@@ -39,7 +39,13 @@ process.argv.slice(2).forEach(function (fileName) {
       });
       delete rec.result_name;
   });
-  console.log(JSON.stringify(recs, null, 2));
+  var all = {
+    dimCols: dimCols,
+    resCols: resCols,
+    //dimNames: dimNames,
+    data: recs,
+  };
+  console.log(JSON.stringify(all, null, 2));
   return;
   console.log('dimCols',JSON.stringify(dimCols, null, 2));
   console.log('resultCols', JSON.stringify(resCols, null, 2));
