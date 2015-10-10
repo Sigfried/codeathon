@@ -1,12 +1,17 @@
-export const FETCH_ALL = 'FETCH_ALL';
+import {createAction} from 'redux-actions';
+import fetch from 'isomorphic-fetch';
+
+export const NEW_DATA = 'NEW_DATA';
+
+export const REQUEST_DATA = 'REQUEST_DATA';
+export const requestData = createAction(REQUEST_DATA);
+
+export const RECEIVE_DATA = 'RECEIVE_DATA';
+export const receiveData = createAction(RECEIVE_DATA);
+
+export const newData = createAction(NEW_DATA);
+
 export const FILTER = 'FILTER';
-
-export function fetchall() {
-  return {
-    type: FETCH_ALL
-  };
-}
-
 export function filter() {
   return {
     type: FILTER,
@@ -14,16 +19,13 @@ export function filter() {
   };
 }
 
-export function incrementIfOdd() {
-  return (dispatch, getState) => {
-    const { counter } = getState();
-
-    if (counter % 2 === 0) {
-      return;
-    }
-
-    dispatch(increment());
-  };
+export function fetchData(delay=1000) {
+  return dispatch => {
+    dispatch(requestData());
+    return fetch('/data')
+      .then(response => response.json())
+      .then(json => dispatch(receiveData(json)))
+  }
 }
 
 export function incrementAsync(delay = 1000) {
