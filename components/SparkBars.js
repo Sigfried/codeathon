@@ -13,7 +13,6 @@ class SparkBarsChart extends Component {
       var barWidth = this.props.width / this.props.bars.length;
       var bars = [];
       var self = this;
-      console.log(this.props.bars);
       this.props.bars.forEach(function(bar, i) {
           bars.push(
               <SparkBarsBar 

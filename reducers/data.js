@@ -1,14 +1,15 @@
-import { REQUEST_DATA, RECEIVE_DATA, FILTER } from '../actions/data';
+import { SUPERGROUP_REQUESTED, DATA_REQUESTED, DATA_RECEIVED, 
+        FILTER } 
+        from '../actions/data';
 import { CLICK_CHART } from '../actions/sparkbars';
+var _ = require('supergroup');
 //var Immutable = require('immutable');  // too hard to use
 
 const initialState = {
   recs: [],
 };
 export default function data(state, action) {
-  console.log('DATA REDUCER', action);
   if (typeof state === 'undefined') {
-    console.log('RETURNING', initialState);
     return initialState;
   }
   switch (action.type) {
@@ -16,13 +17,17 @@ export default function data(state, action) {
     var newState = Object.assign({}, state);
     newState.bars = newState.bars.slice(1);
     return newState;
-  case REQUEST_DATA:
+  case DATA_REQUESTED:
     return state;
-  case RECEIVE_DATA:
+  case DATA_RECEIVED:
     return Object.assign({}, state,
                       {recs:action.payload});
   case FILTER:
     return action.payload(state);
+  case SUPERGROUP_REQUESTED:
+    var o = {};
+    o[action.payload.name] = _.supergroup(...action.payload);
+    return Object.assign({}, state, o);
   default:
     return state;
   }
