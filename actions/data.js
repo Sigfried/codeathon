@@ -11,6 +11,8 @@ export const receiveData = createAction(RECEIVE_DATA);
 
 export const newData = createAction(NEW_DATA);
 
+export const initAction = createAction('uncaught action');
+
 export const FILTER = 'FILTER';
 export function filter() {
   return {
@@ -18,11 +20,24 @@ export function filter() {
     payload: (data) => data.filter((d) => d > 30),
   };
 }
+export function test(x) {
+  return initAction(x);
+}
 
-export function fetchData(delay=1000) {
+export function fetchData(apiquery) {
+  console.log(arguments);
+  console.log(receiveData({recs:['sync fetchData test']}));
+  /*
+  return {
+    type: 'RECEIVE_DATA',
+    payload: ['sync fetchData test']
+  };
+  */
+  //return receiveData({recs:['sync fetchData test']});
   return dispatch => {
-    dispatch(requestData());
-    return fetch('/data')
+    console.log(dispatch);
+    dispatch(requestData(apiquery));
+    return fetch('/data/' + apiquery)
       .then(response => response.json())
       .then(json => dispatch(receiveData(json)))
   }

@@ -2,12 +2,15 @@ import { REQUEST_DATA, RECEIVE_DATA, FILTER } from '../actions/data';
 import { CLICK_CHART } from '../actions/sparkbars';
 //var Immutable = require('immutable');  // too hard to use
 
-var fakedata = {
-  bars: [83,54,23,45,56,33],
-  odata: {},
+const initialState = {
+  recs: [],
 };
-
-export default function data(state = fakedata, action) {
+export default function data(state, action) {
+  console.log('DATA REDUCER', action);
+  if (typeof state === 'undefined') {
+    console.log('RETURNING', initialState);
+    return initialState;
+  }
   switch (action.type) {
   case CLICK_CHART:
     var newState = Object.assign({}, state);
@@ -16,9 +19,8 @@ export default function data(state = fakedata, action) {
   case REQUEST_DATA:
     return state;
   case RECEIVE_DATA:
-    var newState = Object.assign({}, state);
-    newState.odata = Object.assign({}, state.odata, action.payload);
-    return newState;
+    return Object.assign({}, state,
+                      {recs:action.payload});
   case FILTER:
     return action.payload(state);
   default:

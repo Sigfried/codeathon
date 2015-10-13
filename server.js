@@ -1,11 +1,18 @@
 var express = require('express');
 var pg = require('pg');
+//var dqmunge = require('./data/dqcdm_munge');
 
-function getData() {
+function getData(sql) {
   var promise = new Promise(function(resolve, reject) {
-      pg.connect(process.env.DATABASE_URL + '?ssl=true', function(err, client, done) {
-        var q = 'SELECT * FROM dimension_set';
-        var query = client.query(q);
+      console.log('pg: ', process.env.DATABASE_URL);
+      pg.connect(process.env.DATABASE_URL, function(err, client, done) {
+        if (err) {
+          console.log("connection error", err);
+          reject(Error("connection failed", err));
+          return;
+        }
+        //var q = 'SELECT * FROM dimension_set';
+        var query = client.query(sql);
         query.on('error', function(err) {
           done();
           reject(Error("getData failed"));
@@ -14,7 +21,8 @@ function getData() {
           result.addRow(row);
         });
         query.on('end', function(result) {
-          resolve(result.rows[0]);
+          //var ret = dqmunge.mungeDims(result.rows);
+          resolve(result.rows);
           done();
         });
       });
@@ -39,8 +47,11 @@ app.use(webpackHotMiddleware(compiler));
 app.get("/", function(req, res) {
   res.sendFile(__dirname + '/index.html');
 });
-app.get("/data", function(req, res) {
-  res.json({a:1, b:2, c:3});
+app.get("/data/:apiquery", function(req, res) {
+  var apiquery = req.params.apiquery;
+  if (apiquery === "all")
+  getData('SELECT * FROM denorm').
+    then(json => res.json(json));
 });
 
 app.listen(port, function(error) {
