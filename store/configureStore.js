@@ -1,13 +1,15 @@
 import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
+import promise from 'redux-promise';
 import createLogger from 'redux-logger';
 import reducer from '../reducers';
 
 var middleware = [];
+middleware.push(thunk);
+middleware.push(promise);
+middleware.push(createLogger({duration:true}));
 if (process.env.NODE_ENV !== 'production')
   middleware.push(require('redux-immutable-state-invariant')());
-middleware.push(thunk);
-middleware.push(createLogger());
 
 const createStoreWithMiddleware = applyMiddleware(...middleware)(createStore);
 

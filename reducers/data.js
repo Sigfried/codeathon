@@ -1,8 +1,8 @@
-import { SUPERGROUP_REQUESTED, DATA_REQUESTED, DATA_RECEIVED, 
-        FILTER } 
+import { SUPERGROUP_REQUESTED, SUPERGROUP_FULFILLED, SUPERGROUP_REJECTED,
+          DATA_REQUESTED, DATA_RECEIVED, 
+          FILTER } 
         from '../actions/data';
 import { CLICK_CHART } from '../actions/sparkbars';
-var _ = require('supergroup');
 //var Immutable = require('immutable');  // too hard to use
 
 const initialState = {
@@ -13,21 +13,28 @@ export default function data(state, action) {
     return initialState;
   }
   switch (action.type) {
-  case CLICK_CHART:
-    var newState = Object.assign({}, state);
-    newState.bars = newState.bars.slice(1);
-    return newState;
   case DATA_REQUESTED:
     return state;
+  /*
   case DATA_RECEIVED:
     return Object.assign({}, state,
                       {recs:action.payload});
+  */
   case FILTER:
     return action.payload(state);
-  case SUPERGROUP_REQUESTED:
-    var o = {};
-    o[action.payload.name] = _.supergroup(...action.payload);
-    return Object.assign({}, state, o);
+  case DATA_RECEIVED:
+    console.log('DATA_RECEIVED', action, 'old state', state);
+    var newState = Object.assign({},state);
+    newState[action.meta.name] = action.payload;
+    debugger;
+    return newState;
+    /*
+    return Object.assign({}, state, {action.meta.name: action.paylod});
+    newState[action.meta.name] = jj
+      Object.assign({}, state[action.meta.name], {sg: action.payload});
+    debugger;
+    return newState;
+    */
   default:
     return state;
   }

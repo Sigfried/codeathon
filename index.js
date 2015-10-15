@@ -1,14 +1,14 @@
 import React from 'react';
+import ReactDom from 'react-dom';
 import { Provider } from 'react-redux';
 import App from './containers/App';
 import configureStore from './store/configureStore';
 
 const store = configureStore();
-console.log(store.getState());
 
-React.render(
+ReactDom.render(
   <Provider store={store}>
-    {() => <App />}
+    <App />
   </Provider>,
   document.getElementById('root')
 );
