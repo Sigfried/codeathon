@@ -1,6 +1,7 @@
 import * as ActionTypes from '../actions';
 import merge from 'lodash/object/merge';
 import paginate from './paginate';
+import explorer from './explorer';
 import { routerStateReducer as router } from 'redux-router';
 import { combineReducers } from 'redux';
 
@@ -47,6 +48,7 @@ const pagination = combineReducers({
 });
 
 const rootReducer = combineReducers({
+  explorer,
   entities,
   pagination,
   errorMessage,

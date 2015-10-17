@@ -4,6 +4,7 @@ import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { ReduxRouter } from 'redux-router';
 import configureStore from './store/configureStore';
+import explorerconf from './explorer.conf';
 
 const store = configureStore();
 
