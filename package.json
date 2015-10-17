@@ -21,6 +21,7 @@
     "lodash": "^3.10.1",
     "normalizr": "^1.0.0",
     "pg": "^4.4.3",
+    "pg-copy-streams": "^0.3.0",
     "react": "^0.14.0-rc1",
     "react-dom": "^0.14.0-rc1",
     "react-redux": "^2.1.2",
