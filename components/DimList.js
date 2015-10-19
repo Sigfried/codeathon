@@ -21,7 +21,6 @@ export default class DimList extends React.Component {
       />);
     return <ul> {recs.length ? dimComponents : []} </ul>;
   }
-  componentWillUpdate(nextProps, nextState) {
 }
 DimList.propTypes = {
   dims: PropTypes.object.isRequired,
