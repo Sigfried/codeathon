@@ -1,73 +1,41 @@
 import React, { Component, PropTypes } from 'react';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
 import * as ExplorerActions from '../actions/explorer';
+import SparkBarsChart from './SparkBars';
 var _ = require('lodash');
-/*
-class CommentListContainer extends React.Component {
-  constructor() {
-    super();
-    this.state = { comments: [] }
-  }
-  componentDidMount() {
-    $.ajax({
-      url: "/my-comments.json",
-      dataType: 'json',
-      success: function(comments) {
-        this.setState({comments: comments});
-      }.bind(this)
-    });
-  }
-  render() {
-    return <CommentList comments={this.state.comments} />;
-  }
-}
-*/
 
 export default class DimList extends React.Component {
   constructor(props) {
     super(props);
-    debugger;
+    //this.state = props.dims;
   }
   render() { 
-    var dims = _.map(this.props.dims, (dim,key) => 
-      <Dim recs={this.props.recs} dim={dim} key={key} supergroup={this.props.supergroup}/>);
-    return <ul> {dims} </ul>;
+    // Injected by react-redux: (in connect below)
+    let { dims, recs, dispatch } = this.props;
+    //let boundActionCreators = bindActionCreators(ExplorerActions, this.props.dispatch);
+    var dimComponents = _.map(dims, (dim,key) => 
+      <Dim recs={recs} dim={dim} key={key} 
+          dispatch={dispatch}
+          //{...boundActionCreators}
+      />);
+    return <ul> {recs.length ? dimComponents : []} </ul>;
   }
   componentWillUpdate(nextProps, nextState) {
-    debugger;
-  /*
-    if (nextProps.recs.length) {
-      _.each(this.props.dims, (dim, key) => {
-        debugger;
-        //if (!this.props.dims[key].vals)
-        if (!dim.vals)
-          this.props.supergroup( dim, nextProps.recs);
-      });
-    }
-  */
-  }
-  /*
-  shouldComponentUpdate(prevProps, prevState) {
-    //console.log('checking', this.props.recs.length, prevProps.recs.length, 'while', Object.keys(this.props));
-    console.log(this.props.dims.data_element == prevProps.dims.data_element,
-      this.props.dims.data_element,prevProps.dims.data_element);
-    return this.props.recs != prevProps.recs || this.props.dims.data_element != prevProps.dims.data_element;
-  }
-  */
 }
 DimList.propTypes = {
   dims: PropTypes.object.isRequired,
   recs: PropTypes.array.isRequired,
 };
 class Dim extends React.Component {
-  /*
-  shouldComponentUpdate(prevProps, prevState) {
-    return this.props.dim.vals != prevProps.dim.vals;
+  constructor(props) {
+    super(props);
+    //this.state = props.dim;
   }
-  */
-  componentWillUpdate(nextProps, nextState) {
+  componentWillMount(nextProps, nextState) {
     var dim = this.props.dim;
-    //debugger;
-    //this.props.supergroup(dim, this.props.recs);
+    this.props.dispatch(ExplorerActions.supergroup(
+      dim, this.props.recs));
   }
   render() { 
     var dim = this.props.dim;
@@ -76,7 +44,15 @@ class Dim extends React.Component {
       vals = _.map(dim.vals, (val) => 
         <Val val={val} key={val.toString()} />);
     }
+    let bars=_.map(dim.vals, val => val.records.length);
+    var sparkbars = <SparkBarsChart
+                      bars={bars}
+                      width={150}
+                      height={75} 
+                      />;
+    console.log(bars);
     return <li>{dim.name}
+            {sparkbars}
             <ul>
               {vals}
             </ul>
@@ -91,3 +67,6 @@ class Val extends React.Component {
           </li>;
   }
 }
+export default connect((state) => {
+          return state; //.explorer.dims;
+        })(DimList);

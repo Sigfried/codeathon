@@ -2,8 +2,9 @@ import { combineReducers } from 'redux';
 import conf from '../explorer.conf';
 import {DATA_RECEIVED, SUPERGROUPED_DIM } from '../actions/explorer';
 var _ = require('lodash');
+var settings = conf();
 
-function explorerReducer(state = conf(), action) {
+function explorerReducer(state = settings, action) {
   switch (action.type) {
   case DATA_RECEIVED:
     var newState = Object.assign({},state);
@@ -22,29 +23,39 @@ function recs(state = [], action) {
     return state;
   }
 }
-function toFetch(state = conf().toFetch, action) {
+function toFetch(state = settings.toFetch, action) {
   return state;
 }
-function dims(state = conf().dims, action) {
+function dims(state = settings.dims, action) {
   switch (action.type) {
-  /*
+  case 'MESS_WITH_DIM':
+    //return Object.assign({}, state, { foo: action.meta.field });
+    var dim = Object.assign({}, action.meta,
+                            { vals: action.payload });
+    return Object.assign({}, state, { [dim.field]: dim });
   case SUPERGROUPED_DIM:
     var dim = Object.assign({}, action.meta,
                             { vals: action.payload });
     return Object.assign({}, state, { [dim.field]: dim });
-  */
   default:
     return state;
   }
 }
-function dim(state, action) {
+/*
+function dim(state = settings.dims, action) {
+  let field = action.meta && action.meta.field || 'none';
+  if (state === settings.dims && field && (field in state))
+      state = state[field];
   switch (action.type) {
+  case 'MESS_WITH_DIM':
+    return Object.assign({}, state, { foo: action.meta.field });
   case SUPERGROUPED_DIM:
     return Object.assign({}, state, { vals: action.payload });
   default:
     return state;
   }
 }
+*/
 const explorerReducers = combineReducers({
   recs, toFetch, dims
   //explorerReducer

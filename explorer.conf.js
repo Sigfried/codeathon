@@ -1,6 +1,5 @@
 
 export default function explorerconf() {
-  //console.log('CONF');
   return {
           //recs: [],
           toFetch: 'all',
