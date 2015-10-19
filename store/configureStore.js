@@ -5,13 +5,13 @@ import createHistory from 'history/lib/createBrowserHistory';
 import routes from '../routes';
 import thunk from 'redux-thunk';
 import api from '../middleware/api';
-import createLogger from 'redux-logger';
+//import createLogger from 'redux-logger';
 import rootReducer from '../reducers';
 
 const finalCreateStore = compose(
   applyMiddleware(thunk, api),
   reduxReactRouter({ routes, createHistory }),
-  applyMiddleware(createLogger()),
+  //applyMiddleware(createLogger()),
   devTools()
 )(createStore);
 

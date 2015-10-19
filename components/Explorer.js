@@ -16,11 +16,11 @@ export default class Explorer extends Component {
     this.props.fetchRecs(this.props.toFetch);
   }
   render() {
-    const { explorer } = this.props;
+    const { explorer, supergroup } = this.props;
     return (
       <div>
         <h1>Dims</h1>
-        <DimList {...explorer}/>
+        <DimList {...explorer} supergroup={supergroup}/>
       </div>
     );
   }

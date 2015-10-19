@@ -76,6 +76,7 @@ function mapStateToProps(state) {
     errorMessage: state.errorMessage,
     inputValue: state.router.location.pathname.substring(1),
     explorer: state.explorer,
+    //explorer: state.explorer.explorerReducer,
   };
 }
 

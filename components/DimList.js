@@ -1,4 +1,6 @@
 import React, { Component, PropTypes } from 'react';
+import * as ExplorerActions from '../actions/explorer';
+var _ = require('lodash');
 /*
 class CommentListContainer extends React.Component {
   constructor() {
@@ -22,39 +24,45 @@ class CommentListContainer extends React.Component {
 
 export default class DimList extends React.Component {
   render() { 
-    var dims = this.props.dims.map( (dim,i) => {
-      return <Something recs={this.props.recs} dim={dim} key={i} />
-    });
+    var dims = _.map(this.props.dims, (dim,key) => 
+      <Dim recs={this.props.recs} dim={dim} key={key} />);
     return <ul> {dims} </ul>;
   }
   componentDidUpdate() {
-    return;
-    console.log('supergrouping?');
     if (this.props.recs.length) {
-      console.log('supergrouping');
-      this.props.dims.forEach(dim => {
-        //console.log('may supergroup', this.props.dim.field, 'with recs:', this.props.recs.length);
-          this.props.supergroup(
-            dim.field,
-            this.props.recs,
-            dim.field);
-      });
+      //debugger;
+      _.each(this.props.dims, (dim) =>
+          this.props.supergroup( dim, this.props.recs));
     }
   }
   shouldComponentUpdate(prevProps, prevState) {
-    console.log('checking', this.props.recs.length, prevProps.recs.length,
-               'while', Object.keys(this.props));
+    //console.log('checking', this.props.recs.length, prevProps.recs.length, 'while', Object.keys(this.props));
     return this.props.recs != prevProps.recs;
   }
 }
 DimList.propTypes = {
-  dims: PropTypes.array.isRequired,
+  dims: PropTypes.object.isRequired,
   recs: PropTypes.array.isRequired,
 };
-class Something extends React.Component {
-  componentDidUpdate() {
-  }
+class Dim extends React.Component {
   render() { 
-    return <li>{this.props.dim.name}</li>;
+    var vals = [];
+    if (this.props.dim.vals) {
+      vals = _.map(this.props.dim.vals, (val) => 
+        <Val val={val} key={val.toString()} />);
+    }
+    return <li>{this.props.dim.name}
+            <ul>
+              {vals}
+            </ul>
+          </li>;
+  }
+}
+class Val extends React.Component {
+  render() { 
+    var val = this.props.val;
+    return <li>
+            {val.toString()} ({val.records.length})
+          </li>;
   }
 }

@@ -1,12 +1,12 @@
 
 export default function explorerconf() {
-  console.log('CONF');
+  //console.log('CONF');
   return {
-          recs: [],
+          //recs: [],
           toFetch: 'all',
-          dims: [
-            {field: 'data_element', name: 'Data Element' },
-            {field: 'hospital_name', name: 'Hospital' },
+          dims: {
+            data_element: {field: 'data_element', name: 'Data Element' },
+            hospital_name: {field: 'hospital_name', name: 'Hospital' },
             /*
             {field: 'issue_period', name: 'Period' },
             {field: 'measure_desc', name: 'Measure Description' },
@@ -17,6 +17,6 @@ export default function explorerconf() {
             //{field: 'value', name: 'Value' },
             {field: 'source_name', name: 'Source' },
             */
-          ],
+          },
         };
 }
