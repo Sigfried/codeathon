@@ -16,6 +16,7 @@ export default class Explorer extends Component {
     this.props.fetchRecs(this.props.toFetch);
   }
   render() {
+    debugger;
     const { explorer, supergroup } = this.props;
     return (
       <div>

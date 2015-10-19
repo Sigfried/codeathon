@@ -27,10 +27,20 @@ function toFetch(state = conf().toFetch, action) {
 }
 function dims(state = conf().dims, action) {
   switch (action.type) {
+  /*
   case SUPERGROUPED_DIM:
     var dim = Object.assign({}, action.meta,
                             { vals: action.payload });
     return Object.assign({}, state, { [dim.field]: dim });
+  */
+  default:
+    return state;
+  }
+}
+function dim(state, action) {
+  switch (action.type) {
+  case SUPERGROUPED_DIM:
+    return Object.assign({}, state, { vals: action.payload });
   default:
     return state;
   }
