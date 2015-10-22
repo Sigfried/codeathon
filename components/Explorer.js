@@ -19,7 +19,6 @@ export default class Explorer extends Component {
     const { explorer } = this.props;
     return (
       <div>
-        <h1>Dims</h1>
         <DimList {...explorer} />
       </div>
     );

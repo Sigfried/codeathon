@@ -3,6 +3,7 @@ import d3 from 'd3';
 
 class SparkBarsChart extends Component {
     render() {
+      return <h4>debugging</h4>;
       //const { increment, incrementIfOdd, incrementAsync, decrement, counter } = this.props;
       // bars just an array of nums
       var ext = d3.extent(this.props.bars);
@@ -13,6 +14,7 @@ class SparkBarsChart extends Component {
       var barWidth = this.props.width / this.props.bars.length;
       var bars = [];
       var self = this;
+      console.log(barStyle);
       this.props.bars.forEach(function(bar, i) {
           bars.push(
               <SparkBarsBar 
@@ -25,10 +27,10 @@ class SparkBarsChart extends Component {
       });
       return (
         <div>
-          <h1>hi</h1>
           <svg width={this.props.width} height={this.props.height}>
-              <rect width={this.props.width} height={this.props.height}
-                      fill="yellow"
+              <rect 
+                  {...chartStyle}
+                  width={this.props.width} height={this.props.height}
                       onClick={e => this.clickChart(e)}
                       />
               {bars}
@@ -41,6 +43,21 @@ class SparkBarsChart extends Component {
       this.props.fetchData();
     }
 }
+var barStyle = {
+  fill: 'steelblue',
+  opacity: 0.6,
+  strokeWidth: 1,
+  stroke: 'white',
+};
+var barBgStyle = {
+  fill: 'steelblue',
+  opacity: 0.1,
+  strokeWidth: 1,
+  stroke: 'white',
+};
+var chartStyle = {
+  opacity: 0,
+};
 
 SparkBarsChart.propTypes = {
   bars: PropTypes.array.isRequired,
@@ -58,13 +75,28 @@ export default SparkBarsChart;
 class SparkBarsBar extends Component {
     // val, x, chartHeight
     render() {
-        var height = this.props.yscale(this.props.val);
-        var y = this.props.chartHeight - height;
-        return (<rect x={this.props.x} y={y} 
-                    width={this.props.barWidth}
+        const {val, yscale, chartHeight, x, barWidth} = this.props;
+        const height = yscale(val);
+        const y = chartHeight - height;
+        return (
+          <g transform={"translate(" + x + ")"}>
+            <rect
+                    {...barBgStyle}
+                    width={barWidth}
+                    height={chartHeight} 
+                    onMouseOver={valHover}
+            />
+            <rect y={y} 
+                    {...barStyle}
+                    width={barWidth}
                     height={height} 
-                  />);
+            />
+          </g>
+        );
     }
 };
 
+function valHover(evt) {
+  console.log(evt.target);
+}
 

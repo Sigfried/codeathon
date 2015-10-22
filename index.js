@@ -7,6 +7,7 @@ import configureStore from './store/configureStore';
 //import explorerconf from './explorer.conf';
 
 const store = configureStore();
+window.store = store; // for debugging
 
 render(
   <Provider store={store}>

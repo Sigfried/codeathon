@@ -24,9 +24,15 @@ const supergrouped =  // puts dim into meta
   createAction(SUPERGROUPED_DIM, (data,dim)=>data, (data,dim)=>dim);
 export function supergroup(dim, recs) {
   return (dispatch, getState) => {
-    var sg = _.supergroup(recs, dim.field);
+    var sg = _.supergroup(recs, dim.func || dim.field);
     if (sg.length)
       sg = sg.sortBy(a=>-a.records.length);
+
+    //DEBUG
+    //sg = sg.slice(0,3);
+
+
+
     var action = supergrouped(sg, dim);
     return dispatch(action);
   };

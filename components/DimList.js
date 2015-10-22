@@ -3,7 +3,9 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import * as ExplorerActions from '../actions/explorer';
 import SparkBarsChart from './SparkBars';
-var _ = require('lodash');
+import LineChart from './LineChart';
+var _ = require('supergroup');
+import d3 from 'd3';
 
 export default class DimList extends React.Component {
   constructor(props) {
@@ -19,6 +21,7 @@ export default class DimList extends React.Component {
           dispatch={dispatch}
           //{...boundActionCreators}
       />);
+    //return <LineChart/>;
     return <ul> {recs.length ? dimComponents : []} </ul>;
   }
 }
@@ -26,6 +29,12 @@ DimList.propTypes = {
   dims: PropTypes.object.isRequired,
   recs: PropTypes.array.isRequired,
 };
+function sparkWidth(vals) {
+  var scale = d3.scale.log(10)
+                .domain([1,100])
+                .range([50, window.innerWidth]);
+  return scale(vals.length);
+}
 class Dim extends React.Component {
   constructor(props) {
     super(props);
@@ -45,13 +54,15 @@ class Dim extends React.Component {
     }
     let bars=_.map(dim.vals, val => val.records.length);
     var sparkbars = <SparkBarsChart
+                      valType={"supgergroup"}
                       bars={bars}
-                      width={150}
-                      height={75} 
+                      width={sparkWidth(vals)}
+                      height={40} 
                       />;
     console.log(bars);
-    return <li>{dim.name}
+    return <li>
             {sparkbars}
+            <h3>{dim.name}</h3>
             <ul>
               {vals}
             </ul>
@@ -61,8 +72,22 @@ class Dim extends React.Component {
 class Val extends React.Component {
   render() { 
     var val = this.props.val;
+    var missing = _.supergroup(val.records, 
+                      d=>d.value.length ? 
+                        'Has value' : 'Missing',
+                        {dimName:'Missing'});
+    var withValues = missing.lookup('Has value');
+    var noValues = missing.lookup('Missing');
+    var lcvals = withValues ? 
+            <LineChart val={withValues} /> : '';
+
     return <li>
-            {val.toString()} ({val.records.length})
+            <h4>{val.toString()} 
+                &nbsp;
+                ({val.records.length} records
+                 {noValues ? ', ' + noValues.records.length + ' missing' : ''})
+                </h4>
+            {lcvals}
           </li>;
   }
 }

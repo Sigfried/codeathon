@@ -45,13 +45,15 @@ class App extends Component {
       <div>
         <div>
           <h1>Explorer</h1>
-          data keys: {Object.keys(this.props).join(', ')}
           <Explorer {...explorer} />
           <br/>
         </div>
+        /*
         <hr />
         <Explore value={inputValue}
                  onChange={this.handleChange} />
+        */
+        // not sure what this stuff from example does, may be useful later
         <hr />
         {this.renderErrorMessage()}
         {children}
