@@ -36,13 +36,6 @@ function msg(state = settings.msg, action) {
 }
 function dims(state = settings.dims, action) {
   switch (action.type) {
-  /*
-  case 'MESS_WITH_DIM':
-    //return Object.assign({}, state, { foo: action.meta.field });
-    var dim = Object.assign({}, action.meta,
-                            { vals: action.payload });
-    return Object.assign({}, state, { [dim.field]: dim });
-  */
   case SUPERGROUPED_DIM:
     var dim = Object.assign({}, action.meta,
                             { vals: action.payload }
@@ -53,40 +46,7 @@ function dims(state = settings.dims, action) {
     return state;
   }
 }
-/*
-function dim(state = settings.dims, action) {
-  let field = action.meta && action.meta.field || 'none';
-  if (state === settings.dims && field && (field in state))
-      state = state[field];
-  switch (action.type) {
-  case 'MESS_WITH_DIM':
-    return Object.assign({}, state, { foo: action.meta.field });
-  case SUPERGROUPED_DIM:
-    return Object.assign({}, state, { vals: action.payload });
-  default:
-    return state;
-  }
-}
-*/
 const explorerReducers = combineReducers({
   recs, toFetch, dims, msg
-  //explorerReducer
-  //rawData, dims
 });
 export default explorerReducers;
-/*
-function dims(recs = [], action) {
-  switch (action.type) {
-  case DATA_RECEIVED:
-    if (Array.isArray(action.payload))
-      return action.payload;
-  default:
-    return recs;
-  }
-}
-
-
-
-*/
-
-

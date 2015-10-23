@@ -13,7 +13,7 @@ export default class Explorer extends Component {
     super(props);
   }
   componentWillMount() {
-    this.props.fetchRecs(this.props.toFetch, this.props.dispatch);
+    this.props.dispatch(ExplorerActions.fetchRecs(this.props.toFetch, this.props.dispatch));
   }
   componentDidMount() {
     //Perf.stop();
@@ -21,12 +21,12 @@ export default class Explorer extends Component {
     //Perf.start();
   }
   render() {
-    const { explorer } = this.props;
+    const { explorer, dispatch } = this.props;
     return (
       <div>
         <p id="msgp" />
         <Message foo="bar" msg={explorer.msg} />
-        <DimList {...explorer} />
+        <DimList {...explorer} dispatch={dispatch}/>
       </div>
     );
   }
@@ -69,7 +69,7 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators(ExplorerActions, dispatch);
 }
 
-export default connect(mapStateToProps, 
-                    mapDispatchToProps
+export default connect(mapStateToProps//, 
+                    //mapDispatchToProps
           //{ resetErrorMessage, pushState, }
                       )(Explorer);

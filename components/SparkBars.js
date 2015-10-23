@@ -10,7 +10,7 @@ class SparkBarsChart extends Component {
     return this.props.vals != nextProps.vals;
   }
   render() {
-    const {dispatch, valType, vals, barNums, width, height } = this.props;
+    const {valType, vals, barNums, width, height, dispatch } = this.props;
     //return <h4>debugging</h4>;
     var ext = d3.extent(barNums);
     var dumbExt = [0, ext[1]];
@@ -72,19 +72,15 @@ SparkBarsChart.propTypes = {
   barNums: PropTypes.array.isRequired,
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
+  dispatch: PropTypes.func.isRequired,
 };
 
 export default SparkBarsChart;
-/*
- * container
- *  chart
- *    [bar, bar]
- *
- */
 class SparkBarsBar extends Component {
     // val, x, chartHeight
     render() {
-        const {dispatch, val, barNum, yscale, chartHeight, x, barWidth} = this.props;
+        const {val, barNum, yscale, chartHeight, 
+          x, barWidth, dispatch} = this.props;
         const height = yscale(barNum);
         const y = chartHeight - height;
         return (
@@ -93,30 +89,32 @@ class SparkBarsBar extends Component {
                     style={{...barBgStyle}}
                     width={barWidth}
                     height={chartHeight} 
-                    onMouseOver={evt=>valHover(dispatch, evt, barNum, val)}
+                    onMouseOver={this.valHover.bind(this)}
             />
             <rect y={y} 
                     style={{...barStyle}}
                     width={barWidth}
                     height={height} 
-                    onMouseOver={evt=>valHover(dispatch, evt, barNum, val)}
+                    onMouseOver={this.valHover.bind(this)}
             />
           </g>
         );
     }
+    valHover() {
+      const { dispatch, val } = this.props;
+      //Perf.stop();
+      //Perf.printExclusive(Perf.getLastMeasurements());
+      //Perf.printWasted(Perf.getLastMeasurements());
+      //Perf.start();
+      //console.log(val.toString(), barNum, evt.target);
+      //document.getElementById('msgp').innerHTML = 'dispatching ' + val.toString();
+      dispatch(ExplorerActions.messageChanged(val.toString()));
+      document.getElementById('msgp').innerHTML = val.toString();
+    }
 };
 
-function valHover(dispatch, evt, barNum, val) {
-  //Perf.stop();
-  //Perf.printExclusive(Perf.getLastMeasurements());
-  //Perf.printWasted(Perf.getLastMeasurements());
-  //Perf.start();
-  //console.log(val.toString(), barNum, evt.target);
-  document.getElementById('msgp').innerHTML = 'dispatching ' + val.toString();
-  dispatch(ExplorerActions.messageChanged(val.toString()));
-  document.getElementById('msgp').innerHTML = 'dispatched ' + val.toString();
-}
-
+/*
 export default connect((state) => {
           return state; //.explorer.dims;
         })(SparkBarsChart);
+        */

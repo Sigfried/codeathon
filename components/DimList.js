@@ -17,14 +17,10 @@ export default class DimList extends React.Component {
            this.props.recs != nextProps.recs
   }
   render() { 
-    // Injected by react-redux: (in connect below)
     let { dims, recs, dispatch } = this.props;
-    //let boundActionCreators = bindActionCreators(ExplorerActions, this.props.dispatch);
-    var dimComponents = _.map(dims, (dim,key) => 
-      <Dim recs={recs} dim={dim} key={key} 
-          dispatch={dispatch}
-          //{...boundActionCreators}
-      />);
+    var dimComponents = _.map(dims, (dim,key) =>
+      <Dim recs={recs} dim={dim} key={key} dispatch={dispatch} />
+    );
     //return <LineChart/>;
     return <ul> {recs.length ? dimComponents : []} </ul>;
   }
@@ -32,6 +28,7 @@ export default class DimList extends React.Component {
 DimList.propTypes = {
   dims: PropTypes.object.isRequired,
   recs: PropTypes.array.isRequired,
+  dispatch: PropTypes.func.isRequired,
 };
 function sparkWidth(vals) {
   var scale = d3.scale.log(10)
@@ -45,12 +42,11 @@ class Dim extends React.Component {
     //this.state = props.dim;
   }
   componentWillMount(nextProps, nextState) {
-    var dim = this.props.dim;
-    this.props.dispatch(ExplorerActions.supergroup(
-      dim, this.props.recs));
+    const {dim, recs, dispatch} = this.props;
+    dispatch(ExplorerActions.supergroup(dim, recs));
   }
   render() { 
-    let dim = this.props.dim;
+    const {dim, dispatch} = this.props;
     let vals = [];
     let sparkbars = [];
     if (dim.vals) {
@@ -63,6 +59,7 @@ class Dim extends React.Component {
                         barNums={barNums}
                         width={sparkWidth(vals)}
                         height={40} 
+                        dispatch={dispatch}
                         />;
     }
     //console.log(bars);
@@ -75,6 +72,12 @@ class Dim extends React.Component {
           </li>;
   }
 }
+Dim.propTypes = {
+  dim: PropTypes.object.isRequired,
+  recs: PropTypes.array.isRequired,
+  dispatch: PropTypes.func.isRequired,
+  //key: PropTypes.number.isRequired,
+};
 class Val extends React.Component {
   render() { 
     var val = this.props.val;
@@ -97,6 +100,8 @@ class Val extends React.Component {
           </li>;
   }
 }
+/*
 export default connect((state) => {
           return state; //.explorer.dims;
         })(DimList);
+        */
