@@ -12,6 +12,10 @@ export default class DimList extends React.Component {
     super(props);
     //this.state = props.dims;
   }
+  shouldComponentUpdate(nextProps) {
+    return this.props.dims != nextProps.dims ||
+           this.props.recs != nextProps.recs
+  }
   render() { 
     // Injected by react-redux: (in connect below)
     let { dims, recs, dispatch } = this.props;
@@ -46,20 +50,22 @@ class Dim extends React.Component {
       dim, this.props.recs));
   }
   render() { 
-    var dim = this.props.dim;
+    let dim = this.props.dim;
     let vals = [];
+    let sparkbars = [];
     if (dim.vals) {
       vals = _.map(dim.vals, (val) => 
         <Val val={val} key={val.toString()} />);
+      let barNums=_.map(dim.vals, val => val.records.length);
+      sparkbars = <SparkBarsChart
+                        valType={"supgergroup"}
+                        vals={dim.vals}
+                        barNums={barNums}
+                        width={sparkWidth(vals)}
+                        height={40} 
+                        />;
     }
-    let bars=_.map(dim.vals, val => val.records.length);
-    var sparkbars = <SparkBarsChart
-                      valType={"supgergroup"}
-                      bars={bars}
-                      width={sparkWidth(vals)}
-                      height={40} 
-                      />;
-    console.log(bars);
+    //console.log(bars);
     return <li>
             {sparkbars}
             <h3>{dim.name}</h3>

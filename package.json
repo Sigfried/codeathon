@@ -28,6 +28,7 @@
     "pg": "^4.4.3",
     "pg-copy-streams": "^0.3.0",
     "react": "^0.14.0-rc1",
+    "react-addons-perf": "^0.14.0",
     "react-dom": "^0.14.0-rc1",
     "react-redux": "^2.1.2",
     "react-router": "^1.0.0-rc1",

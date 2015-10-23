@@ -48,12 +48,6 @@ class App extends Component {
           <Explorer {...explorer} />
           <br/>
         </div>
-        /*
-        <hr />
-        <Explore value={inputValue}
-                 onChange={this.handleChange} />
-        */
-        // not sure what this stuff from example does, may be useful later
         <hr />
         {this.renderErrorMessage()}
         {children}
@@ -61,6 +55,12 @@ class App extends Component {
     );
   }
 }
+        /*
+        <hr />
+        <Explore value={inputValue}
+                 onChange={this.handleChange} />
+        */
+        // not sure what this stuff from example does, may be useful later
 
 App.propTypes = {
   // Injected by React Redux

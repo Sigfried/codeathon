@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 import conf from '../explorer.conf';
-import {DATA_RECEIVED, SUPERGROUPED_DIM } from '../actions/explorer';
+import {DATA_RECEIVED, SUPERGROUPED_DIM, MSG } from '../actions/explorer';
 var _ = require('lodash');
 var settings = conf();
 
@@ -26,16 +26,28 @@ function recs(state = [], action) {
 function toFetch(state = settings.toFetch, action) {
   return state;
 }
+function msg(state = settings.msg, action) {
+  switch (action.type) {
+  case MSG:
+    return action.payload;
+  default:
+    return state;
+  }
+}
 function dims(state = settings.dims, action) {
   switch (action.type) {
+  /*
   case 'MESS_WITH_DIM':
     //return Object.assign({}, state, { foo: action.meta.field });
     var dim = Object.assign({}, action.meta,
                             { vals: action.payload });
     return Object.assign({}, state, { [dim.field]: dim });
+  */
   case SUPERGROUPED_DIM:
     var dim = Object.assign({}, action.meta,
-                            { vals: action.payload });
+                            { vals: action.payload }
+                            //{ vals: action.payload.slice(0,1) }   // DEBUG!!!!!
+                           );
     return Object.assign({}, state, { [dim.field]: dim });
   default:
     return state;
@@ -57,7 +69,7 @@ function dim(state = settings.dims, action) {
 }
 */
 const explorerReducers = combineReducers({
-  recs, toFetch, dims
+  recs, toFetch, dims, msg
   //explorerReducer
   //rawData, dims
 });

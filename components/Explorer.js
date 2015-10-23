@@ -6,19 +6,26 @@ import { pushState } from 'redux-router';
 import { resetErrorMessage } from '../actions';
 import * as ExplorerActions from '../actions/explorer';
 import { bindActionCreators } from 'redux';
+//var Perf = require('react-addons-perf');
 
 export default class Explorer extends Component {
   constructor(props) {
     super(props);
   }
-
   componentWillMount() {
-    this.props.fetchRecs(this.props.toFetch);
+    this.props.fetchRecs(this.props.toFetch, this.props.dispatch);
+  }
+  componentDidMount() {
+    //Perf.stop();
+    //Perf.printWasted();
+    //Perf.start();
   }
   render() {
     const { explorer } = this.props;
     return (
       <div>
+        <p id="msgp" />
+        <Message foo="bar" msg={explorer.msg} />
         <DimList {...explorer} />
       </div>
     );
@@ -28,6 +35,28 @@ export default class Explorer extends Component {
 Explorer.propTypes = {
   explorer: PropTypes.object.isRequired,
 };
+class Message extends Component {
+  constructor(props) {
+    super(props);
+  }
+  componentDidUpdate() {
+    //Perf.stop();
+    //Perf.printInclusive(Perf.getLastMeasurements());
+  }
+  render() {
+    const { msg } = this.props;
+    return (
+      <p style={{...msgStyle}}>
+        {msg}
+      </p>
+    );
+  }
+}
+var msgStyle = {
+  color: 'green',
+  fontFamily: 'arial',
+  fontSize: '25px',
+};
 function mapStateToProps(state) {
   return {
     errorMessage: state.errorMessage,
@@ -36,6 +65,7 @@ function mapStateToProps(state) {
   };
 }
 function mapDispatchToProps(dispatch) {
+  ExplorerActions.dispatch = dispatch; // probably not supposed to do this
   return bindActionCreators(ExplorerActions, dispatch);
 }
 

@@ -2,9 +2,10 @@
 export default function explorerconf() {
   return {
           //recs: [],
+          msg: 'msg',
           toFetch: 'all',
           dims: {
-            element_measure: {field: 'element_measure', name: 'Element/Measure', 
+            element_measure: {field: 'element_measure', name: 'Element => Measure', 
               func: r=>r.data_element + ' => ' + r.measure_name},
             //data_element: {field: 'data_element', name: 'Data Element' },
             //patient_type: {field: 'patient_type', name: 'Patient Type' },

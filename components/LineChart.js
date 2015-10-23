@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import d3 from 'd3';
 
 const ANIMATION_DURATION = 400;
+const X_TICKS_WANTED = 5;
 
 //import dimple from '../node_modules/dimple-js/dist/dimple.latest';
 //import nvd3 from 'nvd3';
@@ -25,12 +26,12 @@ class LineChart extends Component {
       const {val} = this.props;
       var sg = _.supergroup(_.sortBy(val.records,'issue_period'),
         ['result_name','patient_type']);
-      var series = sg.leafNodes();
+      var serieses = sg.leafNodes();
       this.lc = new d3LineChart();
       this.lc.setx(d=>d.issue_period)
       this.lc.sety(d=>d.value);
-      //this.lc.create(this.refs.div, series.slice(0,1), 300, 100);
-      this.lc.create(this.refs.div, series);
+      //this.lc.create(this.refs.div, serieses.slice(0,1), 300, 100);
+      this.lc.create(this.refs.div, serieses);
       //dimplelc(this.refs.svg, val);
       //nvdlc(d3.select(this.refs.svg).append('svg').node());
     }
@@ -42,27 +43,16 @@ class d3Chart {
   constructor() {
     this._margin = {top: 20, right: 20, bottom: 60, left: 50};
   }
-  create(el, series, width, height) {
+  create(el, serieses, width, height) {
+    // each series is a supergroup node with recs to be points
     this._setLayoutDims(el, width, height);
     var svg = d3.select(el).append('svg')
           .attr('class', 'd3')
           .attr('width', this._layout.width)
           .attr('height', this._layout.height);
 
-    svg.append('g')
-        .attr('class', 'd3chart');
 
-    this.update(svg.node(), series);
-  }
-  update(el, series) {
-    var colorScale = d3.scale.category10();
-    // Re-compute the scales, and render the chart
-    this._setLayoutDims(el);
-    var scales = this._scales(el, _.flatten(series.map(d=>d.records)));
-    //var prevScales = this._scales(el, state.prevDomain);
-    //series.forEach((s,i) => this._drawChart(el, scales, s.records, colorScale(i)));
-    series.forEach((s,i) => this._drawPoints(el, scales, s.records, colorScale(i)));
-    //this._drawTooltips(el, scales, state.tooltips, prevScales);
+    this.update(svg.node(), serieses);
   }
   _setLayoutDims(el, width, height) {
     this._layout = { width: width || el.offsetWidth, 
@@ -87,12 +77,15 @@ class d3XYChart extends d3Chart {
     return this._gety = func;
   }
   _axes(scales) {
-    var x = d3.svg.axis()
-                  .scale(scales.x)
-                  .orient("bottom");
-    var y = d3.svg.axis()
-                  .scale(scales.y)
-                  .orient("left");
+    let ticks = scales.x.domain();
+    let portion = Math.floor(ticks.length / X_TICKS_WANTED);
+    let x = d3.svg.axis()
+      .scale(scales.x)
+      .tickValues(ticks.filter((d,i) => i % portion === 0))
+      .orient("bottom");
+    let y = d3.svg.axis()
+      .scale(scales.y)
+      .orient("left");
     return {x: x, y: y};
   };
   _scales(el, recs) {
@@ -122,14 +115,35 @@ class d3LineChart extends d3XYChart {
    * make scales from points for now
    */
 
+  update(el, serieses) {
+    let scales = this._scales(el, _.flatten(serieses.map(d=>d.records)));
+
+    let colorScale = d3.scale.category10();
+    colorScale(99); //'throwaway first color');
+    // Re-compute the scales, and render the chart
+    this._setLayoutDims(el);
+    let _this = this;
+    this._drawAxes(el, scales, _.chain(serieses).map(d=>d.records).flatten().value());
+    d3.select(el).selectAll('g.linechart-series')
+        .data(serieses, d=>d)
+        .enter()
+      .append('g')
+        .attr('class', 'linechart-series')
+      .each(function(series, i) {
+        _this._drawPoints( 
+            this, scales, series.records, colorScale(i));
+        _this._drawChart(this, scales, series.records, colorScale(i));
+      });
+
+    //var prevScales = this._scales(el, state.prevDomain);
+    //this._drawTooltips(el, scales, state.tooltips, prevScales);
+  }
   _line(scales) {
     return d3.svg.line()
             .x(d => {let a=scales.x(this._getx(d));/*console.log(a);*/return a;})
             .y(d => {let a=scales.y(this._gety(d));/*console.log(a);*/return a;})
   }
-  _drawChart(el, scales, data, color, prevScales, dispatcher) {
-    var g = d3.select(el).selectAll('g.d3chart');
-
+  _drawAxes(el, scales, prevScales) {
     var axes = this._axes(scales);
     //this._drawAxes(el, this._axes(scales));
     var xAxis = d3.select(el).append('g')
@@ -149,14 +163,20 @@ class d3LineChart extends d3XYChart {
       .style('stroke', 'steelblue')
       .style('stroke-width', 1.5)
 
-    //var line = g.selectAll('path.line') .datum(data, function(d) { return d.id; });
-    g.append('path')
+  }
+  _drawChart(el, scales, data, color, prevScales, dispatcher) {
+    //var g = d3.select(el).selectAll('g.d3chart');
+    var g = d3.select(el) //FIX   .selectAll('.d3-points');
+    g.selectAll('path.line')
+      .data(data, d=>d)//(, function(d) { return d.id; });
+      .enter()
+      .append('path')
         .datum(data)
         .attr('class', 'line')
         .attr('d', this._line(scales))
         .style('fill','none')
         //.style('stroke','steelblue')
-        .style('fill', color)
+        .style('stroke', color)
         .style('stroke-width',1.5)
       /*
       .transition()
@@ -189,6 +209,7 @@ class d3LineChart extends d3XYChart {
     */
   };
   _drawPoints(el, scales, data, color, prevScales, dispatcher) {
+    let jigger = () => (Math.random() - 0.5) * 5;
     var g = d3.select(el) //FIX   .selectAll('.d3-points');
 
     var point = g.selectAll('.d3-point')
@@ -198,17 +219,18 @@ class d3LineChart extends d3XYChart {
     point.enter().append('circle')
         .attr('class', 'd3-point')
         .style('fill', color)
+        .style('opacity', 0.5)
         .attr('cx', d => {
           if (prevScales) {
             return prevScales.x(this._getx(d));
           }
-          return scales.x(this._getx(d));
+          return scales.x(this._getx(d)) + jigger();
         })
       .transition()
         .duration(ANIMATION_DURATION)
-        .attr('cx', d => scales.x(this._getx(d)));
+        .attr('cx', d => scales.x(this._getx(d)) + jigger());
 
-    point.attr('cy', d => scales.y(this._gety(d)) + (Math.random() - 0.5) * 5)
+    point.attr('cy', d => scales.y(this._gety(d)) + jigger())
         .attr('r', 5)
         //.attr('r', d => { return scales.z(d.z); })
         .on('mouseover', d => {
@@ -219,13 +241,13 @@ class d3LineChart extends d3XYChart {
         })
       .transition()
         .duration(ANIMATION_DURATION)
-        .attr('cx', d => { return scales.x(this._getx(d)); });
+        .attr('cx', d => { return scales.x(this._getx(d)) + jigger(); });
 
     if (prevScales) {
       point.exit()
         .transition()
           .duration(ANIMATION_DURATION)
-          .attr('cx', d => { return scales.x(this._getx(d)); })
+          .attr('cx', d => { return scales.x(this._getx(d)) + jigger(); })
           .remove();
     }
     else {
@@ -233,38 +255,6 @@ class d3LineChart extends d3XYChart {
           .remove();
     }
   };
-}
-
-
-function dimplelc(node, val) {
-  var svg = d3.select(node);
-  val.records.forEach((d,i)=>{
-    d.value = Number(d.value);
-    d.key = i;
-  })
-  var myChart = new dimple.chart(svg, val.records);
-  myChart.setMargins("30px", "20px", "10px", "10px");
-  var x = myChart.addCategoryAxis("x", "issue_period")
-  x.addOrderRule("issue_period");
-  x.addGroupOrderRule((...args)=>{
-    console.log(args);
-    return 1;
-  });
-  //x.title = '';
-  x.hidden = true;
-  var y = myChart.addMeasureAxis("y", "value");
-  //y.ticks = 4;
-  y.title = '';
-  y.overrideMin = val.aggregate(d3.min, "value") * 1/1.2;
-  y.overrideMax = val.aggregate(d3.max, "value") * 1.2;
-  //console.log(y.overrideMin);
-  //y.overrideMin = 10;
-  //y.overrideMax = 100;
-  var series = myChart.addSeries(["key","patient_type"], dimple.plot.line);
-  //var series = myChart.addSeries("patient_type", dimple.plot.bubble);
-  //series.x.addGroupOrderRule("issue_period");
-  //series.y.addGroupOrderRule("issue_period");
-  myChart.draw();
 }
 var barStyle = {
   fill: 'steelblue',
