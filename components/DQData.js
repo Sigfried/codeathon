@@ -9,7 +9,13 @@ export default class Explorer extends Component {
     super(props);
   }
   componentWillMount() {
-    this.props.dispatch(ExplorerActions.fetchRecs(this.props.toFetch, this.props.dispatch));
+    const {dispatch, toFetch} = this.props;
+    dispatch(ExplorerActions.fetchRecs(toFetch, dispatch,
+      this.prepareDimsWhenRecsReady.bind(this)));
+  }
+  prepareDimsWhenRecsReady(recs) {
+    const { dims, dispatch } = this.props;
+    _.each(dims, dim => dispatch(ExplorerActions.supergroup(dim, recs)));
   }
   componentDidMount() {
     //Perf.stop();

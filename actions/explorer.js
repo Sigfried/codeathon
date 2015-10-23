@@ -9,12 +9,14 @@ const requestData = createAction(DATA_REQUESTED);
 
 const receiveData = createAction(DATA_RECEIVED);
 
-export function fetchRecs(apiquery, dispatch) {
+export function fetchRecs(apiquery, dispatch, callback) {
   fetch('/data/' + apiquery)
     .then(response => response.json())
     .then(json => {
       dispatch(receiveData(json))
-    });
+      return json;
+    })
+    .then(callback || (d=>d))
   return requestData(apiquery);
 }
 export function fetchRecsAsync(apiquery) {
@@ -31,6 +33,7 @@ export const SUPERGROUPED_DIM = 'SUPERGROUPED_DIM';
 const supergrouped =  // puts dim into meta
   createAction(SUPERGROUPED_DIM, (data,dim)=>data, (data,dim)=>dim);
 export function supergroup(dim, recs) {
+  debugger;
   var sg = _.supergroup(recs, dim.func || dim.field);
   if (sg.length)
     sg = sg.sortBy(a=>-a.records.length);

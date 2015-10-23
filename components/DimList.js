@@ -15,6 +15,7 @@ export class DimList extends React.Component {
            this.props.recs != nextProps.recs
   }
   renderDims(dimComponent) {
+    // make sure recs has items
     return _.map(this.props.dims, dim => {
       var c = React.cloneElement(dimComponent, {
         recs: this.props.recs,
@@ -26,14 +27,16 @@ export class DimList extends React.Component {
     });
   }
   render() { 
-    var children = React.Children.map(
+    const {recs, children} = this.props;
+    if (!recs.length) return <div/>;
+    var childrenToRender = React.Children.map(
         this.props.children, child => {
           //debugger;
           return child.type === Dim ?
             this.renderDims(child) : child
     });
-    console.log(children);
-    return <div>{children}</div>;
+    console.log(childrenToRender);
+    return <div>{childrenToRender}</div>;
     /*
     console.log(React.Children.only());
     debugger;
@@ -70,10 +73,6 @@ export class Dim extends React.Component {
   constructor(props) {
     super(props);
     //this.state = props.dim;
-  }
-  componentWillMount(nextProps, nextState) {
-    const {dim, recs, dispatch} = this.props;
-    dispatch(ExplorerActions.supergroup(dim, recs));
   }
   render() { 
     const {dim, dispatch} = this.props;

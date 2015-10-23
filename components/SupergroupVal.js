@@ -24,4 +24,3 @@ export default class Val extends React.Component {
           </li>;
   }
 }
-
