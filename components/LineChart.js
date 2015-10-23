@@ -20,7 +20,6 @@ class LineChart extends Component {
                       height:"200px", width:"700px"
                     }}>
               </div>);
-     return <h2>hi</h2>;
     }
     componentDidMount() {
       const {val} = this.props;

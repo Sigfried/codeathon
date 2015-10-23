@@ -37,6 +37,7 @@ function msg(state = settings.msg, action) {
 function dims(state = settings.dims, action) {
   switch (action.type) {
   case SUPERGROUPED_DIM:
+    console.log(state);
     var dim = Object.assign({}, action.meta,
                             { vals: action.payload }
                             //{ vals: action.payload.slice(0,1) }   // DEBUG!!!!!

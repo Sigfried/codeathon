@@ -109,7 +109,7 @@ class SparkBarsBar extends Component {
       //console.log(val.toString(), barNum, evt.target);
       //document.getElementById('msgp').innerHTML = 'dispatching ' + val.toString();
       dispatch(ExplorerActions.messageChanged(val.toString()));
-      document.getElementById('msgp').innerHTML = val.toString();
+      //document.getElementById('msgp').innerHTML = val.toString();
     }
 };
 

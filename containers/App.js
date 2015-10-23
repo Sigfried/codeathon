@@ -1,8 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { pushState } from 'redux-router';
-import Explore from '../components/Explore'; // from real-world redux starter
-import Explorer from '../components/Explorer'; // my thing
+//import Explore from '../components/Explore'; // from real-world redux starter
+//import Explorer from '../components/Explorer'; // my thing
+import DQData from '../components/DQData'; // my thing
 import { resetErrorMessage } from '../actions';
 
 class App extends Component {
@@ -44,8 +45,8 @@ class App extends Component {
     return (
       <div>
         <div>
-          <h1>Explorer</h1>
-          <Explorer {...explorer} />
+          <h1>DQ Data Explorer</h1>
+          <DQData {...explorer} />
           <br/>
         </div>
         <hr />

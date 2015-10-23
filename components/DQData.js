@@ -1,11 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
-import DimList from './DimList';
-// no idea if these from starter will be useful
-import { pushState } from 'redux-router';
-import { resetErrorMessage } from '../actions';
+import {DimList, Dim} from './DimList';
 import * as ExplorerActions from '../actions/explorer';
-import { bindActionCreators } from 'redux';
 //var Perf = require('react-addons-perf');
 
 export default class Explorer extends Component {
@@ -25,7 +21,10 @@ export default class Explorer extends Component {
     return (
       <div>
         <Message foo="bar" msg={explorer.msg} />
-        <DimList {...explorer} dispatch={dispatch}/>
+        <DimList dims={explorer.dims} {...explorer} dispatch={dispatch}>
+          <Dim dim={{}} recs={[]} dispatch={()=>{}}>
+          </Dim>
+        </DimList>
       </div>
     );
   }
@@ -62,10 +61,6 @@ function mapStateToProps(state) {
     inputValue: state.router.location.pathname.substring(1),
     explorer: state.explorer,
   };
-}
-function mapDispatchToProps(dispatch) {
-  ExplorerActions.dispatch = dispatch; // probably not supposed to do this
-  return bindActionCreators(ExplorerActions, dispatch);
 }
 
 export default connect(mapStateToProps//, 

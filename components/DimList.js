@@ -1,13 +1,11 @@
 import React, { Component, PropTypes } from 'react';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
 import * as ExplorerActions from '../actions/explorer';
 import SparkBarsChart from './SparkBars';
-import LineChart from './LineChart';
+import SGVal from './SupergroupVal';
 var _ = require('supergroup');
 import d3 from 'd3';
 
-export default class DimList extends React.Component {
+export class DimList extends React.Component {
   constructor(props) {
     super(props);
     //this.state = props.dims;
@@ -16,13 +14,45 @@ export default class DimList extends React.Component {
     return this.props.dims != nextProps.dims ||
            this.props.recs != nextProps.recs
   }
+  renderDims(dimComponent) {
+    return _.map(this.props.dims, dim => {
+      var c = React.cloneElement(dimComponent, {
+        recs: this.props.recs,
+        dispatch: this.props.dispatch,
+        dim: dim
+      })
+      console.log(c);
+      return c;
+    });
+  }
   render() { 
+    var children = React.Children.map(
+        this.props.children, child => {
+          //debugger;
+          return child.type === Dim ?
+            this.renderDims(child) : child
+    });
+    console.log(children);
+    return <div>{children}</div>;
+    /*
+    console.log(React.Children.only());
+    debugger;
+    var children = React.Children.map(
+                    this.props.children,
+                    function(child) {
+                      return <li>{child}</li>;
+                    });
+    return <ul>{children}</ul>;
+    */
+    /*
+
     let { dims, recs, dispatch } = this.props;
     var dimComponents = _.map(dims, (dim,key) =>
       <Dim recs={recs} dim={dim} key={key} dispatch={dispatch} />
     );
     //return <LineChart/>;
     return <ul> {recs.length ? dimComponents : []} </ul>;
+    */
   }
 }
 DimList.propTypes = {
@@ -36,7 +66,7 @@ function sparkWidth(vals) {
                 .range([50, window.innerWidth]);
   return scale(vals.length);
 }
-class Dim extends React.Component {
+export class Dim extends React.Component {
   constructor(props) {
     super(props);
     //this.state = props.dim;
@@ -51,7 +81,7 @@ class Dim extends React.Component {
     let sparkbars = [];
     if (dim.vals) {
       vals = _.map(dim.vals, (val) => 
-        <Val val={val} key={val.toString()} />);
+        <SGVal val={val} key={val.toString()} />);
       let barNums=_.map(dim.vals, val => val.records.length);
       sparkbars = <SparkBarsChart
                         valType={"supgergroup"}
@@ -78,28 +108,6 @@ Dim.propTypes = {
   dispatch: PropTypes.func.isRequired,
   //key: PropTypes.number.isRequired,
 };
-class Val extends React.Component {
-  render() { 
-    var val = this.props.val;
-    var missing = _.supergroup(val.records, 
-                      d=>d.value.length ? 
-                        'Has value' : 'Missing',
-                        {dimName:'Missing'});
-    var withValues = missing.lookup('Has value');
-    var noValues = missing.lookup('Missing');
-    var lcvals = withValues ? 
-            <LineChart val={withValues} /> : '';
-
-    return <li>
-            <h4>{val.toString()} 
-                &nbsp;
-                ({val.records.length} records
-                 {noValues ? ', ' + noValues.records.length + ' missing' : ''})
-                </h4>
-            {lcvals}
-          </li>;
-  }
-}
 /*
 export default connect((state) => {
           return state; //.explorer.dims;
