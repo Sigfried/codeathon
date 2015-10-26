@@ -6,6 +6,12 @@ var _ = require('supergroup');
 import d3 from 'd3';
 
 export class DimList extends React.Component {
+  /*
+   * In the parent component, DimList
+   * will have children. They will be
+   * populated with each dim in the dim
+   * list
+   */
   constructor(props) {
     super(props);
     //this.state = props.dims;
@@ -37,25 +43,6 @@ export class DimList extends React.Component {
     });
     console.log(childrenToRender);
     return <div>{childrenToRender}</div>;
-    /*
-    console.log(React.Children.only());
-    debugger;
-    var children = React.Children.map(
-                    this.props.children,
-                    function(child) {
-                      return <li>{child}</li>;
-                    });
-    return <ul>{children}</ul>;
-    */
-    /*
-
-    let { dims, recs, dispatch } = this.props;
-    var dimComponents = _.map(dims, (dim,key) =>
-      <Dim recs={recs} dim={dim} key={key} dispatch={dispatch} />
-    );
-    //return <LineChart/>;
-    return <ul> {recs.length ? dimComponents : []} </ul>;
-    */
   }
 }
 DimList.propTypes = {
@@ -75,30 +62,13 @@ export class Dim extends React.Component {
     //this.state = props.dim;
   }
   render() { 
-    const {dim, dispatch} = this.props;
-    let vals = [];
-    let sparkbars = [];
-    if (dim.vals) {
-      vals = _.map(dim.vals, (val) => 
-        <SGVal val={val} key={val.toString()} />);
-      let barNums=_.map(dim.vals, val => val.records.length);
-      sparkbars = <SparkBarsChart
-                        valType={"supgergroup"}
-                        vals={dim.vals}
-                        barNums={barNums}
-                        width={sparkWidth(vals)}
-                        height={40} 
-                        dispatch={dispatch}
-                        />;
-    }
-    //console.log(bars);
-    return <li>
-            {sparkbars}
-            <h3>{dim.name}</h3>
-            <ul>
-              {vals}
-            </ul>
-          </li>;
+    var childrenToRender = React.Children.map(
+      this.props.children, child => {
+        return React.cloneElement(child, 
+          this.props);
+    });
+    console.log(childrenToRender);
+    return <div>{childrenToRender}</div>;
   }
 }
 Dim.propTypes = {
@@ -112,3 +82,4 @@ export default connect((state) => {
           return state; //.explorer.dims;
         })(DimList);
         */
+

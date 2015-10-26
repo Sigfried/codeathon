@@ -26,10 +26,11 @@ function recs(state = [], action) {
 function toFetch(state = settings.toFetch, action) {
   return state;
 }
-function msg(state = settings.msg, action) {
+function msg(state = {general:settings.msg}, action) {
+  let name = action.meta && action.meta.name || 'general';
   switch (action.type) {
   case MSG:
-    return action.payload;
+    return Object.assign(state, {[name]:action.payload});
   default:
     return state;
   }
@@ -37,7 +38,7 @@ function msg(state = settings.msg, action) {
 function dims(state = settings.dims, action) {
   switch (action.type) {
   case SUPERGROUPED_DIM:
-    console.log(state);
+    //console.log(action.meta.name, state, action);
     var dim = Object.assign({}, action.meta,
                             { vals: action.payload }
                             //{ vals: action.payload.slice(0,1) }   // DEBUG!!!!!

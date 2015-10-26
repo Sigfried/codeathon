@@ -9,14 +9,18 @@ const requestData = createAction(DATA_REQUESTED);
 
 const receiveData = createAction(DATA_RECEIVED);
 
-export function fetchRecs(apiquery, dispatch, callback) {
+export function fetchRecs(apiquery, dispatch, callbacks) {
   fetch('/data/' + apiquery)
     .then(response => response.json())
     .then(json => {
+      if (callbacks.recsFilter)
+        json = callbacks.recsFilter(json);
+      if (callbacks.recsMap)
+        json = callbacks.recsMap(json);
       dispatch(receiveData(json))
       return json;
     })
-    .then(callback || (d=>d))
+    .then(callbacks.postFetchAction || (d=>d))
   return requestData(apiquery);
 }
 export function fetchRecsAsync(apiquery) {
@@ -33,10 +37,9 @@ export const SUPERGROUPED_DIM = 'SUPERGROUPED_DIM';
 const supergrouped =  // puts dim into meta
   createAction(SUPERGROUPED_DIM, (data,dim)=>data, (data,dim)=>dim);
 export function supergroup(dim, recs) {
-  debugger;
   var sg = _.supergroup(recs, dim.func || dim.field);
   if (sg.length)
-    sg = sg.sortBy(a=>-a.records.length);
+    sg = sg.sortBy(dim.sortBy || (a=>-a.records.length));
   //DEBUG
   //sg = sg.slice(0,3);
   var action = supergrouped(sg, dim);
@@ -56,9 +59,8 @@ export function supergroupAsync(dim, recs) {
 }
 
 export const MSG = 'MSG';
-/* -- much much faster than sending action
-export function messageChanged(msg) {
-  document.getElementById('msgp').innerHTML = msg;
-}
-*/
 export const messageChanged = createAction(MSG);
+
+export const sgValMsg = createAction(MSG,
+  d=>d,
+  d=>{return {name:d.dim||'general', val:d}});

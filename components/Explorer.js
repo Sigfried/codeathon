@@ -1,3 +1,32 @@
+
+
+
+
+
+
+
+
+
+
+
+throw Error("not using this for now");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import DimList from './DimList';
@@ -13,7 +42,9 @@ export default class Explorer extends Component {
     super(props);
   }
   componentWillMount() {
-    this.props.dispatch(ExplorerActions.fetchRecs(this.props.toFetch, this.props.dispatch));
+    debugger;
+    this.props.dispatch(ExplorerActions.fetchRecs(
+      this.props.toFetch, this.props.dispatch));
   }
   componentDidMount() {
     //Perf.stop();

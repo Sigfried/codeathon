@@ -10,7 +10,7 @@ class SparkBarsChart extends Component {
     return this.props.vals != nextProps.vals;
   }
   render() {
-    const {valType, vals, barNums, width, height, dispatch } = this.props;
+    const {dim, valType, vals, barNums, width, height } = this.props;
     //return <h4>debugging</h4>;
     var ext = d3.extent(barNums);
     var dumbExt = [0, ext[1]];
@@ -20,17 +20,16 @@ class SparkBarsChart extends Component {
     var barWidth = width / vals.length;
     var bars = [];
     var self = this;
-    //console.log(barStyle);
     vals.forEach(function(val, i) {
         bars.push(
             <SparkBarsBar 
+                dim={dim}
                 val={val}
                 barNum={barNums[i]} x={barWidth*i}
                 chartHeight={self.props.height}
                 barWidth={barWidth} 
                 yscale={yscale}
                 key={i}
-                dispatch={dispatch}
                 />);
     });
     return (
@@ -72,45 +71,52 @@ SparkBarsChart.propTypes = {
   barNums: PropTypes.array.isRequired,
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
-  dispatch: PropTypes.func.isRequired,
 };
-
+SparkBarsChart.contextTypes =  {
+  dispatch: PropTypes.func,
+}
 export default SparkBarsChart;
+
 class SparkBarsBar extends Component {
     // val, x, chartHeight
     render() {
-        const {val, barNum, yscale, chartHeight, 
-          x, barWidth, dispatch} = this.props;
-        const height = yscale(barNum);
-        const y = chartHeight - height;
-        return (
-          <g transform={"translate(" + x + ")"}>
-            <rect
-                    style={{...barBgStyle}}
-                    width={barWidth}
-                    height={chartHeight} 
-                    onMouseOver={this.valHover.bind(this)}
-            />
-            <rect y={y} 
-                    style={{...barStyle}}
-                    width={barWidth}
-                    height={height} 
-                    onMouseOver={this.valHover.bind(this)}
-            />
-          </g>
-        );
+      const {val, barNum, yscale, chartHeight, 
+        x, barWidth} = this.props;
+      const height = yscale(barNum);
+      const y = chartHeight - height;
+      return (
+        <g transform={"translate(" + x + ")"}>
+          <rect
+                  style={{...barBgStyle}}
+                  width={barWidth}
+                  height={chartHeight} 
+                  onMouseOver={this.valHover.bind(this)}
+          />
+          <rect y={y} 
+                  style={{...barStyle}}
+                  width={barWidth}
+                  height={height} 
+                  onMouseOver={this.valHover.bind(this)}
+          />
+        </g>
+      );
     }
     valHover() {
-      const { dispatch, val } = this.props;
+      const { dispatch } = this.context;
+      const { val, dim } = this.props;
       //Perf.stop();
       //Perf.printExclusive(Perf.getLastMeasurements());
       //Perf.printWasted(Perf.getLastMeasurements());
       //Perf.start();
       //console.log(val.toString(), barNum, evt.target);
       //document.getElementById('msgp').innerHTML = 'dispatching ' + val.toString();
-      dispatch(ExplorerActions.messageChanged(val.toString()));
+      dispatch(ExplorerActions.sgValMsg(val));
       //document.getElementById('msgp').innerHTML = val.toString();
     }
+};
+SparkBarsBar.contextTypes =  {
+  explorer: React.PropTypes.object,
+  dispatch: React.PropTypes.func,
 };
 
 /*

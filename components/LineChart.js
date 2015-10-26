@@ -11,10 +11,12 @@ const X_TICKS_WANTED = 5;
 class LineChart extends Component {
     render() {
       const {val} = this.props;
+      /*
       console.warn("don't do this");
       val.records.forEach((d,i)=>{
         d.value = Number(d.value);
       })
+      */
       return (<div ref="div" 
               style={{border:"1px solid blue", 
                       height:"200px", width:"700px"
