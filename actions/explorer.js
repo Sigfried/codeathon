@@ -63,4 +63,5 @@ export const messageChanged = createAction(MSG);
 
 export const sgValMsg = createAction(MSG,
   d=>d,
-  d=>{return {name:d.dim||'general', val:d}});
+  (val,dim,ctr)=>{return {
+    name:dim.field||'general', val:val, dim:dim,ctr:ctr}});

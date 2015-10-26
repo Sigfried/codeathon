@@ -30,6 +30,7 @@ function msg(state = {general:settings.msg}, action) {
   let name = action.meta && action.meta.name || 'general';
   switch (action.type) {
   case MSG:
+    //console.log('     ', action.meta.ctr, 'action', action.meta.name, action.payload+'');
     return Object.assign(state, {[name]:action.payload});
   default:
     return state;

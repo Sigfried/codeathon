@@ -110,10 +110,12 @@ class SparkBarsBar extends Component {
       //Perf.start();
       //console.log(val.toString(), barNum, evt.target);
       //document.getElementById('msgp').innerHTML = 'dispatching ' + val.toString();
-      dispatch(ExplorerActions.sgValMsg(val));
+      //console.log(' ', ++vdctr, 'hover', dim.field, val+'');
+      dispatch(ExplorerActions.sgValMsg(val, dim, vdctr));
       //document.getElementById('msgp').innerHTML = val.toString();
     }
 };
+var vdctr = 0;
 SparkBarsBar.contextTypes =  {
   explorer: React.PropTypes.object,
   dispatch: React.PropTypes.func,

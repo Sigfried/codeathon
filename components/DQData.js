@@ -82,17 +82,20 @@ class DimDesc extends Component {
             <h3 style={dimTitleStyle}>{dim.name} {range}</h3>
             {sparkbars}
             <ul>{vals}</ul>
-            <DimInfo val={explorer.msg[dim.field]} />
+            <DimInfo dim={dim} val={explorer.msg[dim.field]} />
           </li>;
     return <div>{this.props.dim.field}</div>
   }
 }
 class DimInfo extends Component {
+  shouldComponentUpdate(nextProps) {
+    return this.props.val != nextProps.val;
+  }
   render() {
-    const { val } = this.props;
+    const { dim, val } = this.props;
     let msg = val && val.toString() || 'nothin';
     if (val) 
-      return (<ValDesc val={val} key={val.toString()}/>);
+      return (<ValDesc dim={dim} val={val} key={val.toString()}/>);
     return <div/>;
   }
 }
@@ -131,26 +134,29 @@ class Vals extends Component {
     return <p>{dim.name}</p>;
   }
 }
+var vdctr = 0;
 class ValDesc extends Component {
   render() { 
-    var val = this.props.val;
-    var missing = _.supergroup(val.records, 
+    const { dim, val } = this.props;
+    let missing = _.supergroup(val.records, 
                       d=>d.value.length ? 
                         'Has value' : 'Missing',
                         {dimName:'Missing'});
-    var withValues = missing.lookup('Has value');
-    var noValues = missing.lookup('Missing');
-    var lcvals = withValues ?  <LineChart val={withValues} /> : '';
-    //var lcvals = '';
+    let withValues = missing.lookup('Has value');
+    let noValues = missing.lookup('Missing');
+    let lcvals = '';
+    if (withValues && dim.role != 'x')
+      lcvals = <LineChart val={withValues} />;
+    //console.log('         ', ++vdctr, 'render', dim.field, val+'');
 
-    return <li>
+    return <div>
             <h4>{val.toString()} 
                 &nbsp;
                 ({val.records.length} records
                  {noValues ? ', ' + noValues.records.length + ' missing' : ''})
                 </h4>
             {lcvals}
-          </li>;
+          </div>;
   }
 }
 
