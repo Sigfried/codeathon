@@ -5,6 +5,12 @@ import {ListContainer} from './ListContainer';
 import * as ExplorerActions from '../actions/explorer';
 import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
+import { Glyphicon, Button } from 'react-bootstrap';
+//var css = require('css!bootstrap/dist/css/bootstrap.css');
+//require("!style!css!less!bootstrap/less/bootstrap.less");
+require('expose?$!expose?jQuery!jquery');
+require("bootstrap-webpack");
+
 //var Perf = require('react-addons-perf');
 
 export default class Explorer extends Component {
@@ -138,6 +144,7 @@ var vdctr = 0;
 class ValDesc extends Component {
   render() { 
     const { dim, val } = this.props;
+    const { dispatch } = this.context;
     let missing = _.supergroup(val.records, 
                       d=>d.value.length ? 
                         'Has value' : 'Missing',
@@ -150,7 +157,11 @@ class ValDesc extends Component {
     //console.log('         ', ++vdctr, 'render', dim.field, val+'');
 
     return <div>
-            <h4>{val.toString()} 
+            <h4> 
+                <Button bsStyle="warning" bsSize="xsmall"><Glyphicon glyph="remove-circle" 
+                  onClick={()=>{dispatch(ExplorerActions.sgValMsg(null,dim))}}
+                /></Button>
+                {val.toString()} 
                 &nbsp;
                 ({val.records.length} records
                  {noValues ? ', ' + noValues.records.length + ' missing' : ''})
@@ -159,6 +170,9 @@ class ValDesc extends Component {
           </div>;
   }
 }
+ValDesc.contextTypes =  {
+  dispatch: React.PropTypes.func,
+};
 
 Explorer.propTypes = {
   explorer: PropTypes.object.isRequired,
