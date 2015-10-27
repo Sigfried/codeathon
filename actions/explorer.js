@@ -1,6 +1,6 @@
 import {createAction} from 'redux-actions';
 //import fetch from 'isomorphic-fetch';
-var _ = require('supergroup');
+import _ from 'supergroup';
 require('isomorphic-fetch');
 
 export const HASH_CHANGED = 'HASH_CHANGED';

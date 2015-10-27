@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
 import conf from '../explorer.conf';
 import {DATA_RECEIVED, SUPERGROUPED_DIM, MSG, HASH_CHANGED } from '../actions/explorer';
-var _ = require('lodash');
+import _ from 'lodash';
 var settings = conf();
 
 function explorerReducer(state = settings, action) {

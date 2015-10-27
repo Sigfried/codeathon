@@ -29,13 +29,15 @@ export default class Explorer extends Component {
       {
         recsMap: d=>{ d.value = parseFloat(d.value); return d},
         //recsFilter: d=>d,
-        postFetchAction: this.prepareDimsWhenRecsReady.bind(this)
+        //postFetchAction: this.prepareDimsWhenRecsReady.bind(this)
       }));
   }
+  /*
   prepareDimsWhenRecsReady(recs) {
     const { dims, dispatch } = this.props;
     _.each(dims, dim => dispatch(ExplorerActions.supergroup(dim, recs)));
   }
+  */
   componentDidMount() {
     console.log(this.props.router);
     //Perf.stop();
@@ -43,17 +45,18 @@ export default class Explorer extends Component {
     //Perf.start();
   }
   render() {
-    const { explorer, dispatch, router } = this.props;
-    var dims = _.map(explorer.dims, 
+    const { explorer, dispatch, router, dims } = this.props;
+    var dimDescs = _.map(dims, 
         (dim,k) => {
           return <DimDesc dim={dim} key={dim.field}/>
         })
     return (
       <div>
         <Message msg={explorer.msg.general} />
+        <Message msg={`${explorer.recs.length} total records, ${explorer.filteredRecs.length} shown`} />
         <Message msg={JSON.stringify(router.location.query)} />
         <ul>
-          {dims}
+          {dimDescs}
         </ul>
       </div>
     );
@@ -70,23 +73,26 @@ class DimDesc extends Component {
     const { dim } = this.props;
     const { explorer } = this.context;
     let sparkbars = '', vals = '', range='';
-    if (dim.vals) {
+    //debugger;
+    let dimVals = explorer.dimVals(dim);
+    if (dimVals.length) {
       /*
-      vals = _.map(dim.vals, (val) => 
+      vals = _.map(dimVals, (val) => 
         <ValDesc val={val} key={val.toString()}/>);
       */
-      let barNums=_.map(dim.vals, val => val.records.length);
+      let barNums=_.map(dimVals, val => val.records.length);
       sparkbars = <SparkBarsChart
                         valType={"supgergroup"}
-                        vals={dim.vals}
+                        //vals={dimVals}
+                        vals={dimVals}
                         dim={dim}
                         barNums={barNums}
-                        width={sparkWidth(dim.vals)}
+                        width={sparkWidth(dimVals)}
                         height={40} 
                         />;
     }
-    if (dim.dataType && dim.dataType === 'ordinal' && dim.vals)
-      range = <span style={dimRangeStyle}>{d3.extent(dim.vals.rawValues()).join(' - ')}</span>;
+    if (dim.dataType && dim.dataType === 'ordinal' && dimVals)
+      range = <span style={dimRangeStyle}>{d3.extent(dimVals.rawValues()).join(' - ')}</span>;
 
     return <Panel>
             <h3 style={dimTitleStyle}>{dim.name} {range}</h3>
@@ -97,6 +103,10 @@ class DimDesc extends Component {
     return <div>{this.props.dim.field}</div>
   }
 }
+DimDesc.contextTypes =  {
+  explorer: React.PropTypes.object,
+  dispatch: React.PropTypes.func,
+};
 class DimInfo extends Component {
   shouldComponentUpdate(nextProps) {
     return this.props.val != nextProps.val;
@@ -111,10 +121,6 @@ class DimInfo extends Component {
 }
 DimDesc.childContextTypes =  {
   dim: React.PropTypes.object,
-};
-DimDesc.contextTypes =  {
-  explorer: React.PropTypes.object,
-  dispatch: React.PropTypes.func,
 };
 var dimRangeStyle = {
   paddingLeft: 20,
@@ -249,9 +255,13 @@ function mapStateToProps(state) {
   return {
     errorMessage: state.errorMessage,
     //inputValue: state.router.location.pathname.substring(1),
-    explorer: state.explorer,
+    explorer: Selector.explorer(state),
     router: state.router,
-    filteredRecs: Selector.filteredRecs,
+    /*
+    filteredRecs: Selector.filteredRecs(state),
+    dims: Selector.dims(state),
+    dimValsSelector: Selector.dimVals(state),
+    */
   };
 }
 

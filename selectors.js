@@ -1,14 +1,42 @@
 
 import { createSelector } from 'reselect'
 
-export const explorer = state => state.explorer;
 export const recs = state => state.explorer.recs;
 export const dims = state => state.explorer.dims;
-export const filterSettings = state.router.location.query.filters;
+export const filterSettings = state => state.router.location.query.filters;
+import _ from 'lodash';
 
 export const filteredRecs = createSelector(
   recs, filterSettings,
   (recs, filts) => {
+    return _.chain(recs).filter(
+      rec => {
+        let flatFilts = 
+          _.chain(filts)
+           .map((fs,dimname) => 
+                _.map(fs, (setting,val) => [dimname, val, setting]))
+           .flatten()
+           .filter(f=>f[2]==="true")
+           .map(f=>f.slice(0,2)).value();
+        return !_.some(flatFilts, ff => rec[ff[0]] === ff[1]);
+      }).value();
   });
 
+export const dimVals = createSelector(
+    filteredRecs,
+    recs => {
+      return dim => {
+        let sg = _.supergroup(recs, dim.func || dim.field);
+        if (sg.length)
+          sg = sg.sortBy(dim.sortBy || (a=>-a.records.length));
+        return sg;
+      }
+    }
+  );
 
+export const explorer = state => 
+  Object.assign({}, state.explorer,
+    ({
+      filteredRecs: filteredRecs(state),
+      dimVals: dimVals(state),
+    }));
