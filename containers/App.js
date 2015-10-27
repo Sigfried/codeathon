@@ -41,12 +41,12 @@ class App extends Component {
   }
 
   render() {
-    const { children, inputValue, explorer } = this.props;
+    const { children, inputValue, explorer, pushState } = this.props;
     return (
       <div>
         <div>
           <h1>DQ Data Explorer</h1>
-          <DQData {...explorer} />
+          <DQData {...explorer} pushState={pushState} />
           <br/>
         </div>
         <hr />

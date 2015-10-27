@@ -4,15 +4,23 @@ import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { ReduxRouter } from 'redux-router';
 import configureStore from './store/configureStore';
+import { devTools, persistState } from 'redux-devtools';
+import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
 //import explorerconf from './explorer.conf';
 
 const store = configureStore();
 window.store = store; // for debugging
+console.log('making window.store available for debugging');
 
 render(
+  <div>
   <Provider store={store}>
     <ReduxRouter />
-  </Provider>,
+  </Provider>
+  <DebugPanel top right bottom>
+      <DevTools store={store} monitor={LogMonitor} />
+  </DebugPanel>
+  </div>,
   document.getElementById('root')
 );
 

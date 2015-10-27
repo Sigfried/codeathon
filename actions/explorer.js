@@ -3,6 +3,10 @@ import {createAction} from 'redux-actions';
 var _ = require('supergroup');
 require('isomorphic-fetch');
 
+export const HASH_CHANGED = 'HASH_CHANGED';
+export const hashChanged = createAction(HASH_CHANGED);
+// querystringChanged expects {[keys], val}
+
 export const DATA_REQUESTED = 'DATA_REQUESTED';
 export const DATA_RECEIVED = 'DATA_RECEIVED';
 const requestData = createAction(DATA_REQUESTED);

@@ -1,11 +1,13 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { pushState } from 'redux-router';
 //import {DimList, Dim} from './DimList';
 import {ListContainer} from './ListContainer';
 import * as ExplorerActions from '../actions/explorer';
 import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
-import { Glyphicon, Button } from 'react-bootstrap';
+import { Glyphicon, Button, Panel } from 'react-bootstrap';
+import * as Selector from '../selectors';
 //var css = require('css!bootstrap/dist/css/bootstrap.css');
 //require("!style!css!less!bootstrap/less/bootstrap.less");
 require('expose?$!expose?jQuery!jquery');
@@ -18,9 +20,8 @@ export default class Explorer extends Component {
     super(props);
   }
   getChildContext() {
-    const {explorer, dispatch} = this.props;
-    let c = ({explorer, dispatch, text:'heelo'});
-    return c;
+    const {explorer, dispatch, pushState, router} = this.props;
+    return ({explorer, dispatch, pushState, router});
   }
   componentWillMount() {
     const {dispatch, toFetch} = this.props;
@@ -36,19 +37,21 @@ export default class Explorer extends Component {
     _.each(dims, dim => dispatch(ExplorerActions.supergroup(dim, recs)));
   }
   componentDidMount() {
+    console.log(this.props.router);
     //Perf.stop();
     //Perf.printWasted();
     //Perf.start();
   }
   render() {
-    const { explorer, dispatch } = this.props;
+    const { explorer, dispatch, router } = this.props;
     var dims = _.map(explorer.dims, 
         (dim,k) => {
           return <DimDesc dim={dim} key={dim.field}/>
         })
     return (
       <div>
-        <Message foo="bar" msg={explorer.msg.general} />
+        <Message msg={explorer.msg.general} />
+        <Message msg={JSON.stringify(router.location.query)} />
         <ul>
           {dims}
         </ul>
@@ -59,7 +62,8 @@ export default class Explorer extends Component {
 Explorer.childContextTypes =  {
   explorer: React.PropTypes.object,
   dispatch: React.PropTypes.func,
-  text: React.PropTypes.string,
+  pushState: React.PropTypes.func,
+  router: React.PropTypes.object,
 };
 class DimDesc extends Component {
   render() {
@@ -84,12 +88,12 @@ class DimDesc extends Component {
     if (dim.dataType && dim.dataType === 'ordinal' && dim.vals)
       range = <span style={dimRangeStyle}>{d3.extent(dim.vals.rawValues()).join(' - ')}</span>;
 
-    return <li style={dimLiStyle}>
+    return <Panel>
             <h3 style={dimTitleStyle}>{dim.name} {range}</h3>
             {sparkbars}
             <ul>{vals}</ul>
             <DimInfo dim={dim} val={explorer.msg[dim.field]} />
-          </li>;
+          </Panel>
     return <div>{this.props.dim.field}</div>
   }
 }
@@ -112,13 +116,6 @@ DimDesc.contextTypes =  {
   explorer: React.PropTypes.object,
   dispatch: React.PropTypes.func,
 };
-var dimLiStyle = {
-  listStyle: 'none',
-  //backgroundColor: '#FFF6EE',
-  border: '1px dashed lightgray',
-  padding: 4,
-  marginBottom: 8,
-};
 var dimRangeStyle = {
   paddingLeft: 20,
   fontSize: '80%',
@@ -131,7 +128,7 @@ var dimTitleStyle = {
 function sparkWidth(vals) {
   var scale = d3.scale.log(10)
                 .domain([1,100])
-                .range([50, window.innerWidth]);
+                .range([50, window.innerWidth * .95]);
   return scale(vals.length);
 }
 class Vals extends Component {
@@ -156,22 +153,77 @@ class ValDesc extends Component {
       lcvals = <LineChart val={withValues} />;
     //console.log('         ', ++vdctr, 'render', dim.field, val+'');
 
-    return <div>
+    return <Panel>
             <h4> 
                 <Button bsStyle="warning" bsSize="xsmall"><Glyphicon glyph="remove-circle" 
                   onClick={()=>{dispatch(ExplorerActions.sgValMsg(null,dim))}}
-                /></Button>
+                /></Button>&nbsp;
+                <Button bsSize="xsmall"><Glyphicon glyph="thumbs-up" 
+                  onClick={()=>{dispatch(ExplorerActions.sgValMsg(null,dim))}}
+                /></Button>&nbsp;
+                <Filter dim={dim} val={val} />
+                &nbsp;
                 {val.toString()} 
                 &nbsp;
                 ({val.records.length} records
                  {noValues ? ', ' + noValues.records.length + ' missing' : ''})
                 </h4>
             {lcvals}
-          </div>;
+          </Panel>;
   }
 }
 ValDesc.contextTypes =  {
   dispatch: React.PropTypes.func,
+  pushState: React.PropTypes.func,
+  explorer: React.PropTypes.object,
+  router: React.PropTypes.object,
+};
+
+export class Filter extends Component {
+  render() {
+    return (<Button bsSize="xsmall"><Glyphicon glyph="thumbs-down" 
+              onClick={this.filterOut.bind(this)} /></Button>);
+  }
+  filterOut() {
+    const { pushState, explorer, router, dispatch } = this.context;
+    const { dim, val } = this.props;
+    //let state = explodeHash(router.location.hash);
+    //debugger;
+    let state = router.location.query;
+    state.filters = state.filters || {};
+    state.filters[dim.field] = state.filters[dim.field] || {};
+    state.filters[dim.field][val] = true;
+    //let newhash = buildHash(state);
+    console.log(state);
+    pushState(state,'',state);
+    
+    //debugger;
+    //dispatch(ExplorerActions.filterChanged({dim:dim, val:val, setting:true}));
+    /*
+    let query = _.clone(router.location.query);
+    query.filter = JSON.stringify(
+    debugger;
+    //console.log(query);
+    //let newquery = Object.assign(query, {filter: 'something'});
+    //console.log(query, newquery);
+    //debugger;
+    //let p = pushState({filter:'something'});
+    pushState(null, '?filter=something');
+    */
+  }
+}
+function buildHash(obj) {
+  return '#' + JSON.stringify(obj);
+}
+function explodeHash(hash) {
+  hash = hash && hash.replace(/^#/,'') || '{}';
+  return JSON.parse(hash);
+}
+Filter.contextTypes =  {
+  dispatch: React.PropTypes.func,
+  pushState: React.PropTypes.func,
+  explorer: React.PropTypes.object,
+  router: React.PropTypes.object,
 };
 
 Explorer.propTypes = {
@@ -193,14 +245,18 @@ var msgStyle = {
   fontSize: '15px',
 };
 function mapStateToProps(state) {
+  //console.log(state);
   return {
     errorMessage: state.errorMessage,
-    inputValue: state.router.location.pathname.substring(1),
+    //inputValue: state.router.location.pathname.substring(1),
     explorer: state.explorer,
+    router: state.router,
+    filteredRecs: Selector.filteredRecs,
   };
 }
 
-export default connect(mapStateToProps//, 
+//console.log(pushState);
+export default connect(mapStateToProps, 
                     //mapDispatchToProps
-          //{ resetErrorMessage, pushState, }
+          { /*resetErrorMessage, */ pushState, dispatch: d=>d, }
                       )(Explorer);
