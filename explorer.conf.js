@@ -11,8 +11,11 @@ export default function explorerconf() {
               role: 'x',
               dataType: 'ordinal'
             },
-            element_measure: {field: 'element_measure', name: 'Element => Measure', 
-              func: r=>r.data_element + ' => ' + r.measure_name},
+            element_measure: {
+              field: 'element_measure', name: 'Element => Measure', 
+              func: r=>r.data_element + ' => ' + r.measure_name,
+              chart: true,
+            },
             patient_type: {field: 'patient_type', name: 'Patient Type' },
             result_name: {field: 'result_name', name: 'Result Name' },
             hospital_name: {field: 'hospital_name', name: 'Hospital' },

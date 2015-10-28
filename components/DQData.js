@@ -80,13 +80,13 @@ class DimDesc extends Component {
       vals = _.map(dimVals, (val) => 
         <ValDesc val={val} key={val.toString()}/>);
       */
-      let barNums=_.map(dimVals, val => val.records.length);
+      //let barNums=_.map(dimVals, val => val.records.length);
       sparkbars = <SparkBarsChart
                         valType={"supgergroup"}
                         //vals={dimVals}
                         vals={dimVals}
                         dim={dim}
-                        barNums={barNums}
+                        //barNums={barNums}
                         width={sparkWidth(dimVals)}
                         height={40} 
                         />;
@@ -155,7 +155,7 @@ class ValDesc extends Component {
     let withValues = missing.lookup('Has value');
     let noValues = missing.lookup('Missing');
     let lcvals = '';
-    if (withValues && dim.role != 'x')
+    if (dim.chart && withValues)
       lcvals = <LineChart val={withValues} />;
     //console.log('         ', ++vdctr, 'render', dim.field, val+'');
 
