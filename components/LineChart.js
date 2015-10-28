@@ -64,7 +64,7 @@ class d3Chart {
     this._layout = { width: width || (el.offsetWidth - this._margin.left - this._margin.right),
                      height: height || (el.offsetHeight - this._margin.top - this._margin.bottom),
                    };
-    console.log(el, width, height, this._layout, this._margin);
+    //console.log(el, width, height, this._layout, this._margin);
     //debugger;
   }
 }
@@ -116,7 +116,7 @@ class d3XYChart extends d3Chart {
       //.range([height, 0])
       .range([this._layout.height, 0])
       .domain(yext)
-    console.log(y.range(), y.domain());
+    //console.log(y.range(), y.domain());
 
     return {x: x, y: y};
   };

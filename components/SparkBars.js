@@ -10,9 +10,9 @@ class SparkBarsChart extends Component {
     return this.props.vals != nextProps.vals;
   }
   render() {
-    const {dim, valType, vals, barNums, width, height } = this.props;
+    const {dim, valType, vals, width, height } = this.props;
     //return <h4>debugging</h4>;
-    var ext = d3.extent(barNums);
+    var ext = d3.extent(vals.map(v=>v.records.length));
     var dumbExt = [0, ext[1]];
     var yscale = d3.scale.linear()
                     .domain(dumbExt)
@@ -20,12 +20,18 @@ class SparkBarsChart extends Component {
     var barWidth = width / vals.length;
     var bars = [];
     var self = this;
-    vals.forEach(function(val, i) {
+    vals.sortBy(
+          d=>-(
+              (d.lookup('Not Missing') && 
+                (d.lookup('Not Missing').records.length + ext[1]))
+              ||d.records.length)
+               ).forEach(function(val, i) {
         bars.push(
             <SparkBarsBarStack
                 dim={dim}
                 val={val}
-                barNum={barNums[i]} x={barWidth*i}
+                //barNum={barNums[i]} 
+                x={barWidth*i}
                 chartHeight={self.props.height}
                 barWidth={barWidth} 
                 yscale={yscale}
@@ -74,7 +80,7 @@ var chartStyle = {
 
 SparkBarsChart.propTypes = {
   vals: PropTypes.array.isRequired,
-  barNums: PropTypes.array.isRequired,
+  //barNums: PropTypes.array.isRequired,
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
 };
@@ -85,7 +91,7 @@ export default SparkBarsChart;
 
 class SparkBarsBar extends Component {
     // val, x, chartHeight
-    render() {
+    renderNotUsing() {
       const {val, barNum, yscale, chartHeight, 
         x, barWidth} = this.props;
       const height = yscale(barNum);
@@ -93,13 +99,13 @@ class SparkBarsBar extends Component {
       return (
         <g transform={"translate(" + x + ")"}>
           <rect
-                  style={{...barBgStyle}}
+                  style={barBgStyle}
                   width={barWidth}
                   height={chartHeight} 
                   onMouseOver={this.valHover.bind(this)}
           />
           <rect y={y} 
-                  style={{...barStyle}}
+                  style={barStyle}
                   width={barWidth}
                   height={height} 
                   onMouseOver={this.valHover.bind(this)}
@@ -124,9 +130,9 @@ class SparkBarsBar extends Component {
 class SparkBarsBarStack extends SparkBarsBar {
     // val, x, chartHeight
     render() {
-      const {val, barNum, yscale, chartHeight, 
+      const {val, yscale, chartHeight, 
         x, barWidth} = this.props;
-      const height = yscale(barNum);
+      const height = yscale(val.records.length);
       const y = chartHeight - height;
       let notMissing = val.lookup('Not Missing');
       let notMissingHeight = notMissing && yscale(notMissing.records.length) || 0;
