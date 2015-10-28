@@ -24,14 +24,12 @@ export const filteredRecs = createSelector(
 
 export const dimVals = createSelector(
     filteredRecs,
-    recs => {
-      return dim => {
+    recs => dim => {
         let sg = _.supergroup(recs, dim.func || dim.field);
         if (sg.length)
           sg = sg.sortBy(dim.sortBy || (a=>-a.records.length));
         return sg;
       }
-    }
   );
 
 export const explorer = state => 

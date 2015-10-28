@@ -18,9 +18,9 @@ export function fetchRecs(apiquery, dispatch, callbacks) {
     .then(response => response.json())
     .then(json => {
       if (callbacks.recsFilter)
-        json = callbacks.recsFilter(json);
+        json = json.filter(callbacks.recsFilter);
       if (callbacks.recsMap)
-        json = callbacks.recsMap(json);
+        json = json.map(callbacks.recsMap);
       dispatch(receiveData(json))
       return json;
     })

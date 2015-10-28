@@ -149,7 +149,7 @@ class ValDesc extends Component {
     const { dim, val } = this.props;
     const { dispatch } = this.context;
     let missing = _.supergroup(val.records, 
-                      d=>d.value.length ? 
+                      d=>isFinite(d.value) ? 
                         'Has value' : 'Missing',
                         {dimName:'Missing'});
     let withValues = missing.lookup('Has value');

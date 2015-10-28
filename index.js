@@ -17,12 +17,14 @@ render(
   <Provider store={store}>
     <ReduxRouter />
   </Provider>
-  <DebugPanel top right bottom>
-      <DevTools store={store} monitor={LogMonitor} />
-  </DebugPanel>
   </div>,
   document.getElementById('root')
 );
+/*
+  <DebugPanel top right bottom>
+      <DevTools store={store} monitor={LogMonitor} />
+  </DebugPanel>
+*/
 
 if (process.env.NODE_ENV !== 'production') {
   // Use require because imports can't be conditional.

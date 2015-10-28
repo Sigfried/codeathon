@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import d3 from 'd3';
+//var css = require("css!./lineChart.css"); // hitting some bug...won't compile
 
 const ANIMATION_DURATION = 400;
 const X_TICKS_WANTED = 5;
@@ -19,16 +20,17 @@ class LineChart extends Component {
       */
       return (<div ref="div" 
               style={{border:"1px solid blue", 
-                      height:"200px", width:"700px"
+                      height:"200px", width:"700px",
+                      fontSize: 10,
                     }}>
               </div>);
     }
     componentDidMount() {
       const {val} = this.props;
-      var sg = _.supergroup(_.sortBy(val.records,'issue_period'),
+      let sg = _.supergroup(_.sortBy(val.records,'issue_period'),
         ['result_name','patient_type']);
-      var serieses = sg.leafNodes();
-      this.lc = new d3LineChart();
+      let serieses = sg.leafNodes();
+      this.lc = new D3LineChart();
       this.lc.setx(d=>d.issue_period)
       this.lc.sety(d=>d.value);
       //this.lc.create(this.refs.div, serieses.slice(0,1), 300, 100);
@@ -42,23 +44,28 @@ class LineChart extends Component {
 // https://github.com/nicolashery/example-d3-react
 class d3Chart {
   constructor() {
-    this._margin = {top: 20, right: 20, bottom: 60, left: 50};
+    this._margin = {top: 20, right: 20, bottom: 30, left: 50};
   }
   create(el, serieses, width, height) {
     // each series is a supergroup node with recs to be points
     this._setLayoutDims(el, width, height);
-    var svg = d3.select(el).append('svg')
-          .attr('class', 'd3')
-          .attr('width', this._layout.width)
-          .attr('height', this._layout.height);
+    let svg = d3.select(el).append('svg')
+            .attr('class', 'd3')
+            .attr('width', this._layout.width + this._margin.left + this._margin.right)
+            .attr('height', this._layout.height + this._margin.top + this._margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+
 
 
     this.update(svg.node(), serieses);
   }
   _setLayoutDims(el, width, height) {
-    this._layout = { width: width || el.offsetWidth, 
-                     height: height || el.offsetHeight,
+    this._layout = { width: width || (el.offsetWidth - this._margin.left - this._margin.right),
+                     height: height || (el.offsetHeight - this._margin.top - this._margin.bottom),
                    };
+    console.log(el, width, height, this._layout, this._margin);
+    //debugger;
   }
 }
 class d3XYChart extends d3Chart {
@@ -92,25 +99,30 @@ class d3XYChart extends d3Chart {
   _scales(el, recs) {
     if (!recs) return null;
 
-    var width = this._layout.width - this._margin.left - this._margin.right;
-    var height = this._layout.height - this._margin.top - this._margin.bottom;
+    let width = this._layout.width - this._margin.left - this._margin.right;
+    let height = this._layout.height - this._margin.top - this._margin.bottom;
 
     // shouldn't always be ordinal!
-    var x = d3.scale.ordinal()
+    let x = d3.scale.ordinal()
       //.range([0, width])
-      .rangePoints([this._margin.left, this._layout.width - this._margin.right])
+      .rangePoints([0, this._layout.width])
       .domain(recs.map(this._getx).sort());
 
-    var y = d3.scale.linear()
+
+    let yext = d3.extent(recs.map(this._gety));
+    if (yext[0] === yext[1])
+      yext = [yext[0] - 0.5, yext[1] + 0.5];
+    let y = d3.scale.linear()
       //.range([height, 0])
-      .range([this._layout.height - this._margin.bottom, this._margin.top])
-      .domain(d3.extent(recs.map(this._gety)));
+      .range([this._layout.height, 0])
+      .domain(yext)
+    console.log(y.range(), y.domain());
 
     return {x: x, y: y};
   };
   //_drawAxes(el, axes) { }
 }
-class d3LineChart extends d3XYChart {
+class D3LineChart extends d3XYChart {
   /*
    * expect getx, gety
    * make scales from points for now
@@ -122,7 +134,7 @@ class d3LineChart extends d3XYChart {
     let colorScale = d3.scale.category10();
     colorScale(99); //'throwaway first color');
     // Re-compute the scales, and render the chart
-    this._setLayoutDims(el);
+    //this._setLayoutDims(el);
     let _this = this;
     this._drawAxes(el, scales, _.chain(serieses).map(d=>d.records).flatten().value());
     d3.select(el).selectAll('g.linechart-series')
@@ -136,7 +148,7 @@ class d3LineChart extends d3XYChart {
         _this._drawChart(this, scales, series.records, colorScale(i));
       });
 
-    //var prevScales = this._scales(el, state.prevDomain);
+    //let prevScales = this._scales(el, state.prevDomain);
     //this._drawTooltips(el, scales, state.tooltips, prevScales);
   }
   _line(scales) {
@@ -145,12 +157,12 @@ class d3LineChart extends d3XYChart {
             .y(d => {let a=scales.y(this._gety(d));/*console.log(a);*/return a;})
   }
   _drawAxes(el, scales, prevScales) {
-    var axes = this._axes(scales);
+    let axes = this._axes(scales);
     //this._drawAxes(el, this._axes(scales));
-    var xAxis = d3.select(el).append('g')
+    let xAxis = d3.select(el).append('g')
       .attr("class", "x axis")
                 // FIX!!
-      .attr("transform", "translate(0," + (this._layout.height - 40) + ")")
+      .attr("transform", "translate(0," + (this._layout.height) + ")")
       .call(axes.x);
     // KLUDGE till i figure out how to handle css for d3 in react
     xAxis.selectAll('path,line')
@@ -164,10 +176,34 @@ class d3LineChart extends d3XYChart {
       .style('stroke', 'steelblue')
       .style('stroke-width', 1.5)
 
+
+    let yAxis = d3.select(el).append('g')
+          .attr("class", "y axis")
+      .call(axes.y)
+      /*
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Price ($)")
+      */
+    // KLUDGE till i figure out how to handle css for d3 in react
+    yAxis.selectAll('path,line')
+      .style('fill','none')
+      .style('stroke', '#000')
+      .style('shape-rendering','crispEdges');
+    yAxis.selectAll('.y').selectAll('path')
+      .style('display','none')
+    yAxis.selectAll('.line')
+      .style('fill','none')
+      .style('stroke', 'steelblue')
+      .style('stroke-width', 1.5)
+
   }
   _drawChart(el, scales, data, color, prevScales, dispatcher) {
-    //var g = d3.select(el).selectAll('g.d3chart');
-    var g = d3.select(el) //FIX   .selectAll('.d3-points');
+    //let g = d3.select(el).selectAll('g.d3chart');
+    let g = d3.select(el) //FIX   .selectAll('.d3-points');
     g.selectAll('path.line')
       .data(data, d=>d)//(, function(d) { return d.id; });
       .enter()
@@ -211,12 +247,11 @@ class d3LineChart extends d3XYChart {
   };
   _drawPoints(el, scales, data, color, prevScales, dispatcher) {
     let jigger = () => (Math.random() - 0.5) * 5;
-    var g = d3.select(el) //FIX   .selectAll('.d3-points');
+    let g = d3.select(el) //FIX   .selectAll('.d3-points');
 
-    var point = g.selectAll('.d3-point')
+    let point = g.selectAll('.d3-point')
       .data(data)//(, function(d) { return d.id; });
 
-    //debugger;
     point.enter().append('circle')
         .attr('class', 'd3-point')
         .style('fill', color)
@@ -257,27 +292,6 @@ class d3LineChart extends d3XYChart {
     }
   };
 }
-var barStyle = {
-  fill: 'steelblue',
-  opacity: 0.6,
-  strokeWidth: 1,
-  stroke: 'white',
-};
-var barBgStyle = {
-  fill: 'steelblue',
-  opacity: 0.1,
-  strokeWidth: 1,
-  stroke: 'white',
-};
-var chartStyle = {
-  opacity: 0,
-};
-var lineStyle = {
-  fill: 'steelblue',
-  stroke: 'steelblue',
-  strokeWidth: '1.5px',
-};
-
 
 LineChart.propTypes = {
   /*
