@@ -74,7 +74,7 @@ class DimDesc extends Component {
     const { explorer } = this.context;
     let sparkbars = '', vals = '', range='';
     //debugger;
-    let dimVals = explorer.dimVals(dim);
+    let dimVals = explorer.dimVals[dim.field];
     if (dimVals.length) {
       /*
       vals = _.map(dimVals, (val) => 

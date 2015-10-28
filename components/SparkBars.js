@@ -22,7 +22,7 @@ class SparkBarsChart extends Component {
     var self = this;
     vals.forEach(function(val, i) {
         bars.push(
-            <SparkBarsBar 
+            <SparkBarsBarStack
                 dim={dim}
                 val={val}
                 barNum={barNums[i]} x={barWidth*i}
@@ -53,6 +53,12 @@ class SparkBarsChart extends Component {
 var barStyle = {
   fill: 'steelblue',
   opacity: 0.6,
+  strokeWidth: 1,
+  stroke: 'white',
+};
+var barMissingStyle = {
+  fill: 'steelblue',
+  opacity: 0.3,
   strokeWidth: 1,
   stroke: 'white',
 };
@@ -113,6 +119,39 @@ class SparkBarsBar extends Component {
       //console.log(' ', ++vdctr, 'hover', dim.field, val+'');
       dispatch(ExplorerActions.sgValMsg(val, dim, vdctr));
       //document.getElementById('msgp').innerHTML = val.toString();
+    }
+};
+class SparkBarsBarStack extends SparkBarsBar {
+    // val, x, chartHeight
+    render() {
+      const {val, barNum, yscale, chartHeight, 
+        x, barWidth} = this.props;
+      const height = yscale(barNum);
+      const y = chartHeight - height;
+      let notMissing = val.lookup('Not Missing');
+      let notMissingHeight = notMissing && yscale(notMissing.records.length) || 0;
+      return (
+        <g transform={"translate(" + x + ")"}>
+          <rect
+                  style={barBgStyle}
+                  width={barWidth}
+                  height={chartHeight} 
+                  onMouseOver={this.valHover.bind(this)}
+          />
+          <rect y={y} 
+                  style={barMissingStyle}
+                  width={barWidth}
+                  height={height} 
+                  onMouseOver={this.valHover.bind(this)}
+          />
+          <rect y={chartHeight - notMissingHeight} 
+                  style={barStyle}
+                  width={barWidth}
+                  height={notMissingHeight} 
+                  onMouseOver={this.valHover.bind(this)}
+          />
+        </g>
+      );
     }
 };
 var vdctr = 0;

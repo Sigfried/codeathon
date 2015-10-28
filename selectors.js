@@ -21,7 +21,7 @@ export const filteredRecs = createSelector(
         return !_.some(flatFilts, ff => rec[ff[0]] === ff[1]);
       }).value();
   });
-
+/*
 export const dimVals = createSelector(
     filteredRecs,
     recs => dim => {
@@ -31,6 +31,21 @@ export const dimVals = createSelector(
         return sg;
       }
   );
+*/
+export const dimVals = createSelector(
+  filteredRecs, dims,
+  (recs, dims) => {
+    return _.chain(dims).map(
+            dim => {
+              let sg = _.supergroup(recs, dim.func || dim.field);
+              if (sg.length)
+                sg = sg.sortBy(dim.sortBy || (a=>-a.records.length));
+              sg.addLevel(
+                d=>isFinite(d.value) ? 'Not Missing' : 'Missing',
+                {dimName: 'Missing value'});
+              return [dim.field, sg];
+            }).object().value()
+  });
 
 export const explorer = state => 
   Object.assign({}, state.explorer,
