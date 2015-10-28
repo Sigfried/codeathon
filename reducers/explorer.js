@@ -38,6 +38,7 @@ function msg(state = {general:settings.msg}, action) {
 }
 function dims(state = settings.dims, action) {
   switch (action.type) {
+  /*
   case SUPERGROUPED_DIM:
     //console.log(action.meta.name, state, action);
     var dim = Object.assign({}, action.meta,
@@ -45,6 +46,7 @@ function dims(state = settings.dims, action) {
                             //{ vals: action.payload.slice(0,1) }   // DEBUG!!!!!
                            );
     return Object.assign({}, state, { [dim.field]: dim });
+  */
   default:
     return state;
   }

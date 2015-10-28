@@ -37,6 +37,7 @@ export function fetchRecsAsync(apiquery) {
       });
   }
 }
+/*
 export const SUPERGROUPED_DIM = 'SUPERGROUPED_DIM';
 const supergrouped =  // puts dim into meta
   createAction(SUPERGROUPED_DIM, (data,dim)=>data, (data,dim)=>dim);
@@ -50,6 +51,7 @@ export function supergroup(dim, recs) {
   return action;
   //return dispatch(action);
 }
+*/
 export function supergroupAsync(dim, recs) {
   return (dispatch, getState) => {
     var sg = _.supergroup(recs, dim.func || dim.field);

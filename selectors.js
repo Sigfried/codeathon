@@ -1,10 +1,10 @@
 
 import { createSelector } from 'reselect'
+import _ from 'lodash';
 
 export const recs = state => state.explorer.recs;
 export const dims = state => state.explorer.dims;
 export const filterSettings = state => state.router.location.query.filters;
-import _ from 'lodash';
 
 export const filteredRecs = createSelector(
   recs, filterSettings,
@@ -21,35 +21,28 @@ export const filteredRecs = createSelector(
         return !_.some(flatFilts, ff => rec[ff[0]] === ff[1]);
       }).value();
   });
-/*
-export const dimVals = createSelector(
-    filteredRecs,
-    recs => dim => {
-        let sg = _.supergroup(recs, dim.func || dim.field);
-        if (sg.length)
-          sg = sg.sortBy(dim.sortBy || (a=>-a.records.length));
-        return sg;
-      }
-  );
-*/
-export const dimVals = createSelector(
+export const dimsVals = createSelector(
   filteredRecs, dims,
   (recs, dims) => {
-    return _.chain(dims).map(
-            dim => {
-              let sg = _.supergroup(recs, dim.func || dim.field);
-              if (sg.length)
-                sg = sg.sortBy(dim.sortBy || (a=>-a.records.length));
-              sg.addLevel(
-                d=>isFinite(d.value) ? 'Not Missing' : 'Missing',
+    return _.chain(dims).map(dim => 
+                        [dim.field, dimVals(dim,recs)]).object().value()
+                        }
+);
+
+export const dimVals = (dim, recs) =>
+  _.supergroup(recs, dim.func || dim.field)
+      .sortBy(dim.sortBy || (a=>-a.records.length))
+      .addLevel(d=>isFinite(d.value) ? 'Not Missing' : 'Missing',
                 {dimName: 'Missing value'});
-              return [dim.field, sg];
-            }).object().value()
-  });
+
+export const dimsFoundInRecs = createSelector(
+  recs, recs => _.keys(Object.assign({}, ...recs))
+  );
 
 export const explorer = state => 
   Object.assign({}, state.explorer,
     ({
       filteredRecs: filteredRecs(state),
-      dimVals: dimVals(state),
+      dimsVals: dimsVals(state),
+      dimsFoundInRecs: dimsFoundInRecs(state)
     }));

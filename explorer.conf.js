@@ -5,6 +5,9 @@ export default function explorerconf() {
           msg: 'default message',
           toFetch: 'all',
           dims: {
+            all: {
+              func:()=>'', field: 'all', name: 'All', hide: true,
+            },
             issue_period: {
               field: 'issue_period', name: 'Period',
               sortBy: d=>d.toString(),

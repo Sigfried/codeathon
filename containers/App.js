@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { pushState } from 'redux-router';
+//import { pushState } from 'redux-router';
 //import Explore from '../components/Explore'; // from real-world redux starter
 //import Explorer from '../components/Explorer'; // my thing
 import DQData from '../components/DQData'; // my thing
@@ -9,7 +9,7 @@ import { resetErrorMessage } from '../actions';
 class App extends Component {
   constructor(props) {
     super(props);
-    this.handleChange = this.handleChange.bind(this);
+    //this.handleChange = this.handleChange.bind(this);
     this.handleDismissClick = this.handleDismissClick.bind(this);
   }
 
@@ -18,9 +18,11 @@ class App extends Component {
     e.preventDefault();
   }
 
+  /* from starter
   handleChange(nextValue) {
     this.props.pushState(null, `/${nextValue}`);
   }
+  */
 
   renderErrorMessage() {
     const { errorMessage } = this.props;
@@ -41,12 +43,12 @@ class App extends Component {
   }
 
   render() {
-    const { children, inputValue, explorer, pushState } = this.props;
+    const { children } = this.props;
     return (
       <div>
         <div>
           <h1>DQ Data Explorer</h1>
-          <DQData {...explorer} pushState={pushState} />
+          <DQData />
           <br/>
         </div>
         <hr />
@@ -67,9 +69,9 @@ App.propTypes = {
   // Injected by React Redux
   errorMessage: PropTypes.string,
   resetErrorMessage: PropTypes.func.isRequired,
-  pushState: PropTypes.func.isRequired,
-  inputValue: PropTypes.string.isRequired,
-  explorer: PropTypes.object.isRequired,
+  //pushState: PropTypes.func.isRequired,
+  //inputValue: PropTypes.string.isRequired,
+  //explorer: PropTypes.object.isRequired,
   // Injected by React Router
   children: PropTypes.node
 };
@@ -77,13 +79,13 @@ App.propTypes = {
 function mapStateToProps(state) {
   return {
     errorMessage: state.errorMessage,
-    inputValue: state.router.location.pathname.substring(1),
-    explorer: state.explorer,
+    //inputValue: state.router.location.pathname.substring(1),
+    //explorer: state.explorer,
     //explorer: state.explorer.explorerReducer,
   };
 }
 
 export default connect(mapStateToProps, {
   resetErrorMessage,
-  pushState,
+  //pushState,
 })(App);

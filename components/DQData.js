@@ -20,12 +20,12 @@ export default class Explorer extends Component {
     super(props);
   }
   getChildContext() {
-    const {explorer, dispatch, pushState, router} = this.props;
+    const {explorer, dispatch, router, pushState} = this.props;
     return ({explorer, dispatch, pushState, router});
   }
   componentWillMount() {
-    const {dispatch, toFetch} = this.props;
-    dispatch(ExplorerActions.fetchRecs(toFetch, dispatch,
+    const {explorer, dispatch} = this.props;
+    dispatch(ExplorerActions.fetchRecs(explorer.toFetch, dispatch,
       {
         recsMap: d=>{ d.value = parseFloat(d.value); return d},
         //recsFilter: d=>d,
@@ -39,21 +39,34 @@ export default class Explorer extends Component {
   }
   */
   componentDidMount() {
-    console.log(this.props.router);
+    //console.log(this.props.router);
     //Perf.stop();
     //Perf.printWasted();
     //Perf.start();
   }
   render() {
-    const { explorer, dispatch, router, dims } = this.props;
-    var dimDescs = _.map(dims, 
-        (dim,k) => {
+    const { explorer, dispatch, router } = this.props;
+    const dims = _.values(explorer.dims).filter(d=>!d.hide);
+    let dimDescs = _.map(dims, 
+        (dim) => {
           return <DimDesc dim={dim} key={dim.field}/>
         })
+        //<Message msg={explorer.msg.general} />
+    let allShown = explorer.dimsVals.all;
+    // workaround for supergroup bug:
+    let allShownRecs = allShown && allShown.length && allShown[0].parentList.records || [];
+    let allShownMissing = allShown && allShown.length && allShown[0].lookup('Missing').records || [];
     return (
       <div>
-        <Message msg={explorer.msg.general} />
-        <Message msg={`${explorer.recs.length} total records, ${explorer.filteredRecs.length} shown`} />
+        <Message msg={`Dims found in data records but not used:
+          ${
+              _.difference(explorer.dimsFoundInRecs, _.keys(explorer.dims))
+                .join(', ')
+          }
+          `} />
+        <Message 
+          msg={`${explorer.filteredRecs.length} shown,
+                ${allShownMissing.length ? allShownMissing.length + ' with missing value' : ''} `} />
         <Message msg={JSON.stringify(router.location.query)} />
         <ul>
           {dimDescs}
@@ -72,9 +85,9 @@ class DimDesc extends Component {
   render() {
     const { dim } = this.props;
     const { explorer } = this.context;
+    
     let sparkbars = '', vals = '', range='';
-    //debugger;
-    let dimVals = explorer.dimVals[dim.field];
+    let dimVals = explorer.dimsVals[dim.field];
     if (dimVals.length) {
       /*
       vals = _.map(dimVals, (val) => 
@@ -119,9 +132,6 @@ class DimInfo extends Component {
     return <div/>;
   }
 }
-DimDesc.childContextTypes =  {
-  dim: React.PropTypes.object,
-};
 var dimRangeStyle = {
   paddingLeft: 20,
   fontSize: '80%',
@@ -147,16 +157,10 @@ var vdctr = 0;
 class ValDesc extends Component {
   render() { 
     const { dim, val } = this.props;
-    const { dispatch } = this.context;
-    let missing = _.supergroup(val.records, 
-                      d=>isFinite(d.value) ? 
-                        'Has value' : 'Missing',
-                        {dimName:'Missing'});
-    let withValues = missing.lookup('Has value');
-    let noValues = missing.lookup('Missing');
+    const { dispatch, explorer } = this.context;
     let lcvals = '';
-    if (dim.chart && withValues)
-      lcvals = <LineChart val={withValues} />;
+    if (dim.chart && val.lookup('Not Missing'))
+      lcvals = <LineChart val={val.lookup('Not Missing')} />;
     //console.log('         ', ++vdctr, 'render', dim.field, val+'');
 
     return <Panel>
@@ -172,15 +176,15 @@ class ValDesc extends Component {
                 {val.toString()} 
                 &nbsp;
                 ({val.records.length} records
-                 {noValues ? ', ' + noValues.records.length + ' missing' : ''})
-                </h4>
+                 {val.lookup('Missing') ? ', ' + val.lookup('Missing').records.length + ' missing' : ''})
+            </h4>
             {lcvals}
           </Panel>;
   }
 }
 ValDesc.contextTypes =  {
   dispatch: React.PropTypes.func,
-  pushState: React.PropTypes.func,
+  //pushState: React.PropTypes.func,
   explorer: React.PropTypes.object,
   router: React.PropTypes.object,
 };
@@ -267,6 +271,8 @@ function mapStateToProps(state) {
 
 //console.log(pushState);
 export default connect(mapStateToProps, 
-                    //mapDispatchToProps
-          { /*resetErrorMessage, */ pushState, dispatch: d=>d, }
-                      )(Explorer);
+  //mapDispatchToProps
+          { /*resetErrorMessage, */ 
+            pushState,
+            dispatch: d=>d, 
+          })(Explorer);
