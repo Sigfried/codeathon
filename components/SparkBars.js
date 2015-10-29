@@ -6,11 +6,13 @@ import * as ExplorerActions from '../actions/explorer';
 
 class SparkBarsChart extends Component {
   //componentDidMount() { Perf.start(); }
-  shouldComponentUpdate(nextProps) {
-    return this.props.vals != nextProps.vals;
+  shouldComponentUpdate(nextProps, nextState) {
+    return this.props.vals != nextProps.vals ||
+           this.props.highlighted != nextProps.highlighted;
   }
   render() {
-    const {dim, valType, vals, width, height } = this.props;
+    const {dim, valType, vals, width, height, 
+        isHighlighted, highlight } = this.props;
     //return <h4>debugging</h4>;
     var ext = d3.extent(vals.map(v=>v.records.length));
     var dumbExt = [0, ext[1]];
@@ -30,6 +32,8 @@ class SparkBarsChart extends Component {
             <SparkBarsBarStack
                 dim={dim}
                 val={val}
+                isHighlighted={isHighlighted}
+                highlight={highlight}
                 //barNum={barNums[i]} 
                 x={barWidth*i}
                 chartHeight={self.props.height}
@@ -85,14 +89,16 @@ class SparkBarsBar extends Component {
     */
     valHover() {
       const { dispatch, router, explorer } = this.context;
-      const { val, dim } = this.props;
+      const { val, dim, highlight } = this.props;
+      highlight(dim, val);
       //dispatch(ExplorerActions.sgValMsg(val, dim));
-      ExplorerActions.valHighlighted(dispatch, router, dim, val);
+      //ExplorerActions.valHighlighted(dispatch, router, dim, val);
     }
     barStyle(type) {
       const { explorer } = this.context;
-      const { val, dim } = this.props;
-      let highlighted = explorer.isValHighlighted(dim,val);
+      const { val, dim, isHighlighted } = this.props;
+      let highlighted = isHighlighted(dim,val);
+      //console.log(dim.field, val.toString(), explorer.highlightedDim, explorer.highlightedVal);
       let opacities = {
         background: .2,
         missing: .4,

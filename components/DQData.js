@@ -97,6 +97,10 @@ class DimDesc extends Component {
                         valType={"supgergroup"}
                         //vals={dimVals}
                         vals={dimVals}
+                        isHighlighted={explorer.isValHighlighted}
+                        highlight={(dim,val)=>
+                          ExplorerActions.valHighlighted(dispatch,router,dim,val)}
+                        highlighted={explorer.highlighted}
                         dim={dim}
                         //barNums={barNums}
                         width={sparkWidth(dimVals)}
@@ -106,14 +110,18 @@ class DimDesc extends Component {
     if (dim.dataType && dim.dataType === 'ordinal' && dimVals)
       range = <span style={dimRangeStyle}>{d3.extent(dimVals.rawValues()).join(' - ')}</span>;
 
-    let dimInfo = explorer.isDimHighlighted(dim) ?
-            <DimInfo dim={dim} val={dimVals.lookup(explorer.highlightedVal)} /> : ''
+    let valDesc = '';
+    if (explorer.isDimHighlighted(dim)) {
+      let val = dimVals.lookup(explorer.highlightedVal);
+      if (val)
+        valDesc = <ValDesc dim={dim} val={dimVals.lookup(explorer.highlightedVal)} />;
+    }
     // can't figure out right place for this:
     // onMouseOut={()=>ExplorerActions.valHighlighted(dispatch, router)}
     return <Panel>
             <h3 style={dimTitleStyle}>{dim.name} {range}</h3>
             {sparkbars}
-            {dimInfo}
+            {valDesc}
             <ul>{vals}</ul>
           </Panel>
     return <div>{this.props.dim.field}</div>
@@ -125,9 +133,6 @@ DimDesc.contextTypes =  {
   dispatch: React.PropTypes.func,
 };
 class DimInfo extends Component {
-  shouldComponentUpdate(nextProps) {
-    return this.props.val != nextProps.val;
-  }
   render() {
     const { dim, val } = this.props;
     let msg = val && val.toString() || 'nothin';
@@ -151,21 +156,16 @@ function sparkWidth(vals) {
                 .range([50, window.innerWidth * .95]);
   return scale(vals.length);
 }
-class Vals extends Component {
-  render() {
-    const { dim } = this.props;
-    return <p>{dim.name}</p>;
-  }
-}
-var vdctr = 0;
 class ValDesc extends Component {
+  shouldComponentUpdate(nextProps) {
+    return this.props.val != nextProps.val;
+  }
   render() { 
     const { dim, val } = this.props;
     const { dispatch, explorer } = this.context;
     let lcvals = '';
     if (dim.chart && val.lookup('Not Missing'))
       lcvals = <LineChart val={val.lookup('Not Missing')} />;
-    //console.log('         ', ++vdctr, 'render', dim.field, val+'');
 
     return <Panel>
             <h4> 
