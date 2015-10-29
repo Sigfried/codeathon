@@ -75,6 +75,11 @@ export default class Explorer extends Component {
         //<Message msg={JSON.stringify(router.location.query)} />
   }
 }
+Explorer.propTypes = {
+  explorer: PropTypes.object.isRequired,
+  dispatch: React.PropTypes.func,
+  router: React.PropTypes.object,
+};
 Explorer.childContextTypes =  {
   explorer: React.PropTypes.object,
   dispatch: React.PropTypes.func,
@@ -201,6 +206,8 @@ ValDesc.contextTypes =  {
   explorer: React.PropTypes.object,
   router: React.PropTypes.object,
 };
+class FilterExclusions extends Component {
+}
 
 export class Filter extends Component {
   render() {
@@ -213,22 +220,12 @@ export class Filter extends Component {
     ExplorerActions.filterOut(dispatch, router, dim, val);
   }
 }
-function buildHash(obj) {
-  return '#' + JSON.stringify(obj);
-}
-function explodeHash(hash) {
-  hash = hash && hash.replace(/^#/,'') || '{}';
-  return JSON.parse(hash);
-}
 Filter.contextTypes =  {
   dispatch: React.PropTypes.func,
   explorer: React.PropTypes.object,
   router: React.PropTypes.object,
 };
 
-Explorer.propTypes = {
-  explorer: PropTypes.object.isRequired,
-};
 class Message extends Component {
   render() {
     const { msg } = this.props;
