@@ -125,6 +125,9 @@ class DimDesc extends Component {
     // onMouseOut={()=>ExplorerActions.valHighlighted(dispatch, router)}
     return <Panel>
             <h3 style={dimTitleStyle}>{dim.name} {range}</h3>
+            <FilterExclusions 
+                dimVals={Selector.dimVals(dim,explorer.recs)} 
+                vals={explorer.filteredVals(dim)} />
             {sparkbars}
             {dimInfo}
             <ul>{vals}</ul>
@@ -207,6 +210,16 @@ ValDesc.contextTypes =  {
   router: React.PropTypes.object,
 };
 class FilterExclusions extends Component {
+  render() {
+    const {dimVals, vals} = this.props;
+    let buttons = dimVals.length && vals.length && vals.map(val =>
+      <Button bsSize="small" key={val}>
+        {val}
+      </Button>
+    ) || '';
+
+    return (<div>{buttons.length && 'Filter exclusions: ' || ''}{buttons}</div>);
+  }
 }
 
 export class Filter extends Component {
@@ -245,14 +258,8 @@ function mapStateToProps(state) {
   //console.log(state);
   return {
     errorMessage: state.errorMessage,
-    //inputValue: state.router.location.pathname.substring(1),
     explorer: Selector.explorer(state),
     router: state.router,
-    /*
-    filteredRecs: Selector.filteredRecs(state),
-    dims: Selector.dims(state),
-    dimValsSelector: Selector.dimVals(state),
-    */
   };
 }
 

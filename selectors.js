@@ -3,10 +3,14 @@ import { createSelector } from 'reselect'
 import _ from 'lodash';
 
 let exp = {};
+exp.recs = state => state.explorer.recs;
+exp.dims = state => state.explorer.dims;
 
-export const recs = state => state.explorer.recs;
-export const dims = state => state.explorer.dims;
-export const filterSettings = state => state.router.location.query.filters;
+exp.filterSettings = state => state.router.location.query.filters;
+exp.filteredVals = createSelector(
+  exp.filterSettings,
+  settings => dim => _.keys(settings[dim.field || dim])
+);
 
 exp.highlighted = state => state.router &&
     state.router.location.query.highlighted || [,];
@@ -33,7 +37,7 @@ exp.isValHighlighted = createSelector(
 );
 
 exp.filteredRecs = createSelector(
-  recs, filterSettings,
+  exp.recs, exp.filterSettings,
   (recs, filts) => {
     return _.chain(recs).filter(
       rec => {
@@ -49,15 +53,13 @@ exp.filteredRecs = createSelector(
   });
 
 exp.dimsVals = createSelector(
-  exp.filteredRecs, dims,
-  (recs, dims) => {
-    return _.chain(dims).map(dim => 
-                        [dim.field, dimVals(dim,recs)]).object().value()
-                        }
+  exp.filteredRecs, exp.dims,
+  (recs, dims) => _.chain(dims).map(dim => 
+      [dim.field, dimVals(dim,recs)]).object().value()
 );
 
 exp.dimsFoundInRecs = createSelector(
-  recs, recs => _.keys(Object.assign({}, ...recs))
+  exp.recs, recs => _.keys(Object.assign({}, ...recs))
 );
 
 export const explorer = state => {
