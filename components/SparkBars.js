@@ -117,6 +117,30 @@ class SparkBarsBar extends Component {
       };
     }
 };
+function barStyle(type, highlighted) {
+  let opacities = {
+    background: .2,
+    missing: .4,
+    normal: 1,
+  };
+  let colors = {
+    background: 'white',
+    missing: 'steelblue',
+    normal: 'steelblue',
+  };
+  return {
+    fill: colors[type],
+    strokeWidth: 1,
+    stroke: highlighted ? 'steelblue' : 'white',
+    opacity: opacities[type] / (highlighted ? 1 : 2)
+  };
+}
+const barStyles = 
+  _.chain([true,false]).map(highlighted =>
+      _.map(['normal', 'missing', 'background'],
+            type => [type + highlighted, barStyle(type, highlighted)])
+                           ).flatten().object().value();
+
 SparkBarsBar.contextTypes =  {
   explorer: React.PropTypes.object,
   dispatch: React.PropTypes.func,
@@ -125,28 +149,29 @@ SparkBarsBar.contextTypes =  {
 class SparkBarsBarStack extends SparkBarsBar {
     // val, x, chartHeight
     render() {
-      const {val, yscale, chartHeight, 
-        x, barWidth} = this.props;
+      const {dim, val, yscale, chartHeight, 
+        x, barWidth, isHighlighted} = this.props;
       const height = yscale(val.records.length);
       const y = chartHeight - height;
       let notMissing = val.lookup('Not Missing');
       let notMissingHeight = notMissing && yscale(notMissing.records.length) || 0;
+      let highlighted = isHighlighted(dim,val)
       return (
         <g transform={"translate(" + x + ")"}>
           <rect
-                  style={this.barStyle.bind(this)('background')}
+                  style={barStyles['background' + !!highlighted]}
                   width={barWidth}
                   height={chartHeight} 
                   onMouseOver={this.valHover.bind(this)}
           />
           <rect y={y} 
-                  style={this.barStyle.bind(this)('missing')}
+                  style={barStyles['missing' + !!highlighted]}
                   width={barWidth}
                   height={height} 
                   onMouseOver={this.valHover.bind(this)}
           />
           <rect y={chartHeight - notMissingHeight} 
-                  style={this.barStyle.bind(this)('normal')}
+                  style={barStyles['normal' + !!highlighted]}
                   width={barWidth}
                   height={notMissingHeight} 
                   onMouseOver={this.valHover.bind(this)}

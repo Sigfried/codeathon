@@ -110,18 +110,18 @@ class DimDesc extends Component {
     if (dim.dataType && dim.dataType === 'ordinal' && dimVals)
       range = <span style={dimRangeStyle}>{d3.extent(dimVals.rawValues()).join(' - ')}</span>;
 
-    let valDesc = '';
+    let dimInfo = '';
     if (explorer.isDimHighlighted(dim)) {
       let val = dimVals.lookup(explorer.highlightedVal);
       if (val)
-        valDesc = <ValDesc dim={dim} val={dimVals.lookup(explorer.highlightedVal)} />;
+        dimInfo = <DimInfo dim={dim} val={val} />;
     }
     // can't figure out right place for this:
     // onMouseOut={()=>ExplorerActions.valHighlighted(dispatch, router)}
     return <Panel>
             <h3 style={dimTitleStyle}>{dim.name} {range}</h3>
             {sparkbars}
-            {valDesc}
+            {dimInfo}
             <ul>{vals}</ul>
           </Panel>
     return <div>{this.props.dim.field}</div>
@@ -133,6 +133,9 @@ DimDesc.contextTypes =  {
   dispatch: React.PropTypes.func,
 };
 class DimInfo extends Component {
+  shouldComponentUpdate(nextProps) {
+    return this.props.val != nextProps.val;
+  }
   render() {
     const { dim, val } = this.props;
     let msg = val && val.toString() || 'nothin';
@@ -141,6 +144,11 @@ class DimInfo extends Component {
     return <div/>;
   }
 }
+DimDesc.contextTypes =  {
+  explorer: React.PropTypes.object,
+  router: React.PropTypes.object,
+  dispatch: React.PropTypes.func,
+};
 var dimRangeStyle = {
   paddingLeft: 20,
   fontSize: '80%',
@@ -157,15 +165,17 @@ function sparkWidth(vals) {
   return scale(vals.length);
 }
 class ValDesc extends Component {
+  /*
   shouldComponentUpdate(nextProps) {
     return this.props.val != nextProps.val;
   }
+  */
   render() { 
     const { dim, val } = this.props;
     const { dispatch, explorer } = this.context;
-    let lcvals = '';
+    let lineChart = '';
     if (dim.chart && val.lookup('Not Missing'))
-      lcvals = <LineChart val={val.lookup('Not Missing')} />;
+      lineChart = <LineChart val={val.lookup('Not Missing')} />;
 
     return <Panel>
             <h4> 
@@ -182,7 +192,7 @@ class ValDesc extends Component {
                 ({val.records.length} records
                  {val.lookup('Missing') ? ', ' + val.lookup('Missing').records.length + ' missing' : ''})
             </h4>
-            {lcvals}
+            {lineChart}
           </Panel>;
   }
 }
