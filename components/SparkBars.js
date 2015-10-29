@@ -94,28 +94,6 @@ class SparkBarsBar extends Component {
       //dispatch(ExplorerActions.sgValMsg(val, dim));
       //ExplorerActions.valHighlighted(dispatch, router, dim, val);
     }
-    barStyle(type) {
-      const { explorer } = this.context;
-      const { val, dim, isHighlighted } = this.props;
-      let highlighted = isHighlighted(dim,val);
-      //console.log(dim.field, val.toString(), explorer.highlightedDim, explorer.highlightedVal);
-      let opacities = {
-        background: .2,
-        missing: .4,
-        normal: 1,
-      };
-      let colors = {
-        background: 'white',
-        missing: 'steelblue',
-        normal: 'steelblue',
-      };
-      return {
-        fill: colors[type],
-        strokeWidth: 1,
-        stroke: highlighted ? 'steelblue' : 'white',
-        opacity: opacities[type] / (highlighted ? 1 : 2)
-      };
-    }
 };
 function barStyle(type, highlighted) {
   let opacities = {
@@ -124,7 +102,7 @@ function barStyle(type, highlighted) {
     normal: 1,
   };
   let colors = {
-    background: 'white',
+    background: 'steelblue',
     missing: 'steelblue',
     normal: 'steelblue',
   };

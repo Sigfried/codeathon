@@ -9,7 +9,7 @@ exp.dims = state => state.explorer.dims;
 exp.filterSettings = state => state.router.location.query.filters;
 exp.filteredVals = createSelector(
   exp.filterSettings,
-  settings => dim => _.keys(settings[dim.field || dim])
+  settings => dim => _.keys(settings && settings[dim.field || dim])
 );
 
 exp.highlighted = state => state.router &&

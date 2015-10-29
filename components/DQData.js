@@ -191,13 +191,13 @@ class ValDesc extends Component {
 
     return <div>
             <h4> 
-                <Button bsStyle="warning" bsSize="xsmall"><Glyphicon glyph="remove-circle" 
-                  onClick={()=>{dispatch(ExplorerActions.sgValMsg(null,dim))}}
-                /></Button>&nbsp;
-                <Button bsSize="xsmall"><Glyphicon glyph="thumbs-up" 
-                  onClick={()=>{dispatch(ExplorerActions.sgValMsg(null,dim))}}
-                /></Button>&nbsp;
-                <Filter dim={dim} val={val} />
+                <ButtonToolbar>
+                  <Button bsStyle="warning" bsSize="xsmall"><Glyphicon glyph="remove-circle" 
+                    title="Filter out"
+                    onClick={()=>{dispatch(ExplorerActions.sgValMsg(null,dim))}}
+                  /></Button>
+                  <Filter dim={dim} val={val} />
+                </ButtonToolbar>
                 &nbsp;
                 {val.toString()} 
                 &nbsp;
