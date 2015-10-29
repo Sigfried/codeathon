@@ -41,43 +41,12 @@ class SparkBarsChart extends Component {
     return (
       <div>
         <svg width={width} height={height}>
-            <rect 
-                style={{...chartStyle}}
-                width={width} height={height}
-                    onClick={e => this.clickChart(e)}
-                    />
             {bars}
         </svg>
       </div>);
                 
   }
-  clickChart(e) {
-    this.props.onChartClick('hello');
-    this.props.fetchData();
-  }
 }
-var barStyle = {
-  fill: 'steelblue',
-  opacity: 0.6,
-  strokeWidth: 1,
-  stroke: 'white',
-};
-var barMissingStyle = {
-  fill: 'steelblue',
-  opacity: 0.3,
-  strokeWidth: 1,
-  stroke: 'white',
-};
-var barBgStyle = {
-  fill: 'steelblue',
-  opacity: 0.1,
-  strokeWidth: 1,
-  stroke: 'white',
-};
-var chartStyle = {
-  opacity: 0,
-};
-
 SparkBarsChart.propTypes = {
   vals: PropTypes.array.isRequired,
   //barNums: PropTypes.array.isRequired,
@@ -115,10 +84,31 @@ class SparkBarsBar extends Component {
     }
     */
     valHover() {
-      const { dispatch, router } = this.context;
+      const { dispatch, router, explorer } = this.context;
       const { val, dim } = this.props;
       //dispatch(ExplorerActions.sgValMsg(val, dim));
       ExplorerActions.valHighlighted(dispatch, router, dim, val);
+    }
+    barStyle(type) {
+      const { explorer } = this.context;
+      const { val, dim } = this.props;
+      let highlighted = explorer.isValHighlighted(dim,val);
+      let opacities = {
+        background: .2,
+        missing: .4,
+        normal: 1,
+      };
+      let colors = {
+        background: 'white',
+        missing: 'steelblue',
+        normal: 'steelblue',
+      };
+      return {
+        fill: colors[type],
+        strokeWidth: 1,
+        stroke: highlighted ? 'steelblue' : 'white',
+        opacity: opacities[type] / (highlighted ? 1 : 2)
+      };
     }
 };
 SparkBarsBar.contextTypes =  {
@@ -138,19 +128,19 @@ class SparkBarsBarStack extends SparkBarsBar {
       return (
         <g transform={"translate(" + x + ")"}>
           <rect
-                  style={barBgStyle}
+                  style={this.barStyle.bind(this)('background')}
                   width={barWidth}
                   height={chartHeight} 
                   onMouseOver={this.valHover.bind(this)}
           />
           <rect y={y} 
-                  style={barMissingStyle}
+                  style={this.barStyle.bind(this)('missing')}
                   width={barWidth}
                   height={height} 
                   onMouseOver={this.valHover.bind(this)}
           />
           <rect y={chartHeight - notMissingHeight} 
-                  style={barStyle}
+                  style={this.barStyle.bind(this)('normal')}
                   width={barWidth}
                   height={notMissingHeight} 
                   onMouseOver={this.valHover.bind(this)}
