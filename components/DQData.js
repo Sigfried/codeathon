@@ -5,7 +5,7 @@ import {ListContainer} from './ListContainer';
 import * as ExplorerActions from '../actions/explorer';
 import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
-import { Glyphicon, Button, Panel } from 'react-bootstrap';
+import { Glyphicon, Button, Panel, ButtonToolbar } from 'react-bootstrap';
 import * as Selector from '../selectors';
 //var css = require('css!bootstrap/dist/css/bootstrap.css');
 //require("!style!css!less!bootstrap/less/bootstrap.less");
@@ -125,11 +125,15 @@ class DimDesc extends Component {
     // onMouseOut={()=>ExplorerActions.valHighlighted(dispatch, router)}
     return <Panel>
             <h3 style={dimTitleStyle}>{dim.name} {range}</h3>
-            <FilterExclusions 
-                dimVals={Selector.dimVals(dim,explorer.recs)} 
-                vals={explorer.filteredVals(dim)} />
             {sparkbars}
             {dimInfo}
+            <FilterExclusions 
+                dimVals={Selector.dimVals(dim,explorer.recs)} 
+                vals={explorer.filteredVals(dim)} 
+                dim={dim}
+                dispatch={dispatch}
+                router={router}
+                />
             <ul>{vals}</ul>
           </Panel>
     return <div>{this.props.dim.field}</div>
@@ -185,7 +189,7 @@ class ValDesc extends Component {
     if (dim.chart && val.lookup('Not Missing'))
       lineChart = <LineChart val={val.lookup('Not Missing')} />;
 
-    return <Panel>
+    return <div>
             <h4> 
                 <Button bsStyle="warning" bsSize="xsmall"><Glyphicon glyph="remove-circle" 
                   onClick={()=>{dispatch(ExplorerActions.sgValMsg(null,dim))}}
@@ -201,7 +205,7 @@ class ValDesc extends Component {
                  {val.lookup('Missing') ? ', ' + val.lookup('Missing').records.length + ' missing' : ''})
             </h4>
             {lineChart}
-          </Panel>;
+          </div>;
   }
 }
 ValDesc.contextTypes =  {
@@ -211,14 +215,19 @@ ValDesc.contextTypes =  {
 };
 class FilterExclusions extends Component {
   render() {
-    const {dimVals, vals} = this.props;
+    const {dimVals, vals, dispatch, router, dim} = this.props;
+    let cancel = val => () => ExplorerActions.filterOut(dispatch, router, dim, val, false);
     let buttons = dimVals.length && vals.length && vals.map(val =>
-      <Button bsSize="small" key={val}>
+      <Button 
+          onClick={cancel(val)}
+          bsStyle="warning" bsSize="xsmall" key={val}>
         {val}
       </Button>
     ) || '';
 
-    return (<div>{buttons.length && 'Filter exclusions: ' || ''}{buttons}</div>);
+    return (<div>{buttons.length && 'Filter exclusions: ' || ''}
+              <ButtonToolbar>{buttons}</ButtonToolbar>
+              </div>);
   }
 }
 
