@@ -68,9 +68,9 @@ export default class Explorer extends Component {
           msg={`${explorer.filteredRecs.length} shown,
                 ${allShownMissing.length ? allShownMissing.length + ' with missing value' : ''} `} />
         <Message msg={JSON.stringify(router.location.query)} />
-        <ul>
+        <div>
           {dimDescs}
-        </ul>
+        </div>
       </div>
     );
   }
@@ -84,7 +84,7 @@ Explorer.childContextTypes =  {
 class DimDesc extends Component {
   render() {
     const { dim } = this.props;
-    const { explorer } = this.context;
+    const { explorer, router, dispatch } = this.context;
     
     let sparkbars = '', vals = '', range='';
     let dimVals = explorer.dimsVals[dim.field];
@@ -107,17 +107,23 @@ class DimDesc extends Component {
     if (dim.dataType && dim.dataType === 'ordinal' && dimVals)
       range = <span style={dimRangeStyle}>{d3.extent(dimVals.rawValues()).join(' - ')}</span>;
 
+    let [highlightedDim, highlightedVal] = router.location.query.highlighted || [,];
+    let dimInfo = highlightedDim === dim.field ?
+            <DimInfo dim={dim} val={dimVals.lookup(highlightedVal)} /> : ''
+    // can't figure out right place for this:
+    // onMouseOut={()=>ExplorerActions.valHighlighted(dispatch, router)}
     return <Panel>
             <h3 style={dimTitleStyle}>{dim.name} {range}</h3>
             {sparkbars}
+            {dimInfo}
             <ul>{vals}</ul>
-            <DimInfo dim={dim} val={explorer.msg[dim.field]} />
           </Panel>
     return <div>{this.props.dim.field}</div>
   }
 }
 DimDesc.contextTypes =  {
   explorer: React.PropTypes.object,
+  router: React.PropTypes.object,
   dispatch: React.PropTypes.func,
 };
 class DimInfo extends Component {
@@ -194,7 +200,7 @@ export class Filter extends Component {
     return (<Button bsSize="xsmall"><Glyphicon glyph="thumbs-down" 
               onClick={this.filterOut.bind(this)} /></Button>);
   }
-  filterOut() {
+  filterOut() { // replace with action
     const { pushState, explorer, router, dispatch } = this.context;
     const { dim, val } = this.props;
     //let state = explodeHash(router.location.hash);
@@ -271,8 +277,7 @@ function mapStateToProps(state) {
 
 //console.log(pushState);
 export default connect(mapStateToProps, 
-  //mapDispatchToProps
           { /*resetErrorMessage, */ 
             pushState,
-            dispatch: d=>d, 
+            dispatch: dispatchWrappedFunc=>dispatchWrappedFunc, 
           })(Explorer);

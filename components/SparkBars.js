@@ -20,12 +20,12 @@ class SparkBarsChart extends Component {
     var barWidth = width / vals.length;
     var bars = [];
     var self = this;
-    vals.sortBy(
-          d=>-(
+    vals.sortBy(dim.sortBy ||
+          (d=>-(
               (d.lookup('Not Missing') && 
                 (d.lookup('Not Missing').records.length + ext[1]))
-              ||d.records.length)
-               ).forEach(function(val, i) {
+              ||d.records.length))
+          ).forEach(function(val, i) {
         bars.push(
             <SparkBarsBarStack
                 dim={dim}
@@ -90,7 +90,7 @@ SparkBarsChart.contextTypes =  {
 export default SparkBarsChart;
 
 class SparkBarsBar extends Component {
-    // val, x, chartHeight
+    /*
     renderNotUsing() {
       const {val, barNum, yscale, chartHeight, 
         x, barWidth} = this.props;
@@ -113,19 +113,18 @@ class SparkBarsBar extends Component {
         </g>
       );
     }
+    */
     valHover() {
-      const { dispatch } = this.context;
+      const { dispatch, router } = this.context;
       const { val, dim } = this.props;
-      //Perf.stop();
-      //Perf.printExclusive(Perf.getLastMeasurements());
-      //Perf.printWasted(Perf.getLastMeasurements());
-      //Perf.start();
-      //console.log(val.toString(), barNum, evt.target);
-      //document.getElementById('msgp').innerHTML = 'dispatching ' + val.toString();
-      //console.log(' ', ++vdctr, 'hover', dim.field, val+'');
-      dispatch(ExplorerActions.sgValMsg(val, dim, vdctr));
-      //document.getElementById('msgp').innerHTML = val.toString();
+      //dispatch(ExplorerActions.sgValMsg(val, dim));
+      ExplorerActions.valHighlighted(dispatch, router, dim, val);
     }
+};
+SparkBarsBar.contextTypes =  {
+  explorer: React.PropTypes.object,
+  dispatch: React.PropTypes.func,
+  router: React.PropTypes.object,
 };
 class SparkBarsBarStack extends SparkBarsBar {
     // val, x, chartHeight
@@ -159,11 +158,6 @@ class SparkBarsBarStack extends SparkBarsBar {
         </g>
       );
     }
-};
-var vdctr = 0;
-SparkBarsBar.contextTypes =  {
-  explorer: React.PropTypes.object,
-  dispatch: React.PropTypes.func,
 };
 
 /*

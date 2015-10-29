@@ -1,11 +1,8 @@
 import {createAction} from 'redux-actions';
+import { pushState } from 'redux-router';
 //import fetch from 'isomorphic-fetch';
 import _ from 'supergroup';
 require('isomorphic-fetch');
-
-export const HASH_CHANGED = 'HASH_CHANGED';
-export const hashChanged = createAction(HASH_CHANGED);
-// querystringChanged expects {[keys], val}
 
 export const DATA_REQUESTED = 'DATA_REQUESTED';
 export const DATA_RECEIVED = 'DATA_RECEIVED';
@@ -63,11 +60,20 @@ export function supergroupAsync(dim, recs) {
     return dispatch(action);
   };
 }
+export const valHighlighted = (dispatch, router, dim, val) => {
+  let query = router.location.query;
+  if (dim && val)
+    query.highlighted = [dim.field, val.toString()];
+  else
+    delete query.highlighted;
+  dispatch(pushState(query,'',query));
+};
 
+/*
 export const MSG = 'MSG';
 export const messageChanged = createAction(MSG);
-
 export const sgValMsg = createAction(MSG,
   d=>d,
   (val,dim,ctr)=>{return {
     name:dim.field||'general', val:val, dim:dim,ctr:ctr}});
+*/

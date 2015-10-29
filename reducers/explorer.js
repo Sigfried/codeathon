@@ -1,6 +1,8 @@
 import { combineReducers } from 'redux';
 import conf from '../explorer.conf';
-import {DATA_RECEIVED, SUPERGROUPED_DIM, MSG, HASH_CHANGED } from '../actions/explorer';
+import {DATA_RECEIVED, SUPERGROUPED_DIM, 
+        //MSG, 
+       } from '../actions/explorer';
 import _ from 'lodash';
 var settings = conf();
 
@@ -26,6 +28,7 @@ function recs(state = [], action) {
 function toFetch(state = settings.toFetch, action) {
   return state;
 }
+/*
 function msg(state = {general:settings.msg}, action) {
   let name = action.meta && action.meta.name || 'general';
   switch (action.type) {
@@ -36,17 +39,9 @@ function msg(state = {general:settings.msg}, action) {
     return state;
   }
 }
+*/
 function dims(state = settings.dims, action) {
   switch (action.type) {
-  /*
-  case SUPERGROUPED_DIM:
-    //console.log(action.meta.name, state, action);
-    var dim = Object.assign({}, action.meta,
-                            { vals: action.payload }
-                            //{ vals: action.payload.slice(0,1) }   // DEBUG!!!!!
-                           );
-    return Object.assign({}, state, { [dim.field]: dim });
-  */
   default:
     return state;
   }
@@ -68,6 +63,6 @@ function filter(state = {default:'nothin'}, action) {
 function hash(state='', action) {
 };
 const explorerReducers = combineReducers({
-  recs, toFetch, dims, msg
+  recs, toFetch, dims, 
 });
 export default explorerReducers;
