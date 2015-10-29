@@ -68,6 +68,15 @@ export const valHighlighted = (dispatch, router, dim, val) => {
     delete query.highlighted;
   dispatch(pushState(query,'',query));
 };
+export const filterOut = (dispatch, router, dim, val) => {
+  //const { pushState, explorer, router, dispatch } = this.context;
+  //const { dim, val } = this.props;
+  let query = router.location.query;
+  query.filters = query.filters || {};
+  query.filters[dim.field] = query.filters[dim.field] || {};
+  query.filters[dim.field][val] = true;
+  dispatch(pushState(query,'',query));
+};
 
 /*
 export const MSG = 'MSG';

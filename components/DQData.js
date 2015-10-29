@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { pushState } from 'redux-router';
 //import {DimList, Dim} from './DimList';
 import {ListContainer} from './ListContainer';
 import * as ExplorerActions from '../actions/explorer';
@@ -20,8 +19,8 @@ export default class Explorer extends Component {
     super(props);
   }
   getChildContext() {
-    const {explorer, dispatch, router, pushState} = this.props;
-    return ({explorer, dispatch, pushState, router});
+    const {explorer, dispatch, router, } = this.props;
+    return ({explorer, dispatch, router});
   }
   componentWillMount() {
     const {explorer, dispatch} = this.props;
@@ -65,20 +64,20 @@ export default class Explorer extends Component {
           }
           `} />
         <Message 
-          msg={`${explorer.filteredRecs.length} shown,
+          msg={`${explorer.recs.length} records,
+                ${explorer.filteredRecs.length} shown,
                 ${allShownMissing.length ? allShownMissing.length + ' with missing value' : ''} `} />
-        <Message msg={JSON.stringify(router.location.query)} />
         <div>
           {dimDescs}
         </div>
       </div>
     );
+        //<Message msg={JSON.stringify(router.location.query)} />
   }
 }
 Explorer.childContextTypes =  {
   explorer: React.PropTypes.object,
   dispatch: React.PropTypes.func,
-  pushState: React.PropTypes.func,
   router: React.PropTypes.object,
 };
 class DimDesc extends Component {
@@ -107,9 +106,8 @@ class DimDesc extends Component {
     if (dim.dataType && dim.dataType === 'ordinal' && dimVals)
       range = <span style={dimRangeStyle}>{d3.extent(dimVals.rawValues()).join(' - ')}</span>;
 
-    let [highlightedDim, highlightedVal] = router.location.query.highlighted || [,];
-    let dimInfo = highlightedDim === dim.field ?
-            <DimInfo dim={dim} val={dimVals.lookup(highlightedVal)} /> : ''
+    let dimInfo = explorer.isDimHighlighted(dim) ?
+            <DimInfo dim={dim} val={dimVals.lookup(explorer.highlightedVal)} /> : ''
     // can't figure out right place for this:
     // onMouseOut={()=>ExplorerActions.valHighlighted(dispatch, router)}
     return <Panel>
@@ -190,7 +188,6 @@ class ValDesc extends Component {
 }
 ValDesc.contextTypes =  {
   dispatch: React.PropTypes.func,
-  //pushState: React.PropTypes.func,
   explorer: React.PropTypes.object,
   router: React.PropTypes.object,
 };
@@ -201,31 +198,9 @@ export class Filter extends Component {
               onClick={this.filterOut.bind(this)} /></Button>);
   }
   filterOut() { // replace with action
-    const { pushState, explorer, router, dispatch } = this.context;
+    const { explorer, router, dispatch } = this.context;
     const { dim, val } = this.props;
-    //let state = explodeHash(router.location.hash);
-    //debugger;
-    let state = router.location.query;
-    state.filters = state.filters || {};
-    state.filters[dim.field] = state.filters[dim.field] || {};
-    state.filters[dim.field][val] = true;
-    //let newhash = buildHash(state);
-    console.log(state);
-    pushState(state,'',state);
-    
-    //debugger;
-    //dispatch(ExplorerActions.filterChanged({dim:dim, val:val, setting:true}));
-    /*
-    let query = _.clone(router.location.query);
-    query.filter = JSON.stringify(
-    debugger;
-    //console.log(query);
-    //let newquery = Object.assign(query, {filter: 'something'});
-    //console.log(query, newquery);
-    //debugger;
-    //let p = pushState({filter:'something'});
-    pushState(null, '?filter=something');
-    */
+    ExplorerActions.filterOut(dispatch, router, dim, val);
   }
 }
 function buildHash(obj) {
@@ -237,7 +212,6 @@ function explodeHash(hash) {
 }
 Filter.contextTypes =  {
   dispatch: React.PropTypes.func,
-  pushState: React.PropTypes.func,
   explorer: React.PropTypes.object,
   router: React.PropTypes.object,
 };
@@ -275,9 +249,7 @@ function mapStateToProps(state) {
   };
 }
 
-//console.log(pushState);
 export default connect(mapStateToProps, 
           { /*resetErrorMessage, */ 
-            pushState,
             dispatch: dispatchWrappedFunc=>dispatchWrappedFunc, 
           })(Explorer);
