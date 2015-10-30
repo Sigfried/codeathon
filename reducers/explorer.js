@@ -28,6 +28,9 @@ function recs(state = [], action) {
 function toFetch(state = settings.toFetch, action) {
   return state;
 }
+function schema(state = settings.schema, action) {
+  return state;
+}
 /*
 function msg(state = {general:settings.msg}, action) {
   let name = action.meta && action.meta.name || 'general';
@@ -63,6 +66,6 @@ function filter(state = {default:'nothin'}, action) {
 function hash(state='', action) {
 };
 const explorerReducers = combineReducers({
-  recs, toFetch, dims, 
+  recs, toFetch, dims, schema,
 });
 export default explorerReducers;

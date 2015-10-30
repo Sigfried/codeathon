@@ -19,18 +19,41 @@ app.listen(port, function(error) {
   }
 });
 
-app.get("/data/:apiquery", function(req, res) {
-  console.log('GET DATA');
+app.get("/data/:schema/:apiquery", function(req, res) {
   var apiquery = req.params.apiquery;
+  var schema = req.params.schema;
+  if (!schema.match(/^\w+$/)) {
+    console.warn('bad schema', schema);
+    res.error('bad schema', schema);
+    return;
+  }
+  console.log('GET DATA from ', schema);
+  var q;
   if (apiquery === "all")
-  getData('SELECT * FROM denorm').
-    then(json => res.json(json));
+    q = 'SELECT * FROM denorm';
+  else if (apiquery === 'dimsetsets')
+    q = 'select  dimsetset, count(*) as cnt \n' +
+        'from denorm \n' +
+        'where value is not null \n' +
+        'group by dimsetset \n';
+
+    getData("SET search_path='" + schema +"'")
+      .then(function() {
+        return getData(q);
+      })
+    .then(json => res.json(json));
 });
 
 app.use(function(req, res) {
   res.sendFile(__dirname + '/index.html');
 });
 
+function pgErr(msg, err, done, reject, client) {
+  console.log(msg, err.toString());
+  done();
+  client.end();
+  reject(err.error);
+}
 function getData(sql) {
   var promise = new Promise(function(resolve, reject) {
       console.log('pg: ', process.env.DATABASE_URL);
@@ -44,8 +67,10 @@ function getData(sql) {
         var query = client.query(sql);
         query.on('error', function(err) {
           done();
-          reject(Error("getData failed"));
-        });
+          pgErr('getData(' + sql + ')', 
+                err, done, reject, client);
+          reject(Error("getData failed", err));
+        })
         query.on('row', function(row, result) {
           result.addRow(row);
         });

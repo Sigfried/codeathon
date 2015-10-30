@@ -10,8 +10,9 @@ const requestData = createAction(DATA_REQUESTED);
 
 const receiveData = createAction(DATA_RECEIVED);
 
-export function fetchRecs(apiquery, dispatch, callbacks) {
-  fetch('/data/' + apiquery)
+export function fetchRecs(schema, apiquery, dispatch, callbacks) {
+  schema = schema || 'public';
+  fetch('/data/' + schema + '/' + apiquery)
     .then(response => response.json())
     .then(json => {
       if (callbacks.recsFilter)

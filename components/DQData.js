@@ -24,19 +24,18 @@ export default class Explorer extends Component {
   }
   componentWillMount() {
     const {explorer, dispatch} = this.props;
-    dispatch(ExplorerActions.fetchRecs(explorer.toFetch, dispatch,
+    dispatch(ExplorerActions.fetchRecs(explorer.schema, explorer.toFetch, dispatch,
       {
         recsMap: d=>{ d.value = parseFloat(d.value); return d},
         //recsFilter: d=>d,
         //postFetchAction: this.prepareDimsWhenRecsReady.bind(this)
       }));
   }
-  /*
   prepareDimsWhenRecsReady(recs) {
-    const { dims, dispatch } = this.props;
-    _.each(dims, dim => dispatch(ExplorerActions.supergroup(dim, recs)));
+    const { dims, dispatch, explorer } = this.props;
+    //_.each(dims, dim => dispatch(ExplorerActions.supergroup(dim, recs)));
+    //dispatch(ExplorerActions.addExtraDims(explorer.extraDims));
   }
-  */
   componentDidMount() {
     //console.log(this.props.router);
     //Perf.stop();
@@ -48,21 +47,21 @@ export default class Explorer extends Component {
     const dims = _.values(explorer.dims).filter(d=>!d.hide);
     let dimDescs = _.map(dims, 
         (dim) => {
-          return <DimDesc style={ExpStyle} dim={dim} key={dim.field}/>
+          return (
+            <div style={styles.dimDesc} key={dim.field}>
+              <DimDesc style={ExpStyle} dim={dim} 
+                sparkbarWidth={window.innerWidth * 0.30}/>
+            </div>);
         })
         //<Message msg={explorer.msg.general} />
     let allShown = explorer.dimsVals.all;
     // workaround for supergroup bug:
     let allShownRecs = allShown && allShown.length && allShown[0].parentList.records || [];
     let allShownMissing = allShown && allShown.length && allShown[0].lookup('Missing').records || [];
+        //<Message msg={`Dims found in data records but not used: ${explorer.extraDims.join(', ')} `} />
     return (
       <div style={ExpStyle}>
-        <Message msg={`Dims found in data records but not used:
-          ${
-              _.difference(explorer.dimsFoundInRecs, _.keys(explorer.dims))
-                .join(', ')
-          }
-          `} />
+        <h1>DQ Data Explorer -- {explorer.schema}</h1>
         <Message 
           msg={`${explorer.recs.length} records,
                 ${explorer.filteredRecs.length} shown,
@@ -126,7 +125,7 @@ class DimDesc extends Component {
                         highlighted={explorer.highlighted}
                         dim={dim}
                         //barNums={barNums}
-                        width={sparkWidth(dimVals, this.refs.dimDesc)}
+                        width={sparkWidth(dimVals, this.props.sparkbarWidth)}
                         height={40} 
                         />;
     }
@@ -145,7 +144,6 @@ class DimDesc extends Component {
     // onMouseOut={()=>ExplorerActions.valHighlighted(dispatch, router)}
     return <div style={Object.assign({}, 
                           this.props.defaultStyle,
-                          styles.dimDesc,
                           this.props.style)} 
                   ref='dimDesc'>
            <Panel>
@@ -165,10 +163,10 @@ class DimDesc extends Component {
     return <div>{this.props.dim.field}</div>
   }
 }
-function sparkWidth(vals, el) {
+function sparkWidth(vals, width) {
   var scale = d3.scale.log(10)
                 .domain([1,100])
-                .range([50, el.offsetWidth * .95]);
+                .range([50, width]);
   return scale(vals.length);
 }
 DimDesc.contextTypes =  {

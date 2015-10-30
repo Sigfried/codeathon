@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 let exp = {};
 exp.recs = state => state.explorer.recs;
-exp.dims = state => state.explorer.dims;
+exp.rawDims = state => state.explorer.dims;
 
 exp.filterSettings = state => state.router.location.query.filters;
 exp.filteredVals = createSelector(
@@ -52,14 +52,34 @@ exp.filteredRecs = createSelector(
       }).value();
   });
 
+
+exp.dimsFoundInRecs = createSelector(
+  exp.recs, recs => _.keys(Object.assign({}, ...recs))
+);
+exp.extraDims = createSelector(
+  exp.rawDims,
+  exp.dimsFoundInRecs,
+  (dims, other) => _.chain(other)
+      .difference(_.keys(exp.dims))
+      .map(d => [d, {field: d, name: d, extra: true}])
+      .object().value()
+);
+exp.rawDims2 = createSelector(
+  exp.rawDims,
+  exp.extraDims,
+  (raw, extra) => Object.assign({}, raw, extra)
+);
+
 exp.dimsVals = createSelector(
-  exp.filteredRecs, exp.dims,
+  exp.filteredRecs, exp.rawDims2,
   (recs, dims) => _.chain(dims).map(dim => 
       [dim.field, dimVals(dim,recs)]).object().value()
 );
 
-exp.dimsFoundInRecs = createSelector(
-  exp.recs, recs => _.keys(Object.assign({}, ...recs))
+exp.dims = createSelector(
+  exp.rawDims2,
+  exp.dimsVals,
+  (raw, vals) => _.filter(raw, d=>vals[d.field].length > 1)
 );
 
 export const explorer = state => {

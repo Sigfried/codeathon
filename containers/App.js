@@ -46,12 +46,6 @@ class App extends Component {
     const { children } = this.props;
     return (
       <div>
-        <div>
-          <h1>DQ Data Explorer</h1>
-          <DQData />
-          <br/>
-        </div>
-        <hr />
         {this.renderErrorMessage()}
         {children}
       </div>

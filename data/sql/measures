@@ -1,0 +1,4 @@
+select  
+		measure_id, measure_name, array_agg(distinct result_unit),array_agg(distinct d0_data_element),array_agg(distinct d2_patient_type)
+from phis_dq.denorm
+group by measure_id, measure_name
