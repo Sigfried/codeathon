@@ -48,7 +48,7 @@ export default class Explorer extends Component {
     const dims = _.values(explorer.dims).filter(d=>!d.hide);
     let dimDescs = _.map(dims, 
         (dim) => {
-          return <DimDesc dim={dim} key={dim.field}/>
+          return <DimDesc style={ExpStyle} dim={dim} key={dim.field}/>
         })
         //<Message msg={explorer.msg.general} />
     let allShown = explorer.dimsVals.all;
@@ -56,7 +56,7 @@ export default class Explorer extends Component {
     let allShownRecs = allShown && allShown.length && allShown[0].parentList.records || [];
     let allShownMissing = allShown && allShown.length && allShown[0].lookup('Missing').records || [];
     return (
-      <div>
+      <div style={ExpStyle}>
         <Message msg={`Dims found in data records but not used:
           ${
               _.difference(explorer.dimsFoundInRecs, _.keys(explorer.dims))
@@ -75,6 +75,9 @@ export default class Explorer extends Component {
         //<Message msg={JSON.stringify(router.location.query)} />
   }
 }
+let ExpStyle = {
+  fontSize: '70%',
+};
 Explorer.propTypes = {
   explorer: PropTypes.object.isRequired,
   dispatch: React.PropTypes.func,
@@ -84,6 +87,21 @@ Explorer.childContextTypes =  {
   explorer: React.PropTypes.object,
   dispatch: React.PropTypes.func,
   router: React.PropTypes.object,
+};
+let styles = {
+  dimDesc: {
+    width: '30%',
+  },
+  dimRangeStyle: {
+    paddingLeft: 20,
+    fontSize: '80%',
+    fontWeight: 'normal',
+  },
+  dimTitleStyle: {
+    fontFamily: 'arial',
+    fontSize: 14,
+    margin: '0px 0px 3px 0px',
+  },
 };
 class DimDesc extends Component {
   render() {
@@ -108,23 +126,30 @@ class DimDesc extends Component {
                         highlighted={explorer.highlighted}
                         dim={dim}
                         //barNums={barNums}
-                        width={sparkWidth(dimVals)}
+                        width={sparkWidth(dimVals, this.refs.dimDesc)}
                         height={40} 
                         />;
     }
     if (dim.dataType && dim.dataType === 'ordinal' && dimVals)
-      range = <span style={dimRangeStyle}>{d3.extent(dimVals.rawValues()).join(' - ')}</span>;
+      range = <span style={styles.dimRangeStyle}>{d3.extent(dimVals.rawValues()).join(' - ')}</span>;
 
     let dimInfo = '';
     if (explorer.isDimHighlighted(dim)) {
       let val = dimVals.lookup(explorer.highlightedVal);
       if (val)
-        dimInfo = <DimInfo dim={dim} val={val} />;
+        dimInfo = <DimInfo style={this.props.style} 
+                      defaultStyle={this.props.defaultStyle}
+                      dim={dim} val={val} />;
     }
     // can't figure out right place for this:
     // onMouseOut={()=>ExplorerActions.valHighlighted(dispatch, router)}
-    return <Panel>
-            <h3 style={dimTitleStyle}>{dim.name} {range}</h3>
+    return <div style={Object.assign({}, 
+                          this.props.defaultStyle,
+                          styles.dimDesc,
+                          this.props.style)} 
+                  ref='dimDesc'>
+           <Panel>
+            <h3 style={styles.dimTitleStyle}>{dim.name} {range}</h3>
             {sparkbars}
             {dimInfo}
             <FilterExclusions 
@@ -135,9 +160,16 @@ class DimDesc extends Component {
                 router={router}
                 />
             <ul>{vals}</ul>
-          </Panel>
+           </Panel>
+          </div>
     return <div>{this.props.dim.field}</div>
   }
+}
+function sparkWidth(vals, el) {
+  var scale = d3.scale.log(10)
+                .domain([1,100])
+                .range([50, el.offsetWidth * .95]);
+  return scale(vals.length);
 }
 DimDesc.contextTypes =  {
   explorer: React.PropTypes.object,
@@ -161,21 +193,6 @@ DimDesc.contextTypes =  {
   router: React.PropTypes.object,
   dispatch: React.PropTypes.func,
 };
-var dimRangeStyle = {
-  paddingLeft: 20,
-  fontSize: '80%',
-  fontWeight: 'normal',
-};
-var dimTitleStyle = {
-  fontFamily: 'arial',
-  margin: '0px 0px 3px 0px',
-};
-function sparkWidth(vals) {
-  var scale = d3.scale.log(10)
-                .domain([1,100])
-                .range([50, window.innerWidth * .95]);
-  return scale(vals.length);
-}
 class ValDesc extends Component {
   /*
   shouldComponentUpdate(nextProps) {
@@ -190,7 +207,7 @@ class ValDesc extends Component {
       lineChart = <LineChart val={val.lookup('Not Missing')} />;
 
     return <div>
-            <h4> 
+            <h4 style={styles.dimTitleStyle}> 
                 <ButtonToolbar>
                   <Button bsStyle="warning" bsSize="xsmall"><Glyphicon glyph="remove-circle" 
                     title="Filter out"

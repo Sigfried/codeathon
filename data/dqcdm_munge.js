@@ -26,9 +26,9 @@ var _ = require('lodash');
         _.chain(dimFields.length)
           .range()
           .each(function(i) {
-            if (row[dimFields[i]] && row[dimFields[i]].length) {
+            if (row[dimFields[i]] && row[dimFields[i]].length && !row[dimFields[i]].match(/emptyfield/)) {
               //var newCol = row[dimFields[i]].replace(/ /g,'') + '_dim' + i;
-              var newCol = row[dimFields[i]].replace(/ /g,'_');
+              var newCol = row[dimFields[i]].replace(/ /g,'_').replace(/^/,'d' + i + '_');
               row[newCol] = row[dimValues[i]];
               dimCols[newCol] = (dimCols[newCol] || 0) + 1;
               if (!_.contains(dimNames, newCol))
@@ -49,7 +49,7 @@ var _ = require('lodash');
         var resNameFields = row.result_name.split(/\|\|\|/);
         _.each(resNameFields, function(f) {
           var ff = f.split(/=/);
-          var newCol = ff[0];
+          var newCol = ff[0].replace(/^/,'r_');
           row[newCol] = ff[1];
             resCols[newCol] = (resCols[newCol] || 0) + 1;
         });
@@ -60,9 +60,9 @@ var _ = require('lodash');
     },
   }
 
-  function getData(q, client, done) {
+  function getData(q, client, done, params) {
     var promise = new Promise(function(resolve, reject) {
-      var query = client.query(q);
+      var query = client.query(q, params);
       query.on('error', function(err) {
         pgErr('getData(' + q + ')', 
               err, done, reject, client);
@@ -127,7 +127,12 @@ var _ = require('lodash');
         return;
       }
       var finalCols = [];
-      getData('SELECT * FROM dimension_set', client, done)
+      var search_path = (process.argv[2] || 'public');
+      console.log('search_path:', search_path);
+      getData("SET search_path='" + search_path +"'", client, done)
+        .then(function() {
+          return getData('SELECT * FROM dimension_set', client, done)
+        })
         .then(function(result) {
           var json = module.exports.mungeDims(result.rows);
           console.log(json.dimensionNames);
