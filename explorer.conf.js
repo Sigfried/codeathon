@@ -4,11 +4,11 @@ export default function explorerconf() {
           //recs: [],
           msg: 'default message',
           //schema: 'pcornet_dq',
-          //schema: 'phis_dq',
-          schema: 'chco_dq',
-          //toFetch: 'all',
-          toFetch: 'dimsetsets',
-          allDims: true,
+          schema: 'phis_dq',
+          //schema: 'chco_dq',
+          toFetch: 'all',
+          //toFetch: 'dimsetsets',
+          //allDims: true,
           dims: {
             all: {
               func:()=>'', field: 'all', name: 'All', hide: true,

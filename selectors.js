@@ -64,23 +64,29 @@ exp.extraDims = createSelector(
       .map(d => [d, {field: d, name: d, extra: true}])
       .object().value()
 );
+/*
 exp.rawDims2 = createSelector(
   exp.rawDims,
   exp.extraDims,
   (raw, extra) => Object.assign({}, raw, extra)
 );
+*/
+
+exp.dims = exp.rawDims;
 
 exp.dimsVals = createSelector(
-  exp.filteredRecs, exp.rawDims2,
+  exp.filteredRecs, exp.dims,
+  //exp.filteredRecs, exp.rawDims2,
   (recs, dims) => _.chain(dims).map(dim => 
       [dim.field, dimVals(dim,recs)]).object().value()
 );
-
+/*
 exp.dims = createSelector(
   exp.rawDims2,
   exp.dimsVals,
   (raw, vals) => _.filter(raw, d=>vals[d.field].length > 1)
 );
+*/
 
 export const explorer = state => {
   let es = Object.assign({}, state.explorer);

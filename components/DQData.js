@@ -50,7 +50,7 @@ export default class Explorer extends Component {
           return (
             <div style={styles.dimDesc} key={dim.field}>
               <DimDesc style={ExpStyle} dim={dim} 
-                sparkbarWidth={window.innerWidth * 0.30}/>
+                sparkbarWidth={window.innerWidth * 0.70}/>
             </div>);
         })
         //<Message msg={explorer.msg.general} />
@@ -89,7 +89,7 @@ Explorer.childContextTypes =  {
 };
 let styles = {
   dimDesc: {
-    width: '30%',
+    width: '70%',
   },
   dimRangeStyle: {
     paddingLeft: 20,

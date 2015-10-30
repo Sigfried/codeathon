@@ -46,6 +46,7 @@ class App extends Component {
     const { children } = this.props;
     return (
       <div>
+        <DQData/>
         {this.renderErrorMessage()}
         {children}
       </div>
