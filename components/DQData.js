@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 //import {DimList, Dim} from './DimList';
-import {ListContainer} from './ListContainer';
+//import {ListContainer} from './ListContainer';
 import * as ExplorerActions from '../actions/explorer';
 import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
