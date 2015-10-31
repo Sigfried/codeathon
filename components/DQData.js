@@ -5,6 +5,7 @@ import {ListContainer} from './ListContainer';
 import * as ExplorerActions from '../actions/explorer';
 import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
+import DataTable from './DataTable';
 import { Glyphicon, Button, Panel, ButtonToolbar } from 'react-bootstrap';
 import * as Selector from '../selectors';
 //var css = require('css!bootstrap/dist/css/bootstrap.css');
@@ -50,7 +51,7 @@ export default class Explorer extends Component {
           return (
             <div style={styles.dimDesc} key={dim.field}>
               <DimDesc style={ExpStyle} dim={dim} 
-                sparkbarWidth={window.innerWidth * 0.70}/>
+                sparkbarWidth={window.innerWidth * 0.50}/>
             </div>);
         })
         //<Message msg={explorer.msg.general} />
@@ -219,6 +220,7 @@ class ValDesc extends Component {
                 ({val.records.length} records
                  {val.lookup('Missing') ? ', ' + val.lookup('Missing').records.length + ' missing' : ''})
             </h4>
+            <DataTable val={val} dims={explorer.dims}/>
             {lineChart}
           </div>;
   }

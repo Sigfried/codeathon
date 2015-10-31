@@ -3,7 +3,8 @@ import { connect } from 'react-redux';
 //import { pushState } from 'redux-router';
 //import Explore from '../components/Explore'; // from real-world redux starter
 //import Explorer from '../components/Explorer'; // my thing
-import DQData from '../components/DQData'; // my thing
+import DQData from '../components/DQData';
+import PickData from '../components/PickData';
 import { resetErrorMessage } from '../actions';
 
 class App extends Component {
@@ -43,6 +44,7 @@ class App extends Component {
   }
 
   render() {
+        //<PickData tableWidth={700} tableHeight={1000}/>
     const { children } = this.props;
     return (
       <div>

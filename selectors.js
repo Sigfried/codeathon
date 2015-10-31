@@ -54,7 +54,11 @@ exp.filteredRecs = createSelector(
 
 
 exp.dimsFoundInRecs = createSelector(
-  exp.recs, recs => _.keys(Object.assign({}, ...recs))
+  exp.recs, recs => {
+    let k = {};
+    recs.forEach(r=>Object.assign(k, r))
+    return _.keys(k);
+  }
 );
 exp.extraDims = createSelector(
   exp.rawDims,

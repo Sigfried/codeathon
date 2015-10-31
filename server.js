@@ -3,9 +3,13 @@ var webpack = require('webpack');
 var webpackDevMiddleware = require('webpack-dev-middleware');
 var webpackHotMiddleware = require('webpack-hot-middleware');
 var config = require('./webpack.config');
+var compression = require('compression');
+var express = require('express');
 
-var app = new require('express')();
+var app = new express();
 var port = 3000;
+app.use(compression())
+app.use(express.static('static'))
 
 var compiler = webpack(config);
 app.use(webpackDevMiddleware(compiler, { noInfo: true, publicPath: config.output.publicPath }));
@@ -56,14 +60,13 @@ function pgErr(msg, err, done, reject, client) {
 }
 function getData(sql) {
   var promise = new Promise(function(resolve, reject) {
-      console.log('pg: ', process.env.DATABASE_URL);
       pg.connect(process.env.DATABASE_URL, function(err, client, done) {
         if (err) {
           console.log("connection error", err);
           reject(Error("connection failed", err));
           return;
         }
-        //var q = 'SELECT * FROM dimension_set';
+        console.log(sql);
         var query = client.query(sql);
         query.on('error', function(err) {
           done();
@@ -75,6 +78,7 @@ function getData(sql) {
           result.addRow(row);
         });
         query.on('end', function(result) {
+          console.log(result.rows.length, 'from', sql);
           //var ret = dqmunge.mungeDims(result.rows);
           resolve(result.rows);
           done();

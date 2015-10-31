@@ -14,6 +14,30 @@ var rows = [
 function rowGetter(rowIndex) {
   return rows[rowIndex];
 }
+export default function PickData() {
+ReactDOM.render(
+  <Table
+    rowHeight={50}
+    rowGetter={rowGetter}
+    rowsCount={rows.length}
+    width={5000}
+    height={5000}
+    headerHeight={50}>
+    <Column
+      label="Col 1"
+      width={3000}
+      dataKey={0}
+    />
+    <Column
+      label="Col 2"
+      width={2000}
+      dataKey={1}
+    />
+  </Table>,
+  document.getElementsByTagName('body')[0]
+);
+}
+/*
 export default class PickData extends Component {
     render() {
       console.log('in pickdata!');
@@ -41,3 +65,4 @@ export default class PickData extends Component {
             );
     }
 }
+*/

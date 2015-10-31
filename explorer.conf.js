@@ -4,6 +4,7 @@ export default function explorerconf() {
           //recs: [],
           msg: 'default message',
           //schema: 'pcornet_dq',
+          //schema: 'ms_dq',
           schema: 'phis_dq',
           //schema: 'chco_dq',
           toFetch: 'all',
