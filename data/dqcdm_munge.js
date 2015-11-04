@@ -94,18 +94,26 @@ var _ = require('lodash');
 
   function getData(q, client, done, params, onRow) {
     var promise = new Promise(function(resolve, reject) {
-      var query = client.query(q, params);
-      query.on('error', function(err) {
-        pgErr('getData(' + q + ')', 
-              err, done, reject, client);
-      })
-      query.on('row', function(row, result) {
-        result.addRow(row);
-      });
-      query.on('end', function(result) {
-        resolve(result);
-        done();
-      });
+      console.log(q);
+      try {
+        var query = client.query(q, params);
+        console.log('query issued');
+        query.on('error', function(err) {
+          pgErr('getData(' + q + ')', 
+                err, done, reject, client);
+        })
+        query.on('row', function(row, result) {
+          console.log('row', row);
+          result.addRow(row);
+        });
+        query.on('end', function(result) {
+          resolve(result);
+          console.log(q, 'finished');
+          done();
+        });
+      } catch(e) {
+        console.error(e);
+      }
     });
     return promise;
   }
@@ -165,7 +173,13 @@ var _ = require('lodash');
       console.log('search_path:', search_path);
       getData("SET search_path='" + search_path +"'", client, done)
         .then(function() {
-          return getData('SELECT \'\'::text AS dimsetset, * FROM dimension_set', client, done)
+          var q = 'SELECT distinct \'\'::text AS dimsetset, * FROM dimension_set d\n';
+          if (search_path === 'pcornet_dq')
+            q += 'from dimension_set d \n' +
+                 'join result r on r.set_id = d.set_id \n' +
+                 'join measure m on r.measure_id = m.measure_id \n' +
+                 "where m.name like '\%date%'";
+          return getData(q, client, done);
         })
         .then(function(result) {
           var json = module.exports.mungeDims(result.rows);
