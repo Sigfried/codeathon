@@ -7,6 +7,10 @@ import DQData from '../components/DQData';
 import PickData from '../components/PickData';
 import { resetErrorMessage } from '../actions';
 
+import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem } from 'react-bootstrap';
+require('expose?$!expose?jQuery!jquery');
+require("bootstrap-webpack");
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -48,7 +52,20 @@ class App extends Component {
     const { children } = this.props;
     return (
       <div>
-        <DQData/>
+        <Navbar>
+            <NavBrand><a href="/">Explorer</a></NavBrand>
+            <Nav>
+              <NavItem eventKey={1} href="/dqdata">DQ Data</NavItem>
+              <NavItem eventKey={2} href="/seedims">See Dims</NavItem>
+              <NavDropdown eventKey={3} title="Dropdown" id="basic-nav-dropdown">
+                <MenuItem eventKey="1">Action</MenuItem>
+                <MenuItem eventKey="2">Another action</MenuItem>
+                <MenuItem eventKey="3">Something else here</MenuItem>
+                <MenuItem divider />
+                <MenuItem eventKey="4">Separated link</MenuItem>
+              </NavDropdown>
+            </Nav>
+          </Navbar>
         {this.renderErrorMessage()}
         {children}
       </div>

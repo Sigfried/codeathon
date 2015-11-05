@@ -2,10 +2,12 @@ import {createAction} from 'redux-actions';
 import { pushState } from 'redux-router';
 //import fetch from 'isomorphic-fetch';
 import _ from 'supergroup';
+import * as dimUtils from '../dimUtils';
 require('isomorphic-fetch');
 
 export const DATA_REQUESTED = 'DATA_REQUESTED';
 export const DATA_RECEIVED = 'DATA_RECEIVED';
+export const DIMLIST_SET = 'DIMLIST_SET';
 const requestData = createAction(DATA_REQUESTED);
 
 const receiveData = createAction(DATA_RECEIVED);
@@ -34,6 +36,12 @@ export function fetchRecsAsync(apiquery) {
         dispatch(receiveData(json))
       });
   }
+}
+
+const dimsSet = createAction(DIMLIST_SET);
+export function setDimsFromRecs(recs) {
+  let dims = dimUtils.fromRecs(recs);
+  return dimsSet(dims);
 }
 /*
 export const SUPERGROUPED_DIM = 'SUPERGROUPED_DIM';

@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 import conf from '../explorer.conf';
-import {DATA_RECEIVED, SUPERGROUPED_DIM, 
+import {DATA_RECEIVED, SUPERGROUPED_DIM, DIMLIST_SET,
         //MSG, 
        } from '../actions/explorer';
 import _ from 'lodash';
@@ -46,6 +46,14 @@ function dims(state = settings.dims, action) {
     return state;
   }
 }
+function dimList(state = [], action) {
+  switch (action.type) {
+  case DIMLIST_SET:
+    return action.payload;
+  default:
+    return state;
+  }
+}
 /*
 function filter(state = {default:'nothin'}, action) {
   switch (action.type) {
@@ -63,6 +71,6 @@ function filter(state = {default:'nothin'}, action) {
 function hash(state='', action) {
 };
 const explorerReducers = combineReducers({
-  recs, dims, config,
+  recs, dims, config, dimList,
 });
 export default explorerReducers;

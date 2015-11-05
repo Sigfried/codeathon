@@ -5,6 +5,7 @@ import _ from 'lodash';
 let exp = {};
 exp.recs = state => state.explorer.recs;
 exp.rawDims = state => state.explorer.dims;
+exp.dimList = state => state.explorer.dimList;
 exp.settings = state => state.explorer;
 
 exp.filterSettings = state => state.router.location.query.filters;

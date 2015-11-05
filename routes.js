@@ -1,5 +1,6 @@
 import React from 'react';
 import { Route } from 'react-router';
+import SeeDims from './components/SeeDims';
 import DQData from './components/DQData';
 import App from './containers/App';
 import PickData from './components/PickData';
@@ -8,7 +9,9 @@ import PickData from './components/PickData';
 
 export default (
   <Route path="/" component={App}>
-    <Route path="/"
+    <Route path="/seedims"
+           component={SeeDims} />
+    <Route path="/dqdata"
            component={DQData} />
     <Route path="/pick"
            component={PickData} />
