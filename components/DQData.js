@@ -25,10 +25,10 @@ export default class Explorer extends Component {
   }
   componentWillMount() {
     const {explorer, dispatch} = this.props;
-    dispatch(ExplorerActions.fetchRecs(explorer.schema, explorer.toFetch, dispatch,
+    dispatch(ExplorerActions.fetchRecs(explorer.config.schema, explorer.config.toFetch, dispatch,
       {
         recsMap: d=>{ d.value = parseFloat(d.value); return d},
-        //recsFilter: d=>d,
+        recsFilter: d=>d.value.length,
         //postFetchAction: this.prepareDimsWhenRecsReady.bind(this)
       }));
   }
@@ -62,7 +62,7 @@ export default class Explorer extends Component {
         //<Message msg={`Dims found in data records but not used: ${explorer.extraDims.join(', ')} `} />
     return (
       <div style={ExpStyle}>
-        <h1>DQ Data Explorer -- {explorer.schema}</h1>
+        <h1>DQ Data Explorer -- {explorer.config.schema}</h1>
         <Message 
           msg={`${explorer.recs.length} records,
                 ${explorer.filteredRecs.length} shown,
@@ -76,7 +76,7 @@ export default class Explorer extends Component {
   }
 }
 let ExpStyle = {
-  fontSize: '70%',
+  //fontSize: '70%',
 };
 Explorer.propTypes = {
   explorer: PropTypes.object.isRequired,
@@ -94,7 +94,7 @@ let styles = {
   },
   dimRangeStyle: {
     paddingLeft: 20,
-    fontSize: '80%',
+    //fontSize: '80%',
     fontWeight: 'normal',
   },
   dimTitleStyle: {

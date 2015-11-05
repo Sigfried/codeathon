@@ -1,8 +1,11 @@
 
-const schema = 'phis_dq';
-//const schema = 'pcornet_dq';
-const dimsetset = 'enctype,admit_date';
-let dims;
+const config = {
+  schema: 'phis_dq',
+  //schema: 'pcornet_dq',
+  dimsetset: 'data_element,issue_period,patient_type,hospital_name',
+  toFetch: 'all',
+  //toFetch: 'dimsetsets',
+};
 const months = {
   'JAN': '01', 
   'FEB': '02',
@@ -17,7 +20,8 @@ const months = {
   'NOV': '11',
   'DEC': '12',
 };
-switch (schema) {
+let dims;
+switch (config.schema) {
   case 'phis_dq':
     dims = {
             all: {
@@ -92,11 +96,8 @@ switch (schema) {
 
 export default function explorerconf() {
   return {
-          schema: schema,
-          dimsetset: dimsetset,
-          toFetch: 'all',
-          //toFetch: 'dimsetsets',
-          allDims: true,
+          config: config,
           dims: dims,
+          //allDims: true,
         };
 }
