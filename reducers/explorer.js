@@ -1,6 +1,7 @@
 import { combineReducers } from 'redux';
 import conf from '../explorer.conf';
 import {DATA_RECEIVED, SUPERGROUPED_DIM, DIMLIST_SET,
+        //CONFIG_CHANGED,
         //MSG, 
        } from '../actions/explorer';
 import _ from 'lodash';
@@ -26,7 +27,14 @@ function recs(state = [], action) {
   }
 }
 function config(state = settings.config, action) {
-  return state;
+  switch (action.type) {
+    /*
+    case CONFIG_CHANGED:
+      return Object.assign({}, settings.config, action.payload);
+    */
+    default:
+      return state;
+  }
 }
 /*
 function msg(state = {general:settings.msg}, action) {

@@ -6,7 +6,10 @@ let exp = {};
 exp.recs = state => state.explorer.recs;
 exp.rawDims = state => state.explorer.dims;
 exp.dimList = state => state.explorer.dimList;
-exp.settings = state => state.explorer;
+
+exp.schema = state => {
+  return state.router.location.query.schema || state.explorer.config.schema;
+};
 
 exp.filterSettings = state => state.router.location.query.filters;
 exp.filteredVals = createSelector(

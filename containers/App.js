@@ -6,7 +6,9 @@ import { connect } from 'react-redux';
 import DQData from '../components/DQData';
 import PickData from '../components/PickData';
 import { resetErrorMessage } from '../actions';
+import * as Selector from '../selectors';
 
+import * as ExplorerActions from '../actions/explorer';
 import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem } from 'react-bootstrap';
 require('expose?$!expose?jQuery!jquery');
 require("bootstrap-webpack");
@@ -49,7 +51,9 @@ class App extends Component {
 
   render() {
         //<PickData tableWidth={700} tableHeight={1000}/>
-    const { children } = this.props;
+    const { children, explorer } = this.props;
+    let schemaChoices = explorer.config.schemaChoices.map(
+      sc => <MenuItem onSelect={this.schemaChoose.bind(this)} key={sc} eventKey={sc}>{sc}</MenuItem>);
     return (
       <div>
         <Navbar>
@@ -57,12 +61,8 @@ class App extends Component {
             <Nav>
               <NavItem eventKey={1} href="/dqdata">DQ Data</NavItem>
               <NavItem eventKey={2} href="/seedims">See Dims</NavItem>
-              <NavDropdown eventKey={3} title="Dropdown" id="basic-nav-dropdown">
-                <MenuItem eventKey="1">Action</MenuItem>
-                <MenuItem eventKey="2">Another action</MenuItem>
-                <MenuItem eventKey="3">Something else here</MenuItem>
-                <MenuItem divider />
-                <MenuItem eventKey="4">Separated link</MenuItem>
+              <NavDropdown eventKey={3} title={explorer.schema} id="basic-nav-dropdown">
+                {schemaChoices}
               </NavDropdown>
             </Nav>
           </Navbar>
@@ -70,6 +70,14 @@ class App extends Component {
         {children}
       </div>
     );
+  }
+  schemaChoose(evt, schema) {
+    console.log(evt, schema);
+    ExplorerActions.schemaChange(
+      this.props.dispatch,
+      this.props.router,
+      schema);
+    location.reload();
   }
 }
         /*
@@ -93,6 +101,8 @@ App.propTypes = {
 function mapStateToProps(state) {
   return {
     errorMessage: state.errorMessage,
+    explorer: Selector.explorer(state),
+    router: state.router,
     //inputValue: state.router.location.pathname.substring(1),
     //explorer: state.explorer,
     //explorer: state.explorer.explorerReducer,
@@ -101,5 +111,6 @@ function mapStateToProps(state) {
 
 export default connect(mapStateToProps, {
   resetErrorMessage,
+  dispatch: d => d,
   //pushState,
 })(App);

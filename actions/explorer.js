@@ -5,6 +5,14 @@ import _ from 'supergroup';
 import * as dimUtils from '../dimUtils';
 require('isomorphic-fetch');
 
+//export const CONFIG_CHANGED = 'CONFIG_CHANGED';
+//export const configChange = createAction(CONFIG_CHANGED);
+export const schemaChange = (dispatch, router, schema) => {
+  let query = router.location.query;
+  query.schema = schema;
+  dispatch(pushState(query, router.location.pathname, query));
+};
+
 export const DATA_REQUESTED = 'DATA_REQUESTED';
 export const DATA_RECEIVED = 'DATA_RECEIVED';
 export const DIMLIST_SET = 'DIMLIST_SET';

@@ -25,7 +25,7 @@ export default class Explorer extends Component {
   }
   componentWillMount() {
     const {explorer, dispatch} = this.props;
-    dispatch(ExplorerActions.fetchRecs(explorer.config.schema, explorer.config.toFetch, dispatch,
+    dispatch(ExplorerActions.fetchRecs(explorer.schema, explorer.config.toFetch, dispatch,
       {
         recsMap: d=>{ d.value = parseFloat(d.value); return d},
         recsFilter: d=>d.value.length,
