@@ -57,8 +57,8 @@ export default class Explorer extends Component {
         //<Message msg={explorer.msg.general} />
     let allShown = explorer.dimsVals.all;
     // workaround for supergroup bug:
-    let allShownRecs = allShown && allShown.length && allShown[0].parentList.records || [];
-    let allShownMissing = allShown && allShown.length && allShown[0].lookup('Missing').records || [];
+    let allShownRecs = allShown && allShown.length && allShown[0].parentList && allShown[0].parentList.records || [];
+    let allShownMissing = allShown && allShown.length && allShown[0].lookup('Missing') && allShown[0].lookup('Missing').records || [];
         //<Message msg={`Dims found in data records but not used: ${explorer.extraDims.join(', ')} `} />
     return (
       <div style={ExpStyle}>
