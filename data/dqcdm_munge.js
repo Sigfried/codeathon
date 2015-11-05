@@ -27,7 +27,7 @@ var _ = require('lodash');
           .each(function(i) {
             if (row[dimFields[i]] && row[dimFields[i]].length && !row[dimFields[i]].match(/emptyfield/)) {
               //var newCol = row[dimFields[i]].replace(/ /g,'') + '_dim' + i;
-              var newCol = row[dimFields[i]].replace(/ /g,'_').toLowerCase();
+              var newCol = module.exports.fixColName(row[dimFields[i]]);
               if (!_.contains(dimNames, newCol))
                 dimNames.push(newCol);
             }
@@ -43,13 +43,17 @@ var _ = require('lodash');
         process.exit();
       }
     },
+    fixColName: function(s) {
+      return s.replace(/ /g,'_').toLowerCase();
+    },
     fixDimRow: function(dimNames, row) {
       var newRow = {set_id: row.set_id};
       var dimsetset = [];
       _.range(6).forEach(function(i) {
         var dn = 'dim_name_' + i, dv = 'dim_value_' + i;
         if (row[dn] && row[dn].length && !row[dn].match('emptyfield')) {
-          newRow[row[dn]] = row[dv];
+          //console.log(dn, row[dn]);
+          newRow[module.exports.fixColName(row[dn])] = row[dv];
           dimsetset.push(row[dn]);
         }
       });
@@ -60,6 +64,7 @@ var _ = require('lodash');
       newRow.dimsetset = dimsetset.join(',');
       return newRow;
     },
+    /*
     mungeDims: function(rows) {
       if (!rows || !rows.length) return [];
       var fields = _.keys(rows[0]);
@@ -100,6 +105,7 @@ var _ = require('lodash');
       //console.log(dimCols);
       return {dimensionNames: dimNames, dimensions: rows};
     },
+    */
     mungeResults: function(rows) {
       if (!rows || !rows.length) return [];
       var resCols = {};
@@ -145,9 +151,9 @@ var _ = require('lodash');
   function makeTable(table, dimnames, client, done, recs) {
     try {
       //dimnames = _.sortBy(dimnames, dn => _.keys(recs[0]).indexOf(dn) || Infinity);
-      console.log('maketable', table, dimnames, recs);
+      console.log('maketable', table, dimnames, recs && recs.slice(0,1));
       if (recs && recs.length)
-        dimnames = _.keys(recs[0]);
+        dimnames = _.keys(recs[0])//.map(s=>s.replace(/ /g,'_').toLowerCase());
       console.log('\n\n=======================\n', table, dimnames, recs && recs.length && recs[0], '\n=======================\n\n');
       //process.exit();
       var promise = new Promise(function(resolve, reject) {
