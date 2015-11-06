@@ -36,10 +36,10 @@ app.get("/data/:schema/:apiquery", function(req, res) {
   if (apiquery === "all")
     q = 'SELECT * FROM denorm';
   else if (apiquery === 'dimsetsets')
-    q = 'select  dimsetset, count(*) as cnt \n' +
-        'from denorm \n' +
-        'where value is not null \n' +
-        'group by dimsetset \n';
+    q = 'select  dimsetset, count(*) as records, count(value) as records_with_values ' +
+        'from denorm ' +
+        'where value is not null ' +
+        'group by dimsetset ';
 
     getData("SET search_path='" + schema +"'")
       .then(function() {

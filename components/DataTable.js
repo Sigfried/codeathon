@@ -14,41 +14,47 @@ export default class DataTable extends Component {
 
       let colidx = 0;
       const columns = _.chain(recs[0])
-        .pairs().map(
-        (colname, colval1) => {
-          //console.log(colname, colval1);
+        .keys().map(col => {
           return (
                 <Column
                   isResizable={true}
-                  label={colname}
-                  width={75}
+                  label={col}
+                  width={(_.chain(recs)
+                    .pluck(col)
+                    .pluck('length')
+                    .max()
+                    .value() + 10) * 7}
                   dataKey={colidx++}
-                  key={colidx++}
+                  key={colidx}
                 />);
         }).value();
       //console.log(columns);
                   //width={colval1.length + 'em'}
 
       function rowGetter(rowIndex) {
-        return _.values(recs[rowIndex]);
+        let row = _.values(recs[rowIndex])
+        return row;
       }
       function resize(newWidth, datakey) {
         //console.log(newWidth, datakey);
         debugger;
       }
       return ( 
-              <div>
+            <div>
               <Table
                 onColumnResizeEndCallback={resize}
-                rowHeight={50}
+                onRowClick={
+                  (evt,idx,row)=>
+                    this.props.rowClick(recs[idx])}
+                rowHeight={25}
                 rowGetter={rowGetter}
                 rowsCount={recs.length}
                 width={800}
                 height={300}
-                headerHeight={30}>
+                headerHeight={40}>
                 {columns}
               </Table>
-              </div>
+            </div>
             );
     }
 }

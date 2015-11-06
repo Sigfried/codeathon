@@ -25,12 +25,18 @@ export default class Explorer extends Component {
   }
   componentWillMount() {
     const {explorer, dispatch} = this.props;
-    dispatch(ExplorerActions.fetchRecs(explorer.schema, explorer.config.toFetch, dispatch,
-      {
-        recsMap: d=>{ d.value = parseFloat(d.value); return d},
-        recsFilter: d=>d.value.length,
-        postFetchAction: this.prepareDimsWhenRecsReady.bind(this)
-      }));
+    if (explorer.config.toFetch === "all") {
+      dispatch(ExplorerActions.fetchRecs(explorer.schema, explorer.config.toFetch, dispatch,
+        {
+          recsMap: d=>{ d.value = parseFloat(d.value); return d},
+          recsFilter: d=>d.value.length,
+          postFetchAction: this.prepareDimsWhenRecsReady.bind(this)
+        }));
+    } else if (explorer.config.toFetch === "dimsetsets") {
+      dispatch(ExplorerActions.fetchRecs(explorer.schema, explorer.config.toFetch, dispatch,
+        { }));
+    }
+
   }
   prepareDimsWhenRecsReady(recs) {
     const { dims, dispatch, explorer } = this.props;
@@ -55,10 +61,14 @@ export default class Explorer extends Component {
           {explorer.dimList.map(d=>d.name).join(', ')}
         </Row>
         <Row className="show-grid">
-          <DataTable recs={recs}/>;
+          <DataTable rowClick={this.rowClick.bind(this)}
+                      recs={recs}/>;
         </Row>
       </Grid>
     );
+  }
+  rowClick() {
+    console.log(arguments);
   }
 }
 let ExpStyle = {
