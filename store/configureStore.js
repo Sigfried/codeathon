@@ -5,15 +5,15 @@ import createHistory from 'history/lib/createBrowserHistory';
 import routes from '../routes';
 import thunk from 'redux-thunk';
 //import api from '../middleware/api';
-//import createLogger from 'redux-logger';
+import createLogger from 'redux-logger';
 import rootReducer from '../reducers';
 
 const finalCreateStore = compose(
-  //applyMiddleware(thunk),
+  applyMiddleware(thunk),
   //applyMiddleware(thunk, api),
   reduxReactRouter({ routes, createHistory }),
-  //applyMiddleware(createLogger())//,
-  devTools()
+  applyMiddleware(createLogger())//,
+  //devTools()
 )(createStore);
 
 export default function configureStore(initialState) {

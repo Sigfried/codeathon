@@ -24,19 +24,24 @@ export default class Explorer extends Component {
     return ({explorer, dispatch, router});
   }
   componentWillMount() {
-    const {explorer, dispatch} = this.props;
-    if (explorer.config.toFetch === "all") {
-      dispatch(ExplorerActions.fetchRecs(explorer.schema, explorer.config.toFetch, dispatch,
-        {
-          recsMap: d=>{ d.value = parseFloat(d.value); return d},
-          recsFilter: d=>d.value.length,
-          postFetchAction: this.prepareDimsWhenRecsReady.bind(this)
-        }));
-    } else if (explorer.config.toFetch === "dimsetsets") {
-      dispatch(ExplorerActions.fetchRecs(explorer.schema, explorer.config.toFetch, dispatch,
-        { }));
-    }
-
+    this.getData();
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.schema !== this.props.schema ||
+        prevProps.dimsetset !== this.props.dimsetset)
+      this.getData();
+  }
+  getData() {
+    const {explorer, dispatch, schema, dimsetset} = this.props;
+    dispatch(ExplorerActions.fetchRecs(schema, 
+        explorer.config.toFetch, 
+        {dimsetset: dimsetset},
+        dispatch,
+      {
+        recsMap: d=>{ d.value = parseFloat(d.value); return d},
+        recsFilter: d=>d.value.length,
+        postFetchAction: this.prepareDimsWhenRecsReady.bind(this)
+      }));
   }
   prepareDimsWhenRecsReady(recs) {
     const { dims, dispatch, explorer } = this.props;
@@ -78,6 +83,9 @@ Explorer.propTypes = {
   explorer: PropTypes.object.isRequired,
   dispatch: React.PropTypes.func,
   router: React.PropTypes.object,
+  schema: React.PropTypes.string.isRequired,
+  dimsetset: React.PropTypes.string.isRequired,
+  recs: React.PropTypes.array.isRequired,
 };
 Explorer.childContextTypes =  {
   explorer: React.PropTypes.object,

@@ -1,22 +1,24 @@
 import { combineReducers } from 'redux';
 import conf from '../explorer.conf';
 import {DATA_RECEIVED, SUPERGROUPED_DIM, DIMLIST_SET,
+        DATA_CACHED,
         //CONFIG_CHANGED,
         //MSG, 
        } from '../actions/explorer';
 import _ from 'lodash';
 var settings = conf();
 
-function explorerReducer(state = settings, action) {
+function dataCache(state = {}, action) {
   switch (action.type) {
-  case DATA_RECEIVED:
-    var newState = Object.assign({},state);
-    newState[action.meta.name] = action.payload;
-    return newState;
-  default:
-    return state;
+    case DATA_CACHED:
+      const s = Object.assign({}, state, 
+        { [action.payload.url]: action.payload.data });
+      return s;
+    default:
+      return state;
   }
 }
+
 function recs(state = [], action) {
   switch (action.type) {
   case DATA_RECEIVED:
@@ -24,6 +26,19 @@ function recs(state = [], action) {
       return action.payload;
   default:
     return state;
+  }
+}
+function datasets(state = {dimsetsets:[]}, action) {
+  switch (action.type) {
+    case DATA_RECEIVED:
+      if (!Array.isArray(action.payload))
+        return Object.assign({}, state, action.payload);
+    case DATA_CACHED:
+      const s = Object.assign({}, state, 
+        { [action.payload.dataset]: action.payload.data });
+      return s;
+    default:
+      return state;
   }
 }
 function config(state = settings.config, action) {
@@ -79,6 +94,6 @@ function filter(state = {default:'nothin'}, action) {
 function hash(state='', action) {
 };
 const explorerReducers = combineReducers({
-  recs, dims, config, dimList,
+  recs, dims, config, dimList, datasets, dataCache,
 });
 export default explorerReducers;

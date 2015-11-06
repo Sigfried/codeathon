@@ -33,17 +33,23 @@ app.get("/data/:schema/:apiquery", function(req, res) {
   }
   console.log('GET DATA from ', schema);
   var q;
-  if (apiquery === "all")
+  var params = [];
+  if (apiquery === "denorm") {
     q = 'SELECT * FROM denorm';
+    if (req.query.dimsetset) {
+      q += ' WHERE dimsetset = $1';
+      params.push(req.query.dimsetset);
+    }
+  }
   else if (apiquery === 'dimsetsets')
-    q = 'select  dimsetset, count(*) as records, count(value) as records_with_values ' +
+    q = 'select  dimsetset, count(*) as records, count(nullif(value,\'\')) as records_with_values ' +
         'from denorm ' +
         'where value is not null ' +
         'group by dimsetset ';
 
     getData("SET search_path='" + schema +"'")
       .then(function() {
-        return getData(q);
+        return getData(q, params);
       })
     .then(json => res.json(json));
 });
@@ -58,7 +64,7 @@ function pgErr(msg, err, done, reject, client) {
   client.end();
   reject(err.error);
 }
-function getData(sql) {
+function getData(sql, params) {
   var promise = new Promise(function(resolve, reject) {
       pg.connect(process.env.DATABASE_URL, function(err, client, done) {
         if (err) {
@@ -66,8 +72,8 @@ function getData(sql) {
           reject(Error("connection failed", err));
           return;
         }
-        console.log(sql);
-        var query = client.query(sql);
+        console.log(sql, params);
+        var query = client.query(sql, params);
         query.on('error', function(err) {
           done();
           pgErr('getData(' + sql + ')', 

@@ -7,9 +7,16 @@ require('isomorphic-fetch');
 
 //export const CONFIG_CHANGED = 'CONFIG_CHANGED';
 //export const configChange = createAction(CONFIG_CHANGED);
+
+// should be pathChange, not schemaChange
 export const schemaChange = (dispatch, router, schema) => {
   let query = router.location.query;
   query.schema = schema;
+  dispatch(pushState(query, router.location.pathname, query));
+};
+export const queryChange = (dispatch, router, key, val) => {
+  let query = router.location.query;
+  query[key] = val;
   dispatch(pushState(query, router.location.pathname, query));
 };
 
@@ -20,20 +27,61 @@ const requestData = createAction(DATA_REQUESTED);
 
 const receiveData = createAction(DATA_RECEIVED);
 
-export function fetchRecs(schema, apiquery, dispatch, callbacks) {
+export function fetchRecs(schema, apiquery, where,
+      dispatch, callbacks, dataset) {
   schema = schema || 'public';
-  fetch('/data/' + schema + '/' + apiquery)
+  let qs = _.chain(where).pairs()
+              .map(d=>d.join('='))
+              .join('&').value();
+  let url = '/data/' + schema + '/' + apiquery + '?' + qs;
+  fetch(url)
     .then(response => response.json())
     .then(json => {
       if (callbacks.recsFilter)
         json = json.filter(callbacks.recsFilter);
       if (callbacks.recsMap)
         json = json.map(callbacks.recsMap);
-      dispatch(receiveData(json))
+      if (callbacks.sortBy)
+        json = _.sortBy(json, callbacks.sortBy);
+      if (dataset)
+        dispatch(receiveData({[dataset]: json}))
+      else
+        dispatch(receiveData(json))
       return json;
     })
     .then(callbacks.postFetchAction || (d=>d))
   return requestData(apiquery);
+}
+export const DATA_CACHED = 'DATA_CACHED';
+const cacheData = createAction(DATA_CACHED);
+export function apicall(params) {
+  return (dispatch, getState) => {
+    let url = apiurl(params);
+    const state = getState();
+    if (state.explorer.dataCache[url])
+      return dispatch(receiveData(
+        {dataset: params.dataset,
+         data: state.explorer.dataCache[url]}));
+    return fetch(url)
+      .then(response => response.json())
+      .then(json => {
+        dispatch(cacheData({url:url,data:json}))
+      });
+  }
+}
+function apiurl(params={}) {
+  let {schema, api, where, callbacks, 
+          router, dataset} = params;
+  // stop using dataset?
+  schema = schema || 
+           router && router.location.query.schema || 
+           'public';
+  api = api || 'dimsetsets';
+  let qs = _.chain(where).pairs()
+              .map(d=>d.join('='))
+              .join('&').value();
+  let url = '/data/' + schema + '/' + api + '?' + qs;
+  return url;
 }
 export function fetchRecsAsync(apiquery) {
   return dispatch => {

@@ -10,6 +10,11 @@ exp.dimList = state => state.explorer.dimList;
 exp.schema = state => {
   return state.router.location.query.schema || state.explorer.config.schema;
 };
+exp.dimsetset = state => {
+  return state.router.location.query.dimsetset || 
+    state.explorer.datasets.dimsetsets.length &&
+    state.explorer.datasets.dimsetsets[0].dimsetset || 'dimsetset';
+};
 
 exp.filterSettings = state => state.router.location.query.filters;
 exp.filteredVals = createSelector(

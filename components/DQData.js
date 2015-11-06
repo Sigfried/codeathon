@@ -24,8 +24,19 @@ export default class Explorer extends Component {
     return ({explorer, dispatch, router});
   }
   componentWillMount() {
-    const {explorer, dispatch} = this.props;
-    dispatch(ExplorerActions.fetchRecs(explorer.config.schema, explorer.config.toFetch, dispatch,
+    this.getData();
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.schema !== this.props.schema ||
+        prevProps.dimsetset !== this.props.dimsetset)
+      this.getData();
+  }
+  getData() {
+    const {explorer, dispatch, schema, dimsetset} = this.props;
+    dispatch(ExplorerActions.fetchRecs(schema, 
+          explorer.config.toFetch, 
+          {dimsetset: dimsetset},
+          dispatch,
       {
         recsMap: d=>{ d.value = parseFloat(d.value); return d},
         recsFilter: d=>d.value.length,
@@ -44,7 +55,7 @@ export default class Explorer extends Component {
     //Perf.start();
   }
   render() {
-    const { explorer, dispatch, router } = this.props;
+    const { explorer, dispatch, router, schema, dimsetset } = this.props;
     const dims = _.values(explorer.dims).filter(d=>!d.hide);
     let dimDescs = _.map(dims, 
         (dim) => {
@@ -62,7 +73,7 @@ export default class Explorer extends Component {
         //<Message msg={`Dims found in data records but not used: ${explorer.extraDims.join(', ')} `} />
     return (
       <div style={ExpStyle}>
-        <h1>DQ Data Explorer -- {explorer.config.schema}</h1>
+        <h1>DQ Data Explorer -- {schema}</h1>
         <Message 
           msg={`${explorer.recs.length} records,
                 ${explorer.filteredRecs.length} shown,
@@ -82,6 +93,9 @@ Explorer.propTypes = {
   explorer: PropTypes.object.isRequired,
   dispatch: React.PropTypes.func,
   router: React.PropTypes.object,
+  schema: React.PropTypes.string.isRequired,
+  dimsetset: React.PropTypes.string.isRequired,
+  recs: React.PropTypes.array.isRequired,
 };
 Explorer.childContextTypes =  {
   explorer: React.PropTypes.object,
