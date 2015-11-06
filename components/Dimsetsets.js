@@ -42,12 +42,16 @@ export default class Dimsetsets extends Component {
       </Grid>
     );
   }
+  componentDidUpdate() {
+    const {apicall, schema, datasets} = this.props;
+    datasets.dimsetsets.forEach(
+      dss => apicall(({ schema, api:'dimsetset', 
+                where: { dss: dss.dimsetset },
+                dataset:dssId(dss)
+            })));
+  }
   dssClick(evt, dss) {
-    const {apicall, schema, } = this.props;
-    apicall(({ schema, api:'dimsetset', 
-             where: { dss: dss.dimsetset },
-             dataset:dssId(dss)
-            }));
+    debugger;
   }
 }
 function dssId(dss) {
@@ -82,7 +86,7 @@ class Dimsetset extends Component {
             </Col>);
         })
 
-    console.log(info);
+    console.log(dss,info);
     return <div>{cols}</div>;
   }
 }

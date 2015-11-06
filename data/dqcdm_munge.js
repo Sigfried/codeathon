@@ -53,8 +53,9 @@ var _ = require('lodash');
         var dn = 'dim_name_' + i, dv = 'dim_value_' + i;
         if (row[dn] && row[dn].length && !row[dn].match('emptyfield')) {
           //console.log(dn, row[dn]);
-          newRow[module.exports.fixColName(row[dn])] = row[dv];
-          dimsetset.push(row[dn]);
+          var dimNameFixed = module.exports.fixColName(row[dn]);
+          newRow[dimNameFixed] = row[dv];
+          dimsetset.push(dimNameFixed);
         }
       });
       dimNames.forEach(function(dimName) {

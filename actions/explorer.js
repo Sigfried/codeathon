@@ -60,9 +60,13 @@ export function apicall(params) {
     console.log(url);
     const state = getState();
     if (state.explorer.dataCache[url])
-      return dispatch(receiveData(
-        {dataset: params.dataset,
-         data: state.explorer.dataCache[url]}));
+      if( _.isEqual(state.explorer.dataCache[url],
+          state.explorer.datasets[params.dataset]))
+        return null;
+      else 
+        return dispatch(receiveData(
+          {dataset: params.dataset,
+          data: state.explorer.dataCache[url]}));
     return fetch(url)
       .then(response => response.json())
       .then(json => {

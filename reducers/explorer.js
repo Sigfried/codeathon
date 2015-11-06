@@ -34,9 +34,11 @@ function datasets(state = {dimsetsets:[]}, action) {
       if (!Array.isArray(action.payload))
         return Object.assign({}, state, action.payload);
     case DATA_CACHED:
-      const s = Object.assign({}, state, 
+      const {dataset, url, data} = action.payload;
+      if (_.isEqual(state[dataset], data))
+          return state;
+      return Object.assign({}, state, 
         { [action.payload.dataset]: action.payload.data });
-      return s;
     default:
       return state;
   }
