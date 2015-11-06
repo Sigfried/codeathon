@@ -18,17 +18,21 @@ export default class Dimsetsets extends Component {
     this.getData();
   }
   getData() {
-    const {apicall, explorer, dispatch, schema, dimsetset} = this.props;
-    console.log(apicall);
+    const {apicall, explorer, dispatch, schema, } = this.props;
     apicall(({ schema, api:'dimsetsets', dataset:'dimsetsets'}));
   }
   render() {
-    const { dimsetsets /*, explorer, dispatch, router */ } = this.props;
-    let dsss = _.map(dimsetsets,
+    const { datasets /*, explorer, dispatch, router */ } = this.props;
+    let dsss = _.map(datasets.dimsetsets,
         (dss) => {
+          let info = datasets[dssId(dss)] &&
+                    datasets[dssId(dss)][0] || {};
           return (
-            <Row className="show-grid" key={dss.dimsetset}>
+            <Row className="show-grid" key={dss.dimsetset}
+              onClick={evt => this.dssClick.bind(this)(evt, dss)}
+            >
               <Dimsetset dss={dss} 
+                  info={info}
               />
             </Row>);
         })
@@ -38,12 +42,19 @@ export default class Dimsetsets extends Component {
       </Grid>
     );
   }
-  rowClick() {
-    console.log(arguments);
+  dssClick(evt, dss) {
+    const {apicall, schema, } = this.props;
+    apicall(({ schema, api:'dimsetset', 
+             where: { dss: dss.dimsetset },
+             dataset:dssId(dss)
+            }));
   }
 }
+function dssId(dss) {
+  return `dimsetset-data-${dss.dimsetset}`;
+}
 Dimsetsets.propTypes = {
-  dimsetsets: React.PropTypes.array.isRequired,
+  datasets: React.PropTypes.object.isRequired,
   /*
   explorer: PropTypes.object.isRequired,
   dispatch: React.PropTypes.func,
@@ -55,13 +66,14 @@ Dimsetsets.propTypes = {
 const styles = {
   dimsetset: {
     border: '1px solid gray',
+    margin: 3,
   },
 }
 class Dimsetset extends Component {
   render() {
-    const { dss } = this.props;
+    const { dss, info } = this.props;
     const dims = dss.dimsetset.split(/,/);
-    let gridWidth = Math.floor(12 / dims.length);
+    let gridWidth = Math.floor(10 / dims.length);
     let cols = _.map(dims,
         dim => {
           return (
@@ -69,18 +81,21 @@ class Dimsetset extends Component {
               {dim}
             </Col>);
         })
+
+    console.log(info);
     return <div>{cols}</div>;
   }
 }
 Dimsetset.propTypes = {
   dss: React.PropTypes.object.isRequired,
+  info: React.PropTypes.object.isRequired,
 };
 function mapStateToProps(state) {
   return {
     errorMessage: state.errorMessage,
     explorer: Selector.explorer(state),
     router: state.router,
-    dimsetsets: state.explorer.datasets.dimsetsets,
+    datasets: state.explorer.datasets,
   };
 }
 

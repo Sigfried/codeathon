@@ -57,6 +57,7 @@ const cacheData = createAction(DATA_CACHED);
 export function apicall(params) {
   return (dispatch, getState) => {
     let url = apiurl(params);
+    console.log(url);
     const state = getState();
     if (state.explorer.dataCache[url])
       return dispatch(receiveData(
@@ -65,7 +66,8 @@ export function apicall(params) {
     return fetch(url)
       .then(response => response.json())
       .then(json => {
-        dispatch(cacheData({url:url,data:json}))
+        dispatch(cacheData({dataset:params.dataset,
+                           url:url,data:json}))
       });
   }
 }

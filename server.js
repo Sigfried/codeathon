@@ -40,17 +40,32 @@ app.get("/data/:schema/:apiquery", function(req, res) {
       q += ' WHERE dimsetset = $1';
       params.push(req.query.dimsetset);
     }
-  }
-  else if (apiquery === 'dimsetsets')
+  } else if (apiquery === 'dimsetsets')
     q = 'select  dimsetset, count(*) as records, count(nullif(value,\'\')) as records_with_values ' +
         'from denorm ' +
         'where value is not null ' +
         'group by dimsetset ';
+  else if (apiquery === 'dimsetset') {
+    var dss = req.query.dss || '';
+    if (!dss.match(/^[\w,]+$/)) {
+      console.warn('bad dss', dss);
+      res.error('bad dss', dss);
+      return;
+    }
+    var cols = dss.split(/,/);
+    q = 'select ' +
+        cols.map(c => 'count(distinct ' + c + ') as ' + c).join(',') +
+        ', count(*) as records, count(distinct measure_id) as measures, ' +
+        'count(distinct set_id) as sets ' +
+        'from denorm ' +
+        'where dimsetset = $1 ';
+    params.push(dss);
+  }
 
-    getData("SET search_path='" + schema +"'")
-      .then(function() {
-        return getData(q, params);
-      })
+  getData("SET search_path='" + schema +"'")
+    .then(function() {
+      return getData(q, params);
+    })
     .then(json => res.json(json));
 });
 
