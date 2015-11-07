@@ -5,3 +5,4 @@ counter-example-files
 .env
 dist
 junk
+*.sql
