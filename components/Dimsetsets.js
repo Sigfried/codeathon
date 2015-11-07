@@ -22,16 +22,17 @@ export default class Dimsetsets extends Component {
     apicall(({ schema, api:'dimsetsets', dataset:'dimsetsets'}));
   }
   render() {
-    const { datasets /*, explorer, dispatch, router */ } = this.props;
+    const { datasets, schema /*, explorer, dispatch, router */ } = this.props;
     let dsss = _.map(datasets.dimsetsets,
         (dss) => {
-          let info = datasets[dssId(dss)] &&
-                    datasets[dssId(dss)][0] || {};
+          let info = datasets[dssId(dss, 'summary', schema)] &&
+                    datasets[dssId(dss, 'summary', schema)][0] || {};
           return (
             <Row className="show-grid" key={dss.dimsetset}
               onClick={evt => this.dssClick.bind(this)(evt, dss)}
             >
-              <Dimsetset dss={dss} 
+              <Dimsetset dss={dss} apicall={apicall}
+                  schema={schema}
                   info={info}
               />
             </Row>);
@@ -47,15 +48,15 @@ export default class Dimsetsets extends Component {
     datasets.dimsetsets.forEach(
       dss => apicall(({ schema, api:'dimsetset', 
                 where: { dss: dss.dimsetset },
-                dataset:dssId(dss)
+                dataset:dssId(dss, 'summary', schema)
             })));
   }
   dssClick(evt, dss) {
     debugger;
   }
 }
-function dssId(dss) {
-  return `dimsetset-data-${dss.dimsetset}`;
+function dssId(dss, what, schema) {
+  return `${schema}_dimsetset_${what}_${dss.dimsetset}`;
 }
 Dimsetsets.propTypes = {
   datasets: React.PropTypes.object.isRequired,
@@ -74,28 +75,38 @@ const styles = {
   },
 }
 class Dimsetset extends Component {
+  componentWillMount() {
+    this.getData();
+  }
+  getData() {
+    const {dss, apicall, explorer, dispatch, schema, } = this.props;
+    apicall(({ schema, api:'denorm', 
+                where: { dss: dss.dimsetset },
+                dataset:dssId(dss, 'data', schema)
+            }));
+    console.log('asked for', dssId(dss, 'data', schema));
+  }
   render() {
     const { dss, info } = this.props;
     const { records, records_with_values, measures,
             sets } = dss;
     const dims = dss.dimsetset.split(/,/);
-    let gridWidth = Math.floor(10 / (dims.length + 1));
+    let gridWidth = Math.floor(10 / dims.length);
     let cols = _.map(dims,
         dim => {
           return (
             <Col style={styles.dimsetset} md={gridWidth} key={dim}>
-              {dim}
+              {dim} ({info[dim]}&nbsp;vals)
             </Col>);
         })
-    cols.unshift(
-      <Col style={styles.dimsetset} md={gridWidth} 
-          key="info">
-        {records} recs, {measures} measures,
-        {sets} sets
-      </Col>);
 
-    console.log(dss,info);
-    return <div>{cols}</div>;
+    return (<div>
+              <Row>
+                <strong>{dss.dimsetset}</strong><br/>
+                <em>{records} recs, {measures} measures, {sets} sets</em>
+              </Row>
+              {cols}
+            </div>);
   }
 }
 Dimsetset.propTypes = {
