@@ -14,19 +14,17 @@ require('expose?$!expose?jQuery!jquery');
 require("bootstrap-webpack");
 
 export default class Dimsetsets extends Component {
-  componentWillMount() {
-    this.getData();
-  }
-  getData() {
-    const {apicall, explorer, dispatch, schema, } = this.props;
-    apicall(({ schema, api:'dimsetsets', dataset:'dimsetsets'}));
-  }
   render() {
-    const { datasets, schema /*, explorer, dispatch, router */ } = this.props;
-    let dsss = _.map(datasets.dimsetsets,
+    const { datasets, schema, explorer /*, dispatch, router */ } = this.props;
+    let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
+    let dimsetsets = explorer.datasets[Selector.apiId(apiparams)] || [];
+    let dsss = _.map(dimsetsets,
         (dss) => {
-          let info = datasets[dssId(dss, 'summary', schema)] &&
-                    datasets[dssId(dss, 'summary', schema)][0] || {};
+          let apiparams = { schema,api:'dimsetset',
+                  where: { dss: dss.dimsetset },
+                  datasetLabel:'summary' };
+          let info = explorer.datasets[Selector.apiId(apiparams)] &&
+                    datasets[Selector.apiId(apiparams)][0] || {};
           return (
             <Row className="show-grid" key={dss.dimsetset}
               onClick={evt => this.dssClick.bind(this)(evt, dss)}
@@ -44,11 +42,15 @@ export default class Dimsetsets extends Component {
     );
   }
   componentDidUpdate() {
-    const {apicall, schema, datasets} = this.props;
-    datasets.dimsetsets.forEach(
-      dss => apicall(({ schema, api:'dimsetset', 
+    const {apicall, schema, datasets, explorer} = this.props;
+    let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
+    let dimsetsets = explorer.datasets[Selector.apiId(apiparams)] || [];
+    console.log(explorer.datasets);
+    console.log(dimsetsets);
+    dimsetsets.forEach(
+      dss => apicall(Selector.apiId({ schema, api:'dimsetset', 
                 where: { dss: dss.dimsetset },
-                dataset:dssId(dss, 'summary', schema)
+                datasetLabel: 'summary'
             })));
   }
   dssClick(evt, dss) {
@@ -80,9 +82,9 @@ class Dimsetset extends Component {
   }
   getData() {
     const {dss, apicall, explorer, dispatch, schema, } = this.props;
-    apicall(({ schema, api:'denorm', 
+    apicall(Selector.apiId({ schema, api:'denorm', 
                 where: { dss: dss.dimsetset },
-                dataset:dssId(dss, 'data', schema)
+                datasetLabel:'data'
             }));
     console.log('asked for', dssId(dss, 'data', schema));
   }
@@ -119,6 +121,7 @@ function mapStateToProps(state) {
     explorer: Selector.explorer(state),
     router: state.router,
     datasets: state.explorer.datasets,
+    schema: state.router.location.query.schema,
   };
 }
 

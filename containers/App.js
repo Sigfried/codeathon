@@ -15,23 +15,35 @@ require("bootstrap-webpack");
 
 class App extends Component {
   componentWillMount() {
-    const {explorer, dispatch} = this.props;
-    dispatch(ExplorerActions.fetchRecs(explorer.schema, 
-        'dimsetsets', {}, dispatch, 
-        { sortBy: d => -d.records, }, 'dimsetsets'));
+    let {explorer, dispatch, apicall, schema} = this.props;
+    schema = schema || 'phis_dq';
+    let apiparams = { 
+        schema, 
+        api:'dimsetsets', 
+        datasetLabel: 'dimsetsets-summary',
+    };
+    apicall(Selector.apiId(apiparams)); 
   }
   render() {
         //<PickData tableWidth={700} tableHeight={1000}/>
-    const { explorer } = this.props;
+    const { explorer, schema, configChange, router, apicall } = this.props;
 
     let schemaChoices = explorer.config.schemaChoices.map(
-      sc => <MenuItem onSelect={this.schemaChoose.bind(this)} key={'sc'+sc} eventKey={sc}>{sc}</MenuItem>);
+      sc => <MenuItem onSelect={() => this.schemaChoose(apicall, sc, configChange, router)} key={'sc'+sc} eventKey={sc}>{sc}</MenuItem>);
 
-    let dimsetsetChoices = explorer.datasets.dimsetsets ?
-      explorer.datasets.dimsetsets.map(
+    let apiparams = { 
+        schema, 
+        api:'dimsetsets', 
+        datasetLabel: 'dimsetsets-summary',
+    };
+    let dimsetsets = explorer.datasets[Selector.apiId(apiparams)];
+    let dimsetsetChoices = dimsetsets ?
+      _.sortBy(dimsetsets, d => -d.records)
+      .map(
         dc => <MenuItem onSelect={this.dssChoose.bind(this)} key={'dss'+dc.dimsetset} eventKey={dc.dimsetset}>{dc.dimsetset} ({dc.records})</MenuItem>)
       : '';
 
+    console.log('dimsetsetchoices', dimsetsetChoices, dimsetsets);
     let children = React.Children.map(this.props.children, function(child, i) {
         return React.cloneElement(child, {
           schema: explorer.schema,
@@ -47,10 +59,10 @@ class App extends Component {
               <NavItem eventKey={1} href="/dqdata">DQ Data</NavItem>
               <NavItem eventKey={2} href="/seedims">See Dims</NavItem>
               <NavItem eventKey={3} href="/dimsetsets">Dimsetset Browser</NavItem>
-              <NavDropdown eventKey={4} title={explorer.schema} id="basic-nav-dropdown">
+              <NavDropdown eventKey={4} title={schema || 'Choose schema'} id="basic-nav-dropdown">
                 {schemaChoices}
               </NavDropdown>
-              <NavDropdown eventKey={5} title={explorer.dimsetset} id="basic-nav-dropdown">
+              <NavDropdown eventKey={5} title={router.location.query.dimsetset || 'Choose dimsetset'} id="basic-nav-dropdown">
                 {dimsetsetChoices}
               </NavDropdown>
             </Nav>
@@ -60,13 +72,14 @@ class App extends Component {
       </div>
     );
   }
-  schemaChoose(evt, schema) {
-    console.log(evt, schema);
-    ExplorerActions.schemaChange(
-      this.props.dispatch,
-      this.props.router,
-      schema);
-    //location.reload();
+  schemaChoose(apicall, schema, configChange, router) {
+    configChange(router, 'schema', schema);
+    let apiparams = { 
+        schema, 
+        api:'dimsetsets', 
+        datasetLabel: 'dimsetsets-summary',
+    };
+    apicall(Selector.apiId(apiparams)); 
   }
   dssChoose(evt, dss) {
     ExplorerActions.queryChange(
@@ -116,6 +129,7 @@ function mapStateToProps(state) {
     errorMessage: state.errorMessage,
     explorer: Selector.explorer(state),
     router: state.router,
+    schema: state.router.location.query.schema,
     //inputValue: state.router.location.pathname.substring(1),
     //explorer: state.explorer,
     //explorer: state.explorer.explorerReducer,
@@ -123,6 +137,8 @@ function mapStateToProps(state) {
 }
 
 export default connect(mapStateToProps, {
+  apicall: ExplorerActions.apicall,
+  configChange: ExplorerActions.configChange,
   resetErrorMessage,
   dispatch: d => d,
   //pushState,

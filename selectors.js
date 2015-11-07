@@ -2,14 +2,26 @@
 import { createSelector } from 'reselect'
 import _ from 'lodash';
 
+export const loc = state => state.router.location;
+export const locQuery = state => createSelector(
+  loc,
+  state => loc.query || {}
+);
+export const schema = createSelector(
+  locQuery,
+  state => locQuery.schema || 'phis_dq'
+);
+
 let exp = {};
 exp.recs = state => state.explorer.recs;
 exp.rawDims = state => state.explorer.dims;
 exp.dimList = state => state.explorer.dimList;
 
+/*
 exp.schema = state => {
   return state.router.location.query.schema || state.explorer.config.schema;
 };
+*/
 exp.dimsetset = state => {
   return state.router.location.query.dimsetset || 
     state.explorer.datasets.dimsetsets.length &&
@@ -109,6 +121,21 @@ export const explorer = state => {
 }
 
 // OTHER STUFF, not really selectors
+//
+export const apiId = params => {
+  const {api, datasetLabel, schema, where} = params;
+  return [api, datasetLabel, schema, 
+    JSON.stringify(where||'{}')].join('##');
+};
+export const parseApiId = str => {
+  let [api, datasetLabel, schema, where] = str.split('##');
+  try {
+  return ({api, datasetLabel, schema,
+            where: JSON.parse(where || '{}')});
+  } catch(e) {
+    debugger;
+  }
+};
 
 export const dimVals = (dim, recs) =>
   _.supergroup(recs, dim.func || dim.field)

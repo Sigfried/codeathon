@@ -3,17 +3,24 @@ import { pushState } from 'redux-router';
 //import fetch from 'isomorphic-fetch';
 import _ from 'supergroup';
 import * as dimUtils from '../dimUtils';
+import * as Selectors from '../selectors';
 require('isomorphic-fetch');
 
-//export const CONFIG_CHANGED = 'CONFIG_CHANGED';
-//export const configChange = createAction(CONFIG_CHANGED);
+export const CONFIG_CHANGED = 'CONFIG_CHANGED';
+export const configChange = (router, key, val) => {
+  let query = router.location.query;
+  query[key] = val;
+  return pushState(query, router.location.pathname, query);
+}
 
+/*
 // should be pathChange, not schemaChange
 export const schemaChange = (dispatch, router, schema) => {
   let query = router.location.query;
   query.schema = schema;
   dispatch(pushState(query, router.location.pathname, query));
 };
+*/
 export const queryChange = (dispatch, router, key, val) => {
   let query = router.location.query;
   query[key] = val;
@@ -27,62 +34,45 @@ const requestData = createAction(DATA_REQUESTED);
 
 const receiveData = createAction(DATA_RECEIVED);
 
-export function fetchRecs(schema, apiquery, where,
-      dispatch, callbacks, dataset) {
-  schema = schema || 'public';
-  let qs = _.chain(where).pairs()
-              .map(d=>d.join('='))
-              .join('&').value();
-  let url = '/data/' + schema + '/' + apiquery + '?' + qs;
-  fetch(url)
-    .then(response => response.json())
-    .then(json => {
-      if (callbacks.recsFilter)
-        json = json.filter(callbacks.recsFilter);
-      if (callbacks.recsMap)
-        json = json.map(callbacks.recsMap);
-      if (callbacks.sortBy)
-        json = _.sortBy(json, callbacks.sortBy);
-      if (dataset)
-        dispatch(receiveData({[dataset]: json}))
-      else
-        dispatch(receiveData(json))
-      return json;
-    })
-    .then(callbacks.postFetchAction || (d=>d))
-  return requestData(apiquery);
-}
 export const DATA_CACHED = 'DATA_CACHED';
 const cacheData = createAction(DATA_CACHED);
-export function apicall(params) {
+export function apicall(apistring) {
+  if (typeof apistring !== 'string')
+    debugger;
+  const params = Selectors.parseApiId(apistring);
+
   return (dispatch, getState) => {
+    const state = getState();
+    if (state.explorer.datasets[apistring])
+      return;
     let url = apiurl(params);
     console.log(url);
-    const state = getState();
-    if (state.explorer.dataCache[url])
-      if( _.isEqual(state.explorer.dataCache[url],
-          state.explorer.datasets[params.dataset]))
-        return null;
-      else 
-        return dispatch(receiveData(
-          {dataset: params.dataset,
-          data: state.explorer.dataCache[url]}));
     return fetch(url)
       .then(response => response.json())
+      /*
       .then(json => {
-        dispatch(cacheData({dataset:params.dataset,
-                           url:url,data:json}))
-      });
+        if (callbacks.recsFilter)
+          json = json.filter(callbacks.recsFilter);
+        if (callbacks.recsMap)
+          json = json.map(callbacks.recsMap);
+        if (callbacks.sortBy)
+          json = _.sortBy(json, callbacks.sortBy);
+        if (dataset)
+          dispatch(receiveData({[dataset]: json}))
+        else
+          dispatch(receiveData(json))
+        return json;
+      })
+      .then(callbacks.postFetchAction || (d=>d))
+      */
+      .then(json =>
+        dispatch(cacheData({apistring, url:url,data:json})))
   }
 }
 function apiurl(params={}) {
-  let {schema, api, where, callbacks, 
-          router, dataset} = params;
-  // stop using dataset?
-  schema = schema || 
-           router && router.location.query.schema || 
-           'public';
-  api = api || 'dimsetsets';
+  let {schema, api, where, datasetLabel} = params;
+  if (!(schema && api && datasetLabel))
+    debugger;
   let qs = _.chain(where).pairs()
               .map(d=>d.join('='))
               .join('&').value();

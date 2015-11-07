@@ -2,12 +2,13 @@ import { combineReducers } from 'redux';
 import conf from '../explorer.conf';
 import {DATA_RECEIVED, SUPERGROUPED_DIM, DIMLIST_SET,
         DATA_CACHED,
-        //CONFIG_CHANGED,
+        CONFIG_CHANGED,
         //MSG, 
        } from '../actions/explorer';
 import _ from 'lodash';
 var settings = conf();
 
+/*
 function dataCache(state = {}, action) {
   switch (action.type) {
     case DATA_CACHED:
@@ -18,6 +19,7 @@ function dataCache(state = {}, action) {
       return state;
   }
 }
+*/
 
 function recs(state = [], action) {
   switch (action.type) {
@@ -34,21 +36,19 @@ function datasets(state = {dimsetsets:[]}, action) {
       if (!Array.isArray(action.payload))
         return Object.assign({}, state, action.payload);
     case DATA_CACHED:
-      const {dataset, url, data} = action.payload;
-      if (_.isEqual(state[dataset], data))
-          return state;
+      const {apistring, url, data} = action.payload;
+      if (_.isEqual(state[apistring], data))
+        debugger;
       return Object.assign({}, state, 
-        { [action.payload.dataset]: action.payload.data });
+        { [action.payload.apistring]: action.payload.data });
     default:
       return state;
   }
 }
 function config(state = settings.config, action) {
   switch (action.type) {
-    /*
     case CONFIG_CHANGED:
       return Object.assign({}, settings.config, action.payload);
-    */
     default:
       return state;
   }
@@ -96,6 +96,6 @@ function filter(state = {default:'nothin'}, action) {
 function hash(state='', action) {
 };
 const explorerReducers = combineReducers({
-  recs, dims, config, dimList, datasets, dataCache,
+  recs, dims, config, dimList, datasets, 
 });
 export default explorerReducers;
