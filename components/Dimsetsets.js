@@ -76,8 +76,10 @@ const styles = {
 class Dimsetset extends Component {
   render() {
     const { dss, info } = this.props;
+    const { records, records_with_values, measures,
+            sets } = dss;
     const dims = dss.dimsetset.split(/,/);
-    let gridWidth = Math.floor(10 / dims.length);
+    let gridWidth = Math.floor(10 / (dims.length + 1));
     let cols = _.map(dims,
         dim => {
           return (
@@ -85,6 +87,12 @@ class Dimsetset extends Component {
               {dim}
             </Col>);
         })
+    cols.unshift(
+      <Col style={styles.dimsetset} md={gridWidth} 
+          key="info">
+        {records} recs, {measures} measures,
+        {sets} sets
+      </Col>);
 
     console.log(dss,info);
     return <div>{cols}</div>;
