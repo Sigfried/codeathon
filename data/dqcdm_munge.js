@@ -44,7 +44,9 @@ var _ = require('lodash');
       }
     },
     fixColName: function(s) {
-      return s.replace(/ /g,'_').toLowerCase();
+      var col = s.replace(/ /g,'_').toLowerCase();
+      if (['table','all'].indexOf(col) > -1)
+        col = 'd_' + col;
     },
     fixDimRow: function(dimNames, row) {
       var newRow = {set_id: row.set_id};
