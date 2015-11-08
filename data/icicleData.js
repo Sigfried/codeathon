@@ -63,7 +63,7 @@ var _ = require('lodash');
                 row['dim_name_' + (i+1)] = dim;
               });
             })
-            console.log(JSON.stringify(result.rows));
+            console.log(JSON.stringify(result.rows, null, 2));
           } catch(e) {
             console.error(e)
             process.exit();

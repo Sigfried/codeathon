@@ -33,6 +33,7 @@ var _ = require('lodash');
             }
           }).value();
       });
+      dimNames = dimNames.concat(dimFields);
       return dimNames;
     },
     newDimRows: function(dimNames, rows) {
@@ -58,6 +59,7 @@ var _ = require('lodash');
           //console.log(dn, row[dn]);
           var dimNameFixed = module.exports.fixColName(row[dn]);
           newRow[dimNameFixed] = row[dv];
+          newRow[dn] = row[dn];
           dimsetset.push(dimNameFixed);
         }
       });

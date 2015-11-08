@@ -42,6 +42,12 @@ app.get("/data/:schema/:apiquery", function(req, res) {
       q += ' WHERE dimsetset = $1';
       params.push(req.query.dss);
     }
+  } else if (apiquery === 'icicle') {
+    q = 'select dim_name_1,dim_name_2,dim_name_3,dim_name_4,dim_name_5,dim_name_6, count(*) as cnt, ' +
+          'count(distinct(measure_name)) as measures ' +
+          'from ' + schema + '.denorm ' +
+          'group by dim_name_1,dim_name_2,dim_name_3,dim_name_4,dim_name_5,dim_name_6 ' +
+          'order by 1,2,3,4,5,6';
   } else if (apiquery === 'dimsetsets')
     //q = 'select  dimsetset, count(*) as records, count(nullif(value,\'\')) as records_with_values ' +
     q = 'select  dimsetset, count(*) as records, ' +

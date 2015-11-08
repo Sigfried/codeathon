@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import _ from 'lodash';
+import _ from 'supergroup';
 
 export default class Icicle extends Component {
 
@@ -22,8 +22,10 @@ export default class Icicle extends Component {
     }
 
     render() {
-        let tree = this.buildTree(this.props.data),
-            partition = d3.layout.partition()
+        const { data } = this.props;
+        var sg = _.supergroup(data,['dim_name_1','dim_name_2','dim_name_3','dim_name_4','dim_name_5','dim_name_6']);
+        let tree = sg.asRootVal();
+        let partition = d3.layout.partition()
                           .children(d => isNaN(d.value) ? d3.entries(d.value) : null)
                           .value(d => d.value);
 

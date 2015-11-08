@@ -6,39 +6,50 @@ import * as ExplorerActions from '../actions/explorer';
 import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
 import DataTable from './DataTable';
+import Icicle from './Icicle';
 import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar } from 'react-bootstrap';
 import * as Selector from '../selectors';
-import _ from 'supergroup';
 //var css = require('css!bootstrap/dist/css/bootstrap.css');
 //require("!style!css!less!bootstrap/less/bootstrap.less");
 require('expose?$!expose?jQuery!jquery');
 require("bootstrap-webpack");
 
 export default class Dimsetsets extends Component {
+  componentWillMount() {
+    const {apicall, schema, } = this.props;
+    let apiparams = { schema,api:'icicle',datasetLabel:'icicle' };
+    let apistring = Selector.apiId(apiparams);
+    apicall(apistring);
+  }
   render() {
     const { datasets, schema, explorer, apicall /*, dispatch, router */ } = this.props;
     let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
     let dimsetsets = datasets[Selector.apiId(apiparams)] || [];
     let dsss = _.map(dimsetsets,
         (dss) => {
-          let apiparams = { schema,api:'dimsetset',
-                  where: { dss: dss.dimsetset },
-                  datasetLabel:'summary' };
-          let info = datasets[Selector.apiId(apiparams)] &&
-                    datasets[Selector.apiId(apiparams)][0] || {};
           return (
             <Row className="show-grid" key={dss.dimsetset}
               onClick={evt => this.dssClick.bind(this)(evt, dss)}
             >
               <Dimsetset dss={dss} apicall={apicall}
                   schema={schema} datasets={datasets}
-                  info={info}
               />
             </Row>);
         })
+    let icicleparams = { schema,api:'icicle',datasetLabel:'icicle' };
+    let icicleData = datasets[Selector.apiId(icicleparams)] || [];
+    /*
+    let icicle = 'wait for icicle';
+    debugger;
+    console.log("THIS HERE IS THE THING");
+    var sg = _.supgergroup(icicleData,
+          ['dim_name_1','dim_name_2','dim_name_3','dim_name_4','dim_name_5','dim_name_6']
+                          );
+                          */
     return (
       <Grid>
         {dsss}
+        <Icicle data={icicleData}></Icicle>
       </Grid>
     );
   }
@@ -79,7 +90,7 @@ class Dimsetset extends Component {
     console.log('asked for', apistring);
   }
   render() {
-    const { dss, info, schema, datasets,  } = this.props;
+    const { dss, schema, datasets,  } = this.props;
     const { records, records_with_values, measures,
             sets } = dss;
 
@@ -107,7 +118,6 @@ class Dimsetset extends Component {
 }
 Dimsetset.propTypes = {
   dss: React.PropTypes.object.isRequired,
-  info: React.PropTypes.object.isRequired,
 };
 class Dim extends Component {
   render() {
