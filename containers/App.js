@@ -10,6 +10,7 @@ import * as Selector from '../selectors';
 
 import d3 from 'd3';
 import { createAction } from 'redux-actions';
+import Icicle from '../components/Icicle';
 
 import * as ExplorerActions from '../actions/explorer';
 import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem } from 'react-bootstrap';
@@ -58,9 +59,6 @@ class App extends Component {
         });
     }, this);
 
-
-      console.log(this.props.viz_data);
-
     return (
       <div>
         <Navbar>
@@ -79,7 +77,7 @@ class App extends Component {
           </Navbar>
         {this.renderErrorMessage()}
         {children}
-
+        <Icicle data={this.props.viz_data}></Icicle>
       </div>
     );
   }

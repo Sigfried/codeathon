@@ -54,7 +54,6 @@ function viz_data(state = [], action) {
         default:
             return state;
     }
-    console.log(action);
 }
 
 const rootReducer = combineReducers({
