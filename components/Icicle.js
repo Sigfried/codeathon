@@ -18,21 +18,16 @@ export default class Icicle extends Component {
             }
         });
 
-        /* return _.keys(groups).map(key => {
-           return Object.assign({name: key,
-           children: groups[key]});
-           }); */
-
         return groups;
     }
 
     render() {
         let tree = this.buildTree(this.props.data),
             partition = d3.layout.partition()
-                          .children(d => d.records ? null : d3.entries(d.value))
-                          .value(d => d.records);
+                          .children(d => isNaN(d.value) ? d3.entries(d.value) : null)
+                          .value(d => d.value);
 
-        console.log(tree, d3.entries(tree));
+        console.log(partition(tree));
 
         return (
             <h1>Hello there</h1>
