@@ -41,14 +41,21 @@ export default class Dimsetsets extends Component {
       </Grid>
     );
   }
+    /* shouldComponentUpdate(nextProps, nextState) {
+       return this.props.schema != nextProps.schema
+       || !_.isEqual(_.keys(this.props.datasets),
+       _.keys(nextProps.datasets))
+       || _.keys(this.props.datasets).length < 2
+       || this.props.dimsetset != nextProps.dimsetset;
+       } */
+
   componentDidUpdate() {
     const {apicall, schema, datasets, explorer} = this.props;
     let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
     let dimsetsets = explorer.datasets[Selector.apiId(apiparams)] || [];
-    console.log(explorer.datasets);
-    console.log(dimsetsets);
+    console.log("datasets", explorer.datasets);
     dimsetsets.forEach(
-      dss => apicall(Selector.apiId({ schema, api:'dimsetset', 
+      dss => apicall(Selector.apiId({ schema, api:'dimsetset',
                 where: { dss: dss.dimsetset },
                 datasetLabel: 'summary'
             })));
@@ -82,7 +89,7 @@ class Dimsetset extends Component {
   }
   getData() {
     const {dss, apicall, explorer, dispatch, schema, } = this.props;
-    apicall(Selector.apiId({ schema, api:'denorm', 
+    apicall(Selector.apiId({ schema, api:'denorm',
                 where: { dss: dss.dimsetset },
                 datasetLabel:'data'
             }));
@@ -125,9 +132,8 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps, 
+export default connect(mapStateToProps,
           { /*resetErrorMessage, */ 
-            dispatch: dispatchWrappedFunc=>dispatchWrappedFunc, 
+            dispatch: dispatchWrappedFunc=>dispatchWrappedFunc,
             apicall,
           })(Dimsetsets);
-

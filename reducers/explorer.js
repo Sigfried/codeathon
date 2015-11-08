@@ -3,7 +3,8 @@ import conf from '../explorer.conf';
 import {DATA_RECEIVED, SUPERGROUPED_DIM, DIMLIST_SET,
         DATA_CACHED,
         CONFIG_CHANGED,
-        //MSG, 
+        DATA_REQUESTED,
+        //MSG,
        } from '../actions/explorer';
 import _ from 'lodash';
 var settings = conf();
@@ -12,7 +13,7 @@ var settings = conf();
 function dataCache(state = {}, action) {
   switch (action.type) {
     case DATA_CACHED:
-      const s = Object.assign({}, state, 
+      const s = Object.assign({}, state,
         { [action.payload.url]: action.payload.data });
       return s;
     default:
@@ -35,11 +36,14 @@ function datasets(state = {dimsetsets:[]}, action) {
     case DATA_RECEIVED:
       if (!Array.isArray(action.payload))
         return Object.assign({}, state, action.payload);
+    case DATA_REQUESTED:
+      return Object.assign({}, state,
+                           { [action.payload.apistring]: [] });
     case DATA_CACHED:
       const {apistring, url, data} = action.payload;
       if (_.isEqual(state[apistring], data))
         debugger;
-      return Object.assign({}, state, 
+      return Object.assign({}, state,
         { [action.payload.apistring]: action.payload.data });
     default:
       return state;
@@ -85,7 +89,7 @@ function filter(state = {default:'nothin'}, action) {
   case FILTER_CHANGED:
     let {dim, val, setting} = action.payload;
     let dimSetting = Object.assign(
-      {}, state[dim.field] || {}, 
+      {}, state[dim.field] || {},
       {[val.toString()]: setting});
     return Object.assign({}, state, { [dim.field]: dimSetting });
   default:
@@ -96,6 +100,6 @@ function filter(state = {default:'nothin'}, action) {
 function hash(state='', action) {
 };
 const explorerReducers = combineReducers({
-  recs, dims, config, dimList, datasets, 
+  recs, dims, config, dimList, datasets,
 });
 export default explorerReducers;

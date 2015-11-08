@@ -36,9 +36,11 @@ const receiveData = createAction(DATA_RECEIVED);
 
 export const DATA_CACHED = 'DATA_CACHED';
 const cacheData = createAction(DATA_CACHED);
+
 export function apicall(apistring) {
   if (typeof apistring !== 'string')
-    debugger;
+        debugger;
+
   const params = Selectors.parseApiId(apistring);
 
   return (dispatch, getState) => {
@@ -46,7 +48,10 @@ export function apicall(apistring) {
     if (state.explorer.datasets[apistring])
       return;
     let url = apiurl(params);
-    console.log(url);
+      dispatch(requestData({apistring, url:url}));
+      //debugger;
+      console.log(url);
+
     return fetch(url)
       .then(response => response.json())
       /*
@@ -65,8 +70,8 @@ export function apicall(apistring) {
       })
       .then(callbacks.postFetchAction || (d=>d))
       */
-      .then(json =>
-        dispatch(cacheData({apistring, url:url,data:json})))
+      .then(json => { //debugger;
+        dispatch(cacheData({apistring, url:url,data:json}))})
   }
 }
 function apiurl(params={}) {
