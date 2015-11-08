@@ -47,12 +47,23 @@ const pagination = combineReducers({
   })
 });
 
+function viz_data(state = [], action) {
+    switch (action.type) {
+        case 'LOADED_VIZ_DATA':
+            return Object.assign({}, state, action.payload);
+        default:
+            return state;
+    }
+    console.log(action);
+}
+
 const rootReducer = combineReducers({
   explorer,
   entities,
   pagination,
   errorMessage,
-  router
+  router,
+  viz_data
 });
 
 export default rootReducer;
