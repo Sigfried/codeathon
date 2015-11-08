@@ -10,6 +10,7 @@ var app = new express();
 var port = 3000;
 app.use(compression())
 app.use(express.static('static'))
+app.use(express.static('data'));
 
 var compiler = webpack(config);
 app.use(webpackDevMiddleware(compiler, { noInfo: true, publicPath: config.output.publicPath }));
@@ -93,7 +94,7 @@ function getData(sql, params) {
         var query = client.query(sql, params);
         query.on('error', function(err) {
           done();
-          pgErr('getData(' + sql + ')', 
+          pgErr('getData(' + sql + ')',
                 err, done, reject, client);
           reject(Error("getData failed", err));
         })

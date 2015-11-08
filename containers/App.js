@@ -8,6 +8,10 @@ import PickData from '../components/PickData';
 import { resetErrorMessage } from '../actions';
 import * as Selector from '../selectors';
 
+import d3 from 'd3';
+import { createAction } from 'redux-actions';
+import Icicle from '../components/Icicle';
+
 import * as ExplorerActions from '../actions/explorer';
 import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem } from 'react-bootstrap';
 require('expose?$!expose?jQuery!jquery');
@@ -17,12 +21,15 @@ class App extends Component {
   componentWillMount() {
     let {explorer, dispatch, apicall, schema} = this.props;
     schema = schema || 'phis_dq';
-    let apiparams = { 
-        schema, 
-        api:'dimsetsets', 
+    let apiparams = {
+        schema,
+        api:'dimsetsets',
         datasetLabel: 'dimsetsets-summary',
     };
-    apicall(Selector.apiId(apiparams)); 
+    //apicall(Selector.apiId(apiparams));
+
+      d3.json('/chco_dimsetsets.json',
+              (data) => dispatch(createAction('LOADED_VIZ_DATA')(data)));
   }
   render() {
         //<PickData tableWidth={700} tableHeight={1000}/>
@@ -31,9 +38,9 @@ class App extends Component {
     let schemaChoices = explorer.config.schemaChoices.map(
       sc => <MenuItem onSelect={() => this.schemaChoose(apicall, sc, configChange, router)} key={'sc'+sc} eventKey={sc}>{sc}</MenuItem>);
 
-    let apiparams = { 
-        schema, 
-        api:'dimsetsets', 
+    let apiparams = {
+        schema,
+        api:'dimsetsets',
         datasetLabel: 'dimsetsets-summary',
     };
     let dimsetsets = explorer.datasets[Selector.apiId(apiparams)];
@@ -51,6 +58,7 @@ class App extends Component {
           recs: explorer.recs,
         });
     }, this);
+
     return (
       <div>
         <Navbar>
@@ -69,17 +77,18 @@ class App extends Component {
           </Navbar>
         {this.renderErrorMessage()}
         {children}
+        <Icicle data={this.props.viz_data}></Icicle>
       </div>
     );
   }
   schemaChoose(apicall, schema, configChange, router) {
     configChange(router, 'schema', schema);
-    let apiparams = { 
-        schema, 
-        api:'dimsetsets', 
+    let apiparams = {
+        schema,
+        api:'dimsetsets',
         datasetLabel: 'dimsetsets-summary',
     };
-    apicall(Selector.apiId(apiparams)); 
+    apicall(Selector.apiId(apiparams));
   }
   dssChoose(evt, dss) {
     ExplorerActions.queryChange(
@@ -130,6 +139,7 @@ function mapStateToProps(state) {
     explorer: Selector.explorer(state),
     router: state.router,
     schema: state.router.location.query.schema,
+    viz_data: state.viz_data
     //inputValue: state.router.location.pathname.substring(1),
     //explorer: state.explorer,
     //explorer: state.explorer.explorerReducer,
@@ -140,6 +150,6 @@ export default connect(mapStateToProps, {
   apicall: ExplorerActions.apicall,
   configChange: ExplorerActions.configChange,
   resetErrorMessage,
-  dispatch: d => d,
+  dispatch: d => d
   //pushState,
 })(App);
