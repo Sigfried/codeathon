@@ -47,6 +47,7 @@ var _ = require('lodash');
       var col = s.replace(/ /g,'_').toLowerCase();
       if (['table','all'].indexOf(col) > -1)
         col = 'd_' + col;
+      return col;
     },
     fixDimRow: function(dimNames, row) {
       var newRow = {set_id: row.set_id};
@@ -222,7 +223,7 @@ var _ = require('lodash');
             if (search_path === 'pcornet_dq')
               q += 'join result r on r.set_id = d.set_id \n' +
                   'join measure m on r.measure_id = m.measure_id \n' +
-                  "where m.name like '%'||'date'||'%'";
+                  "where m.name like '%'||'date'||'%' or value>0";
             return getData(q, client, done);
           } catch(e) {
             console.error(e)
