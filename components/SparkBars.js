@@ -12,7 +12,7 @@ class SparkBarsChart extends Component {
   }
   render() {
     const {dim, valType, vals, width, height, 
-        isHighlighted, highlight } = this.props;
+        isHighlighted, highlight, notmissing } = this.props;
     //return <h4>debugging</h4>;
     var ext = d3.extent(vals.map(v=>v.records.length));
     var dumbExt = [0, ext[1]];
@@ -24,11 +24,12 @@ class SparkBarsChart extends Component {
     var self = this;
     vals.sortBy(dim.sortBy ||
           (d=>-(
-              (d.lookup('Not Missing') && 
+            notmissing && (d.lookup('Not Missing') && 
                 (d.lookup('Not Missing').records.length + ext[1]))
               ||d.records.length))
           ).forEach(function(val, i) {
         bars.push(
+            notmissing &&
             <SparkBarsBarStack
                 dim={dim}
                 val={val}
@@ -40,7 +41,20 @@ class SparkBarsChart extends Component {
                 barWidth={barWidth} 
                 yscale={yscale}
                 key={i}
-                />);
+                />
+                ||
+            <SparkBarsBar
+                dim={dim}
+                val={val}
+                //isHighlighted={isHighlighted}
+                //highlight={highlight}
+                x={barWidth*i}
+                chartHeight={self.props.height}
+                barWidth={barWidth} 
+                yscale={yscale}
+                key={i}
+                />
+        );
     });
     return (
       <div>
@@ -63,22 +77,23 @@ SparkBarsChart.contextTypes =  {
 export default SparkBarsChart;
 
 class SparkBarsBar extends Component {
-    /*
-    renderNotUsing() {
-      const {val, barNum, yscale, chartHeight, 
-        x, barWidth} = this.props;
-      const height = yscale(barNum);
+    render() {
+      const {dim, val, yscale, chartHeight, 
+        x, barWidth, isHighlighted} = this.props;
+      const height = yscale(val.records.length);
       const y = chartHeight - height;
+      //let highlighted = isHighlighted(dim,val)
+      let highlighted = false;
       return (
         <g transform={"translate(" + x + ")"}>
           <rect
-                  style={barBgStyle}
+                  style={barStyles['background' + !!highlighted]}
                   width={barWidth}
                   height={chartHeight} 
                   onMouseOver={this.valHover.bind(this)}
           />
-          <rect y={y} 
-                  style={barStyle}
+          <rect y={chartHeight - height} 
+                  style={barStyles['normal' + !!highlighted]}
                   width={barWidth}
                   height={height} 
                   onMouseOver={this.valHover.bind(this)}
@@ -86,7 +101,6 @@ class SparkBarsBar extends Component {
         </g>
       );
     }
-    */
     valHover() {
       const { dispatch, router, explorer } = this.context;
       const { val, dim, highlight } = this.props;
@@ -94,35 +108,6 @@ class SparkBarsBar extends Component {
       //dispatch(ExplorerActions.sgValMsg(val, dim));
       //ExplorerActions.valHighlighted(dispatch, router, dim, val);
     }
-};
-function barStyle(type, highlighted) {
-  let opacities = {
-    background: .2,
-    missing: .4,
-    normal: 1,
-  };
-  let colors = {
-    background: 'steelblue',
-    missing: 'steelblue',
-    normal: 'steelblue',
-  };
-  return {
-    fill: colors[type],
-    strokeWidth: 1,
-    stroke: highlighted ? 'steelblue' : 'white',
-    opacity: opacities[type] / (highlighted ? 1 : 2)
-  };
-}
-const barStyles = 
-  _.chain([true,false]).map(highlighted =>
-      _.map(['normal', 'missing', 'background'],
-            type => [type + highlighted, barStyle(type, highlighted)])
-                           ).flatten().object().value();
-
-SparkBarsBar.contextTypes =  {
-  explorer: React.PropTypes.object,
-  dispatch: React.PropTypes.func,
-  router: React.PropTypes.object,
 };
 class SparkBarsBarStack extends SparkBarsBar {
     // val, x, chartHeight
@@ -157,6 +142,35 @@ class SparkBarsBarStack extends SparkBarsBar {
         </g>
       );
     }
+};
+function barStyle(type, highlighted) {
+  let opacities = {
+    background: .2,
+    missing: .4,
+    normal: 1,
+  };
+  let colors = {
+    background: 'steelblue',
+    missing: 'steelblue',
+    normal: 'steelblue',
+  };
+  return {
+    fill: colors[type],
+    strokeWidth: 1,
+    stroke: highlighted ? 'steelblue' : 'white',
+    opacity: opacities[type] / (highlighted ? 1 : 2)
+  };
+}
+const barStyles = 
+  _.chain([true,false]).map(highlighted =>
+      _.map(['normal', 'missing', 'background'],
+            type => [type + highlighted, barStyle(type, highlighted)])
+                           ).flatten().object().value();
+
+SparkBarsBar.contextTypes =  {
+  explorer: React.PropTypes.object,
+  dispatch: React.PropTypes.func,
+  router: React.PropTypes.object,
 };
 
 /*

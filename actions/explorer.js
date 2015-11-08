@@ -44,13 +44,14 @@ export function apicall(apistring) {
   const params = Selectors.parseApiId(apistring);
 
   return (dispatch, getState) => {
+    console.log(params);
     const state = getState();
     if (state.explorer.datasets[apistring])
       return;
     let url = apiurl(params);
-      dispatch(requestData({apistring, url:url}));
+    dispatch(requestData({apistring, url:url}));
       //debugger;
-      console.log(url);
+    console.log(url);
 
     return fetch(url)
       .then(response => response.json())

@@ -132,6 +132,7 @@ class DimDesc extends Component {
       //let barNums=_.map(dimVals, val => val.records.length);
       sparkbars = <SparkBarsChart
                         valType={"supgergroup"}
+                        notmissing={true}
                         //vals={dimVals}
                         vals={dimVals}
                         isHighlighted={explorer.isValHighlighted}

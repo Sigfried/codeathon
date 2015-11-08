@@ -25,6 +25,7 @@ app.listen(port, function(error) {
 });
 
 app.get("/data/:schema/:apiquery", function(req, res) {
+  console.log('request', req.url);
   var apiquery = req.params.apiquery;
   var schema = req.params.schema;
   if (!schema.match(/^\w+$/)) {
@@ -35,16 +36,19 @@ app.get("/data/:schema/:apiquery", function(req, res) {
   var q;
   var params = [];
   if (apiquery === "denorm") {
-    q = 'SELECT * FROM denorm';
-    if (req.query.dimsetset) {
+    q = 'SELECT * ' +
+        'from ' + schema + '.denorm ';
+    if (req.query.dss) {
       q += ' WHERE dimsetset = $1';
-      params.push(req.query.dimsetset);
+      params.push(req.query.dss);
     }
   } else if (apiquery === 'dimsetsets')
-    q = 'select  dimsetset, count(*) as records, count(nullif(value,\'\')) as records_with_values ' +
-        ', count(distinct measure_id) as measures, ' +
-        'count(distinct set_id) as sets ' +
-        'from denorm ' +
+    //q = 'select  dimsetset, count(*) as records, count(nullif(value,\'\')) as records_with_values ' +
+    q = 'select  dimsetset, count(*) as records, ' +
+        'count(distinct measure_id) as measures ' +
+        //', count(distinct measure_id) as measures, ' +
+        //'count(distinct set_id) as sets ' +
+        'from ' + schema + '.denorm ' +
         'where value is not null ' +
         'group by dimsetset ';
   else if (apiquery === 'dimsetset') {
@@ -60,16 +64,28 @@ app.get("/data/:schema/:apiquery", function(req, res) {
         cols.map(c => 'count(distinct ' + c + ') as ' + c).join(',') +
         ', count(*) as records, count(distinct measure_id) as measures, ' +
         'count(distinct set_id) as sets ' +
-        'from denorm ' +
+        'from ' + schema + '.denorm ' +
         'where dimsetset = $1 ';
     params.push(dss);
   }
+  getData(q, params)
+    .then(json => {
+      console.log(req.url, json.length, 'results');
+      return json;
+    })
+    .then(json => res.json(json));
 
+  /*
   getData("SET search_path='" + schema +"'")
     .then(function() {
       return getData(q, params);
     })
+    .then(json => {
+      console.log(req.url, json.length, 'results');
+      return json;
+    })
     .then(json => res.json(json));
+    */
 });
 
 app.use(function(req, res) {
@@ -83,6 +99,7 @@ function pgErr(msg, err, done, reject, client) {
   reject(err.error);
 }
 function getData(sql, params) {
+  console.log(sql, params && params.length && params || '');
   var promise = new Promise(function(resolve, reject) {
       pg.connect(process.env.DATABASE_URL, function(err, client, done) {
         if (err) {
@@ -94,7 +111,7 @@ function getData(sql, params) {
         var query = client.query(sql, params);
         query.on('error', function(err) {
           done();
-          pgErr('getData(' + sql + ')',
+          pgErr('getData(' + sql + ': ' + (params&&params||'') + ')',
                 err, done, reject, client);
           reject(Error("getData failed", err));
         })

@@ -26,10 +26,9 @@ class App extends Component {
         api:'dimsetsets',
         datasetLabel: 'dimsetsets-summary',
     };
-    //apicall(Selector.apiId(apiparams));
+    apicall(Selector.apiId(apiparams));
 
-      d3.json('/chco_dimsetsets.json',
-              (data) => dispatch(createAction('LOADED_VIZ_DATA')(data)));
+    //d3.json('/chco_dimsetsets.json', (data) => dispatch(createAction('LOADED_VIZ_DATA')(data)));
   }
   render() {
         //<PickData tableWidth={700} tableHeight={1000}/>
@@ -50,7 +49,7 @@ class App extends Component {
         dc => <MenuItem onSelect={this.dssChoose.bind(this)} key={'dss'+dc.dimsetset} eventKey={dc.dimsetset}>{dc.dimsetset} ({dc.records})</MenuItem>)
       : '';
 
-    console.log('dimsetsetchoices', dimsetsetChoices, dimsetsets);
+    //console.log('dimsetsetchoices', dimsetsetChoices, dimsetsets);
     let children = React.Children.map(this.props.children, function(child, i) {
         return React.cloneElement(child, {
           schema: explorer.schema,
