@@ -31,7 +31,6 @@ app.get("/data/:schema/:apiquery", function(req, res) {
     res.error('bad schema', schema);
     return;
   }
-  console.log('GET DATA from ', schema);
   var q;
   var params = [];
   if (apiquery === "denorm") {
@@ -49,9 +48,10 @@ app.get("/data/:schema/:apiquery", function(req, res) {
         'group by dimsetset ';
   else if (apiquery === 'dimsetset') {
     var dss = req.query.dss || '';
-    if (!dss.match(/^[\w,]+$/)) {
+    console.log('dimsetset ' + dss);
+    if (!dss.match(/^[\w,]*$/)) {
       console.warn('bad dss', dss);
-      res.error('bad dss', dss);
+      res.error('bad dss: ' + dss);
       return;
     }
     var cols = dss.split(/,/);
@@ -89,7 +89,7 @@ function getData(sql, params) {
           reject(Error("connection failed", err));
           return;
         }
-        console.log(sql, params);
+        //console.log(sql, params);
         var query = client.query(sql, params);
         query.on('error', function(err) {
           done();
@@ -101,7 +101,7 @@ function getData(sql, params) {
           result.addRow(row);
         });
         query.on('end', function(result) {
-          console.log(result.rows.length, 'from', sql);
+          //console.log(result.rows.length, 'from', sql);
           //var ret = dqmunge.mungeDims(result.rows);
           resolve(result.rows);
           done();

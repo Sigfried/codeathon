@@ -17,20 +17,20 @@ export default class Dimsetsets extends Component {
   render() {
     const { datasets, schema, explorer /*, dispatch, router */ } = this.props;
     let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
-    let dimsetsets = explorer.datasets[Selector.apiId(apiparams)] || [];
+    let dimsetsets = datasets[Selector.apiId(apiparams)] || [];
     let dsss = _.map(dimsetsets,
         (dss) => {
           let apiparams = { schema,api:'dimsetset',
                   where: { dss: dss.dimsetset },
                   datasetLabel:'summary' };
-          let info = explorer.datasets[Selector.apiId(apiparams)] &&
+          let info = datasets[Selector.apiId(apiparams)] &&
                     datasets[Selector.apiId(apiparams)][0] || {};
           return (
             <Row className="show-grid" key={dss.dimsetset}
               onClick={evt => this.dssClick.bind(this)(evt, dss)}
             >
               <Dimsetset dss={dss} apicall={apicall}
-                  schema={schema}
+                  schema={schema} datasets={datasets}
                   info={info}
               />
             </Row>);
@@ -41,19 +41,10 @@ export default class Dimsetsets extends Component {
       </Grid>
     );
   }
-    /* shouldComponentUpdate(nextProps, nextState) {
-       return this.props.schema != nextProps.schema
-       || !_.isEqual(_.keys(this.props.datasets),
-       _.keys(nextProps.datasets))
-       || _.keys(this.props.datasets).length < 2
-       || this.props.dimsetset != nextProps.dimsetset;
-       } */
-
   componentDidUpdate() {
     const {apicall, schema, datasets, explorer} = this.props;
     let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
-    let dimsetsets = explorer.datasets[Selector.apiId(apiparams)] || [];
-    console.log("datasets", explorer.datasets);
+    let dimsetsets = datasets[Selector.apiId(apiparams)] || [];
     dimsetsets.forEach(
       dss => apicall(Selector.apiId({ schema, api:'dimsetset',
                 where: { dss: dss.dimsetset },
@@ -89,16 +80,24 @@ class Dimsetset extends Component {
   }
   getData() {
     const {dss, apicall, explorer, dispatch, schema, } = this.props;
-    apicall(Selector.apiId({ schema, api:'denorm',
+    let apiparams = { schema, api:'denorm', 
                 where: { dss: dss.dimsetset },
-                datasetLabel:'data'
-            }));
-    console.log('asked for', dssId(dss, 'data', schema));
+                datasetLabel:'data' };
+    apicall(Selector.apiId(apiparams));
+    console.log('asked for', Selector.apiId(apiparams));
   }
   render() {
-    const { dss, info } = this.props;
+    const { dss, info, schema, datasets,  } = this.props;
     const { records, records_with_values, measures,
             sets } = dss;
+
+    let apiparams = { schema, api:'denorm', 
+                where: { dss: dss.dimsetset },
+                datasetLabel:'data' };
+    let data = datasets[Selector.apiId(apiparams)] &&
+              datasets[Selector.apiId(apiparams)][0] || {};
+    console.log('GOT SOMETHING', data);
+
     const dims = dss.dimsetset.split(/,/);
     let gridWidth = Math.floor(10 / dims.length);
     let cols = _.map(dims,
