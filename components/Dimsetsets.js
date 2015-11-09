@@ -48,7 +48,11 @@ export default class Dimsetsets extends Component {
                           */
     return (
       <Grid>
-        <Icicle data={icicleData}></Icicle>
+        <Icicle data={icicleData}
+                dataTitle={'Dim Set Sets'}
+                dimNames={['dim_name_1','dim_name_2','dim_name_3',
+                           'dim_name_4','dim_name_5','dim_name_6']}
+        ></Icicle>
         {dsss}
       </Grid>
     );
