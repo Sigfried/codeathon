@@ -12,12 +12,28 @@ class IciclePart extends Component {
   render() {
       let d = this.props.node;
 
+      // foreignobj from https://developer.mozilla.org/en-US/docs/Web/SVG/Element/foreignObject
       return (
-        <rect x={x(d.y)} y={y(d.x)} 
-              width={x(d.dy)} height={y(d.dx)} 
-              style={{stroke: 'white', fill: 'lightgrey'}}
-          onMouseOver={()=>this.highlight.bind(this)(d)}
-        />
+        <g>
+          <rect x={x(d.y)} y={y(d.x)} 
+                width={x(d.dy)} height={y(d.dx)} 
+                style={{stroke: 'white', fill: 'lightgrey'}}
+            onMouseOver={()=>this.highlight.bind(this)(d)}
+          />
+              <foreignObject x={x(d.y)} y={y(d.x)}
+                             width={x(d.dy)} height={y(d.dx)}
+                            requiredExtensions="http://www.w3.org/1999/xhtml">
+                <body xmlns="http://www.w3.org/1999/xhtml">
+                  <p style={{
+                              padding: 3,
+                              wordWrap:'break-word',
+                              overflow:'hidden', fontSize:'x-small',
+                              pointerEvents: 'none',
+                            }} 
+                  >{d.toString()}</p>
+                </body>
+              </foreignObject>
+        </g>
       );
   }
   highlight(node) {
@@ -62,7 +78,13 @@ export default class Icicle extends Component {
 
         let highlightComp = '';
         if (this.state.highlightedNode) {
-          highlightComp = this.state.highlightedNode.namePath();
+          let node = this.state.highlightedNode;
+          highlightComp = (
+            <p>
+              {node.namePath()}<br/>
+              {node.aggregate(list=>
+                    _.sum(list.map(d=>parseInt(d))), 'cnt')} dimsets
+            </p>);
         }
         return (
           <Row>

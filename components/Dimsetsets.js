@@ -52,6 +52,8 @@ export default class Dimsetsets extends Component {
                 dataTitle={'Dim Set Sets'}
                 dimNames={['dim_name_1','dim_name_2','dim_name_3',
                            'dim_name_4','dim_name_5','dim_name_6']}
+                valueFunction={d=> d.aggregate(
+                  counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt')}
         ></Icicle>
         {dsss}
       </Grid>
@@ -92,7 +94,7 @@ class Dimsetset extends Component {
                 datasetLabel:'data' };
     let apistring = Selector.apiId(apiparams);
     apicall(apistring);
-    console.log('asked for', apistring);
+    //console.log('asked for', apistring);
   }
   render() {
     const { dss, schema, datasets,  } = this.props;
@@ -129,7 +131,6 @@ export class Dim extends Component {
     const { data, dim, gridWidth} = this.props;
 
     let sg = _.supergroup(data, dim);
-    console.log(data,dim,sg);
     //if (data.length) debugger;
     let sparkbars = sg.length && <SparkBarsChart
                         valType={"supgergroup"}
