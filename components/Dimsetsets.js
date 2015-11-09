@@ -48,10 +48,11 @@ export default class Dimsetsets extends Component {
                           */
     return (
       <Grid>
-        {dsss}
         <Icicle data={icicleData}></Icicle>
+        {dsss}
       </Grid>
     );
+        //{dsss}
   }
   dssClick(evt, dss) {
     //debugger;
@@ -119,13 +120,12 @@ class Dimsetset extends Component {
 Dimsetset.propTypes = {
   dss: React.PropTypes.object.isRequired,
 };
-class Dim extends Component {
+export class Dim extends Component {
   render() {
-    const { dss, data, dim, gridWidth} = this.props;
-    const { records, records_with_values, measures,
-            sets } = dss;
+    const { data, dim, gridWidth} = this.props;
 
     let sg = _.supergroup(data, dim);
+    console.log(data,dim,sg);
     //if (data.length) debugger;
     let sparkbars = sg.length && <SparkBarsChart
                         valType={"supgergroup"}
@@ -151,7 +151,6 @@ class Dim extends Component {
   }
 }
 Dim.propTypes = {
-  dss: React.PropTypes.object.isRequired,
   data: React.PropTypes.array.isRequired,
   dim: React.PropTypes.string.isRequired,
   gridWidth: React.PropTypes.number.isRequired,

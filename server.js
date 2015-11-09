@@ -43,7 +43,14 @@ app.get("/data/:schema/:apiquery", function(req, res) {
       params.push(req.query.dss);
     }
   } else if (apiquery === 'icicle') {
-    q = 'select dim_name_1,dim_name_2,dim_name_3,dim_name_4,dim_name_5,dim_name_6, count(*) as cnt, ' +
+    q = 'select ' +
+          "case when dim_name_1 = '' then null else dim_name_1 end as dim_name_1, " +
+          "case when dim_name_2 = '' then null else dim_name_2 end as dim_name_2, " +
+          "case when dim_name_3 = '' then null else dim_name_3 end as dim_name_3, " +
+          "case when dim_name_4 = '' then null else dim_name_4 end as dim_name_4, " +
+          "case when dim_name_5 = '' then null else dim_name_5 end as dim_name_5, " +
+          "case when dim_name_6 = '' then null else dim_name_6 end as dim_name_6, " +
+          'count(*) as cnt, ' +
           'count(distinct(measure_name)) as measures ' +
           'from ' + schema + '.denorm ' +
           'group by dim_name_1,dim_name_2,dim_name_3,dim_name_4,dim_name_5,dim_name_6 ' +
