@@ -8,17 +8,19 @@ let width = 600, height = 700,
     y = d3.scale.linear().range([0,  height]),
     root = _.supergroup([]).asRootVal('root');
 
-class IciclePart extends Component {
+class IceCell extends Component {
   render() {
       let d = this.props.node;
+      const real = this.props.isRealNode(d);
 
       // foreignobj from https://developer.mozilla.org/en-US/docs/Web/SVG/Element/foreignObject
       return (
         <g>
           <rect x={x(d.y)} y={y(d.x)} 
                 width={x(d.dy)} height={y(d.dx)} 
-                style={{stroke: 'white', fill: 'lightgrey'}}
+                style={{stroke: 'white', fill: real ? 'lightgrey' : 'darkgrey'}}
             onMouseOver={()=>this.highlight.bind(this)(d)}
+            onClick={()=>this.drill.bind(this)(d)}
           />
               <foreignObject x={x(d.y)} y={y(d.x)}
                              width={x(d.dy)} height={y(d.dx)}
@@ -35,6 +37,10 @@ class IciclePart extends Component {
               </foreignObject>
         </g>
       );
+  }
+  drill(node) { // specific to dimset stuff
+    if (this.props.drillFunc)
+      this.props.drillFunc(node);
   }
   highlight(node) {
     try {
@@ -61,12 +67,16 @@ export default class Icicle extends Component {
         if (data.length < 1) {
             return (<h3>Loading .. </h3>);
         }
+
         let valFunc = this.props.valueFunction || 
                       _.constant(1); // default to record count
         root = _.supergroup(data, dimNames,
                   {truncateBranchOnEmptyVal:true})
                 .asRootVal(dataTitle)
                 .addRecordsAsChildrenToLeafNodes();
+        console.log(root+'', root.descendants().length)
+        if (root.descendants().length > 500)
+          debugger;
 
         let partition = d3.layout.partition()
                           .value(valFunc)
@@ -86,18 +96,28 @@ export default class Icicle extends Component {
                     _.sum(list.map(d=>parseInt(d))), 'cnt')} dimsets
             </p>);
         }
+        const isRealNode = n => {
+          return _.some(n.records, 
+              rec=>_.isEqual(
+                    _(rec).pick(dimNames).values().compact().value(),
+                    n.pedigree().slice(1).map(String)));
+        };
         return (
           <Row>
             <Col md={8}>
               <svg width={width} height={height}>
               {thing.map((node, i) => {
-                return (<IciclePart  node={node} key={i} 
-                    highlight={this.nodeHighlight.bind(this)} />);
+                return (<IceCell  node={node} key={i} 
+                    drillFunc={this.props.drillFunc}
+                    highlight={this.nodeHighlight.bind(this)} 
+                    isRealNode={isRealNode}
+                    />);
               })}
               </svg>
             </Col>
             <Col md={4} >
               {highlightComp}
+              {this.props.children}
             </Col>
           </Row>
         );

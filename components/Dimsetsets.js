@@ -15,6 +15,14 @@ require('expose?$!expose?jQuery!jquery');
 require("bootstrap-webpack");
 
 export default class Dimsetsets extends Component {
+  constructor() {
+    super();
+    this.state = {};
+    this.state.drillApiString;
+    this.state.drillDss = '';
+    this.state.drillDims = [];
+
+  }
   componentWillMount() {
     const {apicall, schema, } = this.props;
     let apiparams = { schema,api:'icicle',datasetLabel:'icicle' };
@@ -25,6 +33,7 @@ export default class Dimsetsets extends Component {
     const { datasets, schema, explorer, apicall /*, dispatch, router */ } = this.props;
     let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
     let dimsetsets = datasets[Selector.apiId(apiparams)] || [];
+    /*
     let dsss = _.map(dimsetsets,
         (dss) => {
           return (
@@ -36,16 +45,38 @@ export default class Dimsetsets extends Component {
               />
             </Row>);
         })
+    */
     let icicleparams = { schema,api:'icicle',datasetLabel:'icicle' };
     let icicleData = datasets[Selector.apiId(icicleparams)] || [];
-    /*
-    let icicle = 'wait for icicle';
-    debugger;
-    console.log("THIS HERE IS THE THING");
-    var sg = _.supgergroup(icicleData,
-          ['dim_name_1','dim_name_2','dim_name_3','dim_name_4','dim_name_5','dim_name_6']
-                          );
-                          */
+
+    const drillFunc = dim => {
+      this.state.drillDims = dim.pedigree().map(String).slice(1);
+      this.state.drillDss = this.state.drillDims.join(',');
+      let apiparams = { schema, api:'dimsetset', 
+                  where: { dss: this.state.drillDss},
+                  datasetLabel:'summary' };
+      this.state.drillApiString = Selector.apiId(apiparams);
+      apicall(this.state.drillApiString);
+      /*
+      this.state.drillDims = dim.pedigree().map(String).slice(1);
+      this.state.drillDss = this.state.drillDims.join(',');
+      let apiparams = { schema, api:'denorm', 
+                  where: { dss: this.state.drillDss },
+                  datasetLabel:'data' };
+      this.state.drillApiString = Selector.apiId(apiparams);
+      apicall(this.state.drillApiString);
+      /*
+              <Icicle data={drillData}
+                      dataTitle={this.state.drillDss||'Drill down waiting...'}
+                      dimNames={this.state.drillDims || []}
+                      valueFunction={d=> d.aggregate(
+                        counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt')}
+              />
+      */
+    };
+    let drillData = this.state.drillApiString && 
+            datasets[this.state.drillApiString] || [];
+
     return (
       <Grid>
         <Icicle data={icicleData}
@@ -54,8 +85,13 @@ export default class Dimsetsets extends Component {
                            'dim_name_4','dim_name_5','dim_name_6']}
                 valueFunction={d=> d.aggregate(
                   counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt')}
-        ></Icicle>
-        {dsss}
+                drillFunc={drillFunc}
+        >
+          <div style={{border: '1px solid brown'}}>
+              <h3>Icicle drilldown</h3>
+              <pre>{JSON.stringify(drillData,null,2)}</pre>
+          </div>
+        </Icicle>
       </Grid>
     );
         //{dsss}

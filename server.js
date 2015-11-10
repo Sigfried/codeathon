@@ -5,6 +5,7 @@ var webpackHotMiddleware = require('webpack-hot-middleware');
 var config = require('./webpack.config');
 var compression = require('compression');
 var express = require('express');
+var munge = require('./data/dqcdm_munge');
 
 var app = new express();
 var port = 3000;
@@ -35,6 +36,7 @@ app.get("/data/:schema/:apiquery", function(req, res) {
   }
   var q;
   var params = [];
+  var postprocess;
   if (apiquery === "denorm") {
     q = 'SELECT * ' +
         'from ' + schema + '.denorm ';
@@ -53,8 +55,18 @@ app.get("/data/:schema/:apiquery", function(req, res) {
           'count(*) as cnt, ' +
           'count(distinct(measure_name)) as measures ' +
           'from ' + schema + '.denorm ' +
+          'where dim_name_1 is not null ' + 
           'group by dim_name_1,dim_name_2,dim_name_3,dim_name_4,dim_name_5,dim_name_6 ' +
           'order by 1,2,3,4,5,6';
+    postprocess = rows=>rows.map(row=>{
+      row.dim_name_1 && (row.dim_name_1 = munge.fixColName(row.dim_name_1));
+      row.dim_name_2 && (row.dim_name_2 = munge.fixColName(row.dim_name_2));
+      row.dim_name_3 && (row.dim_name_3 = munge.fixColName(row.dim_name_3));
+      row.dim_name_4 && (row.dim_name_4 = munge.fixColName(row.dim_name_4));
+      row.dim_name_5 && (row.dim_name_5 = munge.fixColName(row.dim_name_5));
+      row.dim_name_6 && (row.dim_name_6 = munge.fixColName(row.dim_name_6));
+      return row;
+    });
   } else if (apiquery === 'dimsetsets')
     //q = 'select  dimsetset, count(*) as records, count(nullif(value,\'\')) as records_with_values ' +
     q = 'select  dimsetset, count(*) as records, ' +
@@ -84,6 +96,8 @@ app.get("/data/:schema/:apiquery", function(req, res) {
   getData(q, params)
     .then(json => {
       console.log(req.url, json.length, 'results');
+      if (postprocess)
+        return postprocess(json);
       return json;
     })
     .then(json => res.json(json));

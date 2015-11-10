@@ -302,7 +302,8 @@ var _ = require('lodash');
         });
     });
   };
-  newData();
+  if (process.argv[2])
+    newData();
 })();
   /*
   function newDataNew() {
