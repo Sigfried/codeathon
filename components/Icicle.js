@@ -68,13 +68,13 @@ export default class Icicle extends Component {
             return (<h3>Loading .. </h3>);
         }
 
-        let valFunc = this.props.valueFunction || 
-                      _.constant(1); // default to record count
+        let valFunc = this.props.valueFunction;
+        console.log(valFunc);
         root = _.supergroup(data, dimNames,
                   {truncateBranchOnEmptyVal:true})
                 .asRootVal(dataTitle)
                 .addRecordsAsChildrenToLeafNodes();
-        console.log(root+'', root.descendants().length)
+        //console.log(root+'', root.descendants().length)
         if (root.descendants().length > 500)
           debugger;
 
@@ -116,6 +116,7 @@ export default class Icicle extends Component {
               </svg>
             </Col>
             <Col md={4} >
+              {valFunc.toString()}
               {highlightComp}
               {this.props.children}
             </Col>
@@ -127,4 +128,5 @@ Icicle.propTypes = {
   data: React.PropTypes.array.isRequired, // array of objs
   dataTitle: React.PropTypes.string.isRequired, // name of the whole set
   dimNames: React.PropTypes.array.isRequired, // array of strings to group by
+  valueFunction: React.PropTypes.func.isRequired,
 };

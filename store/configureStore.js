@@ -12,7 +12,7 @@ const finalCreateStore = compose(
   applyMiddleware(thunk),
   //applyMiddleware(thunk, api),
   reduxReactRouter({ routes, createHistory }),
-  applyMiddleware(createLogger())//,
+  //applyMiddleware(createLogger())//,
   //devTools()
 )(createStore);
 

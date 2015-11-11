@@ -44,14 +44,12 @@ export function apicall(apistring) {
   const params = Selectors.parseApiId(apistring);
 
   return (dispatch, getState) => {
-    console.log(params);
+    console.log('API call', apistring);
     const state = getState();
     if (state.explorer.datasets[apistring])
       return;
     let url = apiurl(params);
     dispatch(requestData({apistring, url:url}));
-      //debugger;
-    console.log(url);
 
     return fetch(url)
       .then(response => response.json())
@@ -72,7 +70,9 @@ export function apicall(apistring) {
       .then(callbacks.postFetchAction || (d=>d))
       */
       .then(json => { //debugger;
-        dispatch(cacheData({apistring, url:url,data:json}))})
+        console.log('API call', apistring, 'returned', json);
+        dispatch(cacheData({apistring, url:url,data:json}))
+      })
   }
 }
 function apiurl(params={}) {

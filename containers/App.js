@@ -17,6 +17,16 @@ require('expose?$!expose?jQuery!jquery');
 require("bootstrap-webpack");
 
 class App extends Component {
+  getChildContext() {
+    const {dispatch, router} = this.props;
+    return {
+      queryChange: (key, val) =>
+        ExplorerActions.queryChange(
+          this.props.dispatch,
+          this.props.router,
+          key, val),
+    };
+  }
   componentWillMount() {
     let {explorer, dispatch, apicall, schema} = this.props;
     schema = schema || 'phis_dq';
@@ -112,6 +122,9 @@ class App extends Component {
     );
   }
 }
+App.childContextTypes =  {
+  queryChange: React.PropTypes.func,
+};
         /*
         <hr />
         <Explore value={inputValue}

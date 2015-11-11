@@ -7,12 +7,27 @@ import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
 import DataTable from './DataTable';
 import Icicle from './Icicle';
-import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar } from 'react-bootstrap';
+import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar, Input } from 'react-bootstrap';
 import * as Selector from '../selectors';
 //var css = require('css!bootstrap/dist/css/bootstrap.css');
 //require("!style!css!less!bootstrap/less/bootstrap.less");
 require('expose?$!expose?jQuery!jquery');
 require("bootstrap-webpack");
+
+function valFuncs(pick) {
+  const all = [
+    { label: 'Dimsetset count',
+      func:   d => 1,
+    },
+    { label: 'Result count',
+      func:   d => d.aggregate(
+                counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt'),
+    },
+  ];
+  if (pick)
+    return _.find(all, {label: pick});
+  return all;
+}
 
 export default class Dimsetsets extends Component {
   constructor() {
@@ -21,7 +36,7 @@ export default class Dimsetsets extends Component {
     this.state.drillApiString;
     this.state.drillDss = '';
     this.state.drillDims = [];
-
+    this.state.valFunc = valFuncs()[0];
   }
   componentWillMount() {
     const {apicall, schema, } = this.props;
@@ -52,6 +67,8 @@ export default class Dimsetsets extends Component {
     const drillFunc = dim => {
       this.state.drillDims = dim.pedigree().map(String).slice(1);
       this.state.drillDss = this.state.drillDims.join(',');
+      //console.log(this.context.queryChange);
+      this.context.queryChange('dimsetset', this.state.drillDss);
       let apiparams = { schema, api:'dimsetset', 
                   where: { dss: this.state.drillDss},
                   datasetLabel:'summary' };
@@ -77,14 +94,22 @@ export default class Dimsetsets extends Component {
     let drillData = this.state.drillApiString && 
             datasets[this.state.drillApiString] || [];
 
+    const buttons = valFuncs().map((f,i) =>
+        <Input type="radio" name="valfunc" label={f.label} 
+          defaultChecked={f.label === this.state.valFunc.label}
+          value={f.func} key={f.label} onClick={()=>this.changeValFunc.bind(this)(f)}
+        />
+                                 );
     return (
       <Grid>
+        <fieldset>
+          {buttons}
+        </fieldset>
         <Icicle data={icicleData}
                 dataTitle={'Dim Set Sets'}
                 dimNames={['dim_name_1','dim_name_2','dim_name_3',
                            'dim_name_4','dim_name_5','dim_name_6']}
-                valueFunction={d=> d.aggregate(
-                  counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt')}
+                valueFunction={this.state.valFunc.func}
                 drillFunc={drillFunc}
         >
           <div style={{border: '1px solid brown'}}>
@@ -96,10 +121,18 @@ export default class Dimsetsets extends Component {
     );
         //{dsss}
   }
+  changeValFunc(valFunc) {
+    this.setState({valFunc});
+    console.log(valFunc);
+  }
   dssClick(evt, dss) {
     //debugger;
   }
 }
+Dimsetsets.contextTypes = {
+  queryChange: React.PropTypes.func,
+};
+
 function dssId(dss, what, schema) {
   return `${schema}_dimsetset_${what}_${dss.dimsetset}`;
 }
