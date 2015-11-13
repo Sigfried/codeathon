@@ -42,7 +42,7 @@ class LineChart extends Component {
 
 // from http://nicolashery.com/integrating-d3js-visualizations-in-a-react-app/
 // https://github.com/nicolashery/example-d3-react
-class d3Chart {
+export class D3Chart {
   constructor() {
     this._margin = {top: 20, right: 20, bottom: 30, left: 50};
   }
@@ -68,7 +68,7 @@ class d3Chart {
     //debugger;
   }
 }
-class d3XYChart extends d3Chart {
+class D3XYChart extends D3Chart {
   constructor() {
     super();
     this._getx = d=>d.x;
@@ -122,7 +122,7 @@ class d3XYChart extends d3Chart {
   };
   //_drawAxes(el, axes) { }
 }
-class D3LineChart extends d3XYChart {
+class D3LineChart extends D3XYChart {
   /*
    * expect getx, gety
    * make scales from points for now
