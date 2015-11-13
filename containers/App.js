@@ -36,8 +36,6 @@ class App extends Component {
         datasetLabel: 'dimsetsets-summary',
     };
     apicall(Selector.apiId(apiparams));
-
-    //d3.json('/chco_dimsetsets.json', (data) => dispatch(createAction('LOADED_VIZ_DATA')(data)));
   }
   render() {
         //<PickData tableWidth={700} tableHeight={1000}/>
