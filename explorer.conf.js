@@ -5,7 +5,7 @@ const config = {
   dimsetset: 'data_element,issue_period,patient_type,hospital_name',
   toFetch: 'denorm',
   //toFetch: 'dimsetsets',
-  schemaChoices: ['phis_dq', 'pcornet_dq', 'chco_dq', 'ms_dq', 'synpuf_dq',],
+  schemaChoices: ['phis_dq', 'pcornet_dq', 'hospital_dq', 'ms_dq', 'synpuf_dq',],
 };
 const months = {
   'JAN': '01', 
