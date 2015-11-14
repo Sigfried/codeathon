@@ -17,11 +17,14 @@ require("bootstrap-webpack");
 function valFuncs(pick) {
   const all = [
     { label: 'Dimsetset count',
-      func:   d => 1,
+      func:   d => {return 1},
     },
     { label: 'Result count',
-      func:   d => d.aggregate(
-                counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt'),
+      func:   d => {
+        let res = d.aggregate(
+                counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt');
+        return res;
+      }
     },
   ];
   if (pick)
@@ -86,7 +89,7 @@ export default class Dimsetsets extends Component {
               <Icicle data={drillData}
                       dataTitle={this.state.drillDss||'Drill down waiting...'}
                       dimNames={this.state.drillDims || []}
-                      valueFunction={d=> d.aggregate(
+                      valFunc={d=> d.aggregate(
                         counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt')}
               />
       */
@@ -100,6 +103,9 @@ export default class Dimsetsets extends Component {
           value={f.func} key={f.label} onClick={()=>this.changeValFunc.bind(this)(f)}
         />
                                  );
+    let sortFunc = (a,b) =>
+        valFuncs('Result count').func(b) -
+        valFuncs('Result count').func(a);
     return (
       <Grid>
         <fieldset>
@@ -109,7 +115,8 @@ export default class Dimsetsets extends Component {
                 dataTitle={'Dim Set Sets'}
                 dimNames={['dim_name_1','dim_name_2','dim_name_3',
                            'dim_name_4','dim_name_5','dim_name_6']}
-                valueFunction={this.state.valFunc.func}
+                valFunc={this.state.valFunc.func}
+                sortFunc={sortFunc}
                 drillFunc={drillFunc}
         >
           <div style={{border: '1px solid brown'}}>
@@ -123,7 +130,6 @@ export default class Dimsetsets extends Component {
   }
   changeValFunc(valFunc) {
     this.setState({valFunc});
-    console.log(valFunc);
   }
   dssClick(evt, dss) {
     //debugger;

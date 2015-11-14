@@ -6,47 +6,74 @@ import {D3Chart, D3XYChart} from './LineChart';
 
 let width = 600, height = 700,
     x = d3.scale.linear().range([0, width]),
-    y = d3.scale.linear().range([0,  height]),
-    root = _.supergroup([]).asRootVal('root');
+    y = d3.scale.linear().range([0,  height])
+    //root = _.supergroup([]).asRootVal('root');
 
+function transform(d, ky) {
+    return "translate(8," + d.dx * ky / 2 + ")";
+}
+function click(d, x, y, g) {
+    if (!d.children) return;
+
+    let kx = (d.y ? width - 40 : width) / (1 - d.y);
+    let ky = height / d.dx;
+    x.domain([d.y, 1]).range([d.y ? 40 : 0, width]);
+    y.domain([d.x, d.x + d.dx]);
+
+    var t = g.transition()
+        .duration(d3.event.altKey ? 7500 : 750)
+        .attr("transform", function(d) { return "translate(" + x(d.y) + "," + y(d.x) + ")"; });
+
+    t.select("rect")
+        .attr("width", d.dy * kx)
+        .attr("height", function(d) { return d.dx * ky; });
+
+    t.select("text")
+        .attr("transform", d=>transform(d,ky))
+        .style("opacity", function(d) { return d.dx * ky > 12 ? 1 : 0; });
+
+    d3.event.stopPropagation();
+    return (kx, ky);
+}
 class D3IcicleHorizontal { // not a react component
-    create(el, state) {
-        const {width, height} = state;
+    create(el, props) {
+        const {width, height} = props;
         this.svg = d3.select(el).append('svg')
                 .attr('class', 'd3')
                 .attr('width', width)
                 .attr('height', height)
         this.created = true;
     }
-
-    update(el, state) {
-        if (!this.created)
-            this.create(el, state);
-        const { data, dataTitle, dimNames, valFunc, x, y, 
-                width, height,
-                    } = state;
-        console.log(data);
+    draw(el, props) {
+        const { data, dataTitle, dimNames, valFunc, sortFunc, width, height, } = props;
+        console.log('draw with', valFunc);
+        x = this.x = d3.scale.linear().range([0, width]);
+        y = this.y = d3.scale.linear().range([0, height]);
         if (!data) debugger;
-        let root = _.supergroup(data, dimNames, {truncateBranchOnEmptyVal:true})
+        this.root = _.supergroup(data, dimNames, {truncateBranchOnEmptyVal:true})
                     .asRootVal(dataTitle)
                     .addRecordsAsChildrenToLeafNodes();
-        if (root.descendants().length > 500)
-          debugger;
+        if (this.root.descendants().length > 500)
+            debugger;
 
-        let partition = d3.layout.partition()
-                          .value(valFunc)
+        this.partition = d3.layout.partition()
+                        .value(valFunc)
+                        .sort(sortFunc)
 
-        let g = this.svg.selectAll("g")
-                .data(partition.nodes(root))
+        if (!this.partition) debugger;
+        let g = this.g = this.svg.selectAll("g")
+                .data(this.partition.nodes(this.root), d=>d.namePath())
             .enter().append("svg:g")
                 .attr("transform", function(d) { return "translate(" + x(d.y) + "," + y(d.x) + ")"; })
-                //.on("click", click);
+                .on("click", d=>{
+                    [kx, ky] = click(d, x, y, g);
+                })
 
-        let kx = width / root.dx,
-            ky = height / 1;
+        let kx = this.kx = width / this.root.dx,
+            ky = this.ky = height / 1;
 
         g.append("svg:rect")
-            .attr("width", root.dy * kx)
+            .attr("width", this.root.dy * kx)
             .attr("height", function(d) { return d.dx * ky; })
             .attr("class", function(d) { return d.children ? "parent" : "child"; })
             .style('stroke','white')
@@ -58,9 +85,47 @@ class D3IcicleHorizontal { // not a react component
             .style("opacity", function(d) { return d.dx * ky > 12 ? 1 : 0; })
             .text(function(d) { return d.toString(); })
 
-        function transform(d) {
-            return "translate(8," + d.dx * ky / 2 + ")";
+        this.drawn = true;
+    }
+
+    update(el, props) {
+        if (!this.drawn) {
+            if (!this.created)
+                this.create(el, props);
+            this.draw(el, props);
         }
+        const { data, dataTitle, dimNames, valFunc, width, height, } = props;
+        console.log('update with', valFunc);
+        let x = this.x,
+            y = this.y,
+            kx = this.kx,
+            ky = this.ky;
+
+        this.partition.value(valFunc);
+        this.svg.selectAll("g")
+            .data(this.partition.nodes(this.root), d=>d.namePath())
+
+        this.svg.selectAll('g')
+            .transition()
+            .duration(1000)
+            .attr("transform", function(d) { return "translate(" + x(d.y) + "," + y(d.x) + ")"; })
+        this.svg.selectAll('g')
+            .select('rect')
+            .transition()
+            .duration(1000)
+            .attr("width", this.root.dy * kx)
+            .attr("height", function(d) { 
+                return d.dx * ky; 
+            })
+        this.svg.selectAll('g')
+            .select('text')
+            .transition()
+            .duration(1000)
+            .attr("transform", d=>transform(d,ky))
+            .attr("dy", ".35em")
+            .style("opacity", function(d) { return d.dx * ky > 12 ? 1 : 0; })
+            .text(function(d) { return d.toString(); })
+
             /*
         let highlightComp = '';
         if (this.state.highlightedNode) {
@@ -102,24 +167,14 @@ class D3IcicleHorizontal { // not a react component
     }
 }
 export default class Icicle extends Component {
-    constructor(props) {
-        super();
-        this.state = {
-            width: props.width || 600,
-            height: props.height || 600,
-            root: _.supergroup([]).asRootVal('root'),
-            valFunc: props.valFunc || _.constant(1),
-        };
-        this.state.x = d3.scale.linear().range([0, this.state.width]);
-        this.state.y = d3.scale.linear().range([0, this.state.height]);
+    componentWillUpdate() {
     }
     nodeHighlight(node) {
       this.setState({highlightedNode: node});
     }
 
     render() {
-        const { data, dataTitle, dimNames } = this.props;
-        const { width, height } = this.state;
+        const { data, width, height } = this.props;
         if (data.length < 1) {
             return (<h3>Loading .. </h3>);
         }
@@ -134,22 +189,26 @@ export default class Icicle extends Component {
       this.lc = new D3IcicleHorizontal();
     }
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.data.length < 1 || this.props.data === prevProps.data)
+        if (!(
+            this.props.valFunc !== prevProps.valFunc ||
+            (this.props.data.length > 0 &&
+            this.props.data !== prevProps.data)
+        ))
             return;
-        console.log(this.props.data);
-        this.setState({
-            data: this.props.data,
-            dimNames: this.props.dimNames,
-            dataTitle: this.props.dataTitle,
-        }, 
-        ()=>this.lc.update(this.refs.div, this.state));
+        this.lc.update(this.refs.div, this.props);
     }
 };
 Icicle.propTypes = {
   data: React.PropTypes.array.isRequired, // array of objs
   dataTitle: React.PropTypes.string.isRequired, // name of the whole set
   dimNames: React.PropTypes.array.isRequired, // array of strings to group by
-  valueFunction: React.PropTypes.func.isRequired,
+  valFunc: React.PropTypes.func.isRequired,
+  sortFunc: React.PropTypes.func.isRequired,
+};
+Icicle.defaultProps = {
+    width: 800, 
+    height: 600, 
+    valFunc: _.constant(1),
 };
 
 class IceCell extends Component {
