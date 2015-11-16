@@ -13,7 +13,7 @@ const isRealNode = (n, dimNames) => {
 function transform(d, ky) {
     return "translate(8," + d.dx * ky / 2 + ")";
 }
-function click(d, x, y, g) {
+function click(d, x, y, g, width, height) {
     if (!d.children) return;
 
     let kx = (d.y ? width - 40 : width) / (1 - d.y);
@@ -45,8 +45,10 @@ class D3IcicleHorizontal { // not a react component
                 .attr('height', height)
         this.created = true;
     }
-    draw(el, props, highlightFunc, drillFunc) {
-        const { data, dataTitle, dimNames, valFunc, sortFunc, width, height, } = props;
+    draw(el, props) {
+        const { data, dataTitle, dimNames, valFunc, sortFunc, width, height, 
+                drillCb, hoverCb, zoomable
+        } = props;
         //console.log('draw with', valFunc);
         let x = this.x = d3.scale.linear().range([0, width]);
         let y = this.y = d3.scale.linear().range([0, height]);
@@ -66,13 +68,12 @@ class D3IcicleHorizontal { // not a react component
                 .data(this.partition.nodes(this.root), d=>d.namePath())
             .enter().append("svg:g")
                 .attr("transform", function(d) { return "translate(" + x(d.y) + "," + y(d.x) + ")"; })
-                /*
-                .on("click", d=>{
-                    [kx, ky] = click(d, x, y, g);
+                .on("click.zoom", d=>{
+                    if (zoomable)
+                        [kx, ky] = click(d, x, y, g, width, height);
                 })
-                */
-                .on("click", drillFunc)
-                .on("mouseover", highlightFunc)
+                .on("click.cb", drillCb || _.noop)
+                .on("mouseover.cb", hoverCb || _.noop)
                 .style("cursor", "pointer")
 
 
@@ -99,11 +100,11 @@ class D3IcicleHorizontal { // not a react component
         this.drawn = true;
     }
 
-    update(el, props, highlightFunc, drillFunc) {
+    update(el, props) {
         if (!this.drawn) {
             if (!this.created)
                 this.create(el, props);
-            this.draw(el, props, highlightFunc, drillFunc);
+            this.draw(el, props);
         }
         const { data, dataTitle, dimNames, valFunc, width, height, } = props;
         //console.log('update with', valFunc);
@@ -136,35 +137,6 @@ class D3IcicleHorizontal { // not a react component
             .attr("dy", ".35em")
             .style("opacity", function(d) { return d.dx * ky > 12 ? 1 : 0; })
             .text(function(d) { return d.toString(); })
-
-            /*
-        const isRealNode = n => {
-          return _.some(n.records, 
-              rec=>_.isEqual(
-                    _(rec).pick(dimNames).values().compact().value(),
-                    n.pedigree().slice(1).map(String)));
-        };
-        return (
-          <Row>
-            <Col md={8}>
-              <svg width={width} height={height}>
-              {thing.map((node, i) => {
-                return (<IceCell  node={node} key={i} 
-                    drillFunc={this.props.drillFunc}
-                    highlight={this.nodeHighlight.bind(this)} 
-                    isRealNode={isRealNode}
-                    />);
-              })}
-              </svg>
-            </Col>
-            <Col md={4} >
-              {valFunc.toString()}
-              {highlightComp}
-              {this.props.children}
-            </Col>
-          </Row>
-        );
-        */
     }
 }
 export default class Icicle extends Component {
@@ -172,72 +144,29 @@ export default class Icicle extends Component {
         super();
         this.state = { };
     }
-    nodeHighlight(node) {
-      this.setState({highlightedNode: node});
-    }
-
     render() {
         const { data, width, height } = this.props;
         if (data.length < 1) {
             return (<h3>Loading .. </h3>);
         }
-
-        let highlightComp = '';
-        if (this.state.highlightedNode) {
-            let node = this.state.highlightedNode;
-            debugger;
-            highlightComp = (
-                <p>
-                    {node.namePath({noRoot:true, delim:'\n'})}
-                    <br/>
-                    <br/>
-                    {node.aggregate(list=>
-                        _.sum(list.map(d=>parseInt(d))), 'cnt')} dimsets
-                </p>);
-            //console.log('highlight', node);
-        }
-
         return (
-            <Row>
-                <Col md={6}>
-                    <div ref="div" 
-                        style={{//border:"1px solid blue", 
-                                width, height,
-                                fontSize: 10,
-                            }}>
-                        </div>
-                </Col>
-                <Col md={5} mdOffset={1}>
-                    {highlightComp}
-                    {this.props.children}
-                </Col>
-            </Row>
+            <div ref="div" 
+                style={{//border:"1px solid blue", 
+                        width, height,
+                        fontSize: 10,
+                    }}>
+                </div>
         );
     }
     componentDidMount() {
       this.lc = new D3IcicleHorizontal();
     }
     componentDidUpdate(prevProps, prevState) {
-        if (!(
-            this.props.valFunc !== prevProps.valFunc ||
+        if (this.props.valFunc !== prevProps.valFunc ||
             (this.props.data.length > 0 &&
             this.props.data !== prevProps.data)
-        ))
-            return;
-        this.lc.update(this.refs.div, this.props,
-            this.nodeHighlight.bind(this),
-            this.drill.bind(this)
-                      );
-    }
-    drill(node) { // specific to dimset stuff
-        if (this.props.drillFunc)
-        this.props.drillFunc(node);
-    }
-    highlight(node) {
-        try {
-            this.props.highlight(node);
-        } catch(e) {
-            debugger;
+        ) {
+            this.lc.update(this.refs.div, this.props);
         }
     }
 };
@@ -253,36 +182,3 @@ Icicle.defaultProps = {
     height: window.innerHeight * 0.7, 
     valFunc: _.constant(1),
 };
-
-class IceCell extends Component {
-  render() {
-      let d = this.props.node;
-      const real = this.props.isRealNode(d);
-
-      // foreignobj from https://developer.mozilla.org/en-US/docs/Web/SVG/Element/foreignObject
-      return (
-        <g>
-          <rect x={x(d.y)} y={y(d.x)} 
-                width={x(d.dy)} height={y(d.dx)} 
-                style={{stroke: 'white', fill: real ? 'lightgrey' : 'darkgrey'}}
-            onMouseOver={()=>this.highlight.bind(this)(d)}
-            onClick={()=>this.drill.bind(this)(d)}
-          />
-              <foreignObject x={x(d.y)} y={y(d.x)}
-                             width={x(d.dy)} height={y(d.dx)}
-                            requiredExtensions="http://www.w3.org/1999/xhtml">
-                <body xmlns="http://www.w3.org/1999/xhtml">
-                  <p style={{
-                              padding: 3,
-                              wordWrap:'break-word',
-                              overflow:'hidden', fontSize:'x-small',
-                              pointerEvents: 'none',
-                            }} 
-                  >{d.toString()}</p>
-                </body>
-              </foreignObject>
-        </g>
-      );
-  }
-};
-

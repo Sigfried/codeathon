@@ -69,7 +69,7 @@ export default class Dimsetsets extends Component {
     let icicleparams = { schema,api:'icicle',datasetLabel:'icicle' };
     let icicleData = datasets[Selector.apiId(icicleparams)] || [];
 
-    const drillFunc = dim => {
+    const drillCb = dim => {
       this.state.drillDims = dim.pedigree().map(String).slice(1);
       this.state.drillDss = this.state.drillDims.join(',');
       this.context.queryChange('dimsetset', this.state.drillDss);
@@ -84,22 +84,6 @@ export default class Dimsetsets extends Component {
       this.state.drillApiString = Selector.apiId(apiparams);
       apicall(this.state.drillApiString);
 
-      /*
-      this.state.drillDims = dim.pedigree().map(String).slice(1);
-      this.state.drillDss = this.state.drillDims.join(',');
-      let apiparams = { schema, api:'denorm', 
-                  where: { dss: this.state.drillDss },
-                  datasetLabel:'data' };
-      this.state.drillApiString = Selector.apiId(apiparams);
-      apicall(this.state.drillApiString);
-      /*
-              <Icicle data={drillData}
-                      dataTitle={this.state.drillDss||'Drill down waiting...'}
-                      dimNames={this.state.drillDims || []}
-                      valFunc={d=> d.aggregate(
-                        counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt')}
-              />
-      */
     };
     let dimComp = 'not being used';
     let drillData = [];
@@ -111,13 +95,22 @@ export default class Dimsetsets extends Component {
         dimComp = <Dim dim={dim} data={drillData} gridWidth={3}/>;
       }
     }
+    const hoverCb = _.noop;
     /*
-    function dimval(dimname, data) {
-      let dim = {name:dimname, id: dimname};
-      let val = _.supergroup(data, dimname);
-      return [dim,val];
-    }
-    */
+        let highlightComp = '';
+        if (this.state.highlightedNode) {
+            let node = this.state.highlightedNode;
+            highlightComp = (
+                <p>
+                    {node.namePath({noRoot:true, delim:'\n'})}
+                    <br/>
+                    <br/>
+                    {node.aggregate(list=>
+                        _.sum(list.map(d=>parseInt(d))), 'cnt')} dimsets
+                </p>);
+            //console.log('highlight', node);
+        }
+        */
 
     const buttons = valFuncs().map((f,i) =>
         <Input type="radio" name="valfunc" label={f.label} 
@@ -133,19 +126,29 @@ export default class Dimsetsets extends Component {
         <fieldset>
           {buttons}
         </fieldset>
-        <Icicle data={icicleData}
-                dataTitle={'Dim Set Sets'}
-                dimNames={['dim_name_1','dim_name_2','dim_name_3',
-                           'dim_name_4','dim_name_5','dim_name_6']}
-                valFunc={this.state.valFunc.func}
-                sortFunc={sortFunc}
-                drillFunc={drillFunc}
-        >
-          <div style={{border: '1px solid brown'}}>
-              <h3>Icicle drilldown</h3>
-              {dimComp}
-          </div>
-        </Icicle>
+        <Row>
+            <Col md={6}>
+              <Icicle data={icicleData}
+                      dataTitle={'Dim Set Sets'}
+                      dimNames={['dim_name_1','dim_name_2','dim_name_3',
+                                'dim_name_4','dim_name_5','dim_name_6']}
+                      valFunc={this.state.valFunc.func}
+                      sortFunc={sortFunc}
+                      drillCb={drillCb}
+                      hoverCb={hoverCb}
+                      zoomable={true}
+              >
+                <div style={{border: '1px solid brown'}}>
+                    <h3>Icicle drilldown</h3>
+                    {dimComp}
+                </div>
+              </Icicle>
+            </Col>
+            <Col md={5} mdOffset={1}>
+                {'wait' || highlightComp}
+                {this.props.children}
+            </Col>
+        </Row>
       </Grid>
     );
         //{dsss}
