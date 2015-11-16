@@ -14,7 +14,8 @@ function transform(d, ky) {
     return "translate(8," + d.dx * ky / 2 + ")";
 }
 function click(d, x, y, g, width, height) {
-    if (!d.children) return;
+    if (!d.children) 
+        return [kx, ky];
 
     let kx = (d.y ? width - 40 : width) / (1 - d.y);
     let ky = height / d.dx;
@@ -34,7 +35,7 @@ function click(d, x, y, g, width, height) {
         .style("opacity", function(d) { return d.dx * ky > 12 ? 1 : 0; });
 
     d3.event.stopPropagation();
-    return (kx, ky);
+    return [kx, ky];
 }
 class D3IcicleHorizontal { // not a react component
     create(el, props) {

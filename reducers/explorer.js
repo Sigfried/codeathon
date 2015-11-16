@@ -37,11 +37,14 @@ function datasets(state = {dimsetsets:[]}, action) {
       if (!Array.isArray(action.payload))
         return Object.assign({}, state, action.payload);
     case DATA_REQUESTED:
+      let empty = [];
+      empty.requestedOnly = true;
       return Object.assign({}, state,
-                           { [action.payload.apistring]: [] });
+              { [action.payload.apistring]: empty });
     case DATA_CACHED:
       const {apistring, url, data} = action.payload;
-      if (_.isEqual(state[apistring], data))
+      if (!state[apistring].requestedOnly &&
+          _.isEqual(state[apistring], data))
         debugger;
       return Object.assign({}, state,
         { [action.payload.apistring]: action.payload.data });

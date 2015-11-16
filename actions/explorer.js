@@ -85,6 +85,7 @@ function apiurl(params={}) {
   let url = '/data/' + schema + '/' + api + '?' + qs;
   return url;
 }
+/*
 export function fetchRecsAsync(apiquery) {
   return dispatch => {
     dispatch(requestData(apiquery));
@@ -95,6 +96,7 @@ export function fetchRecsAsync(apiquery) {
       });
   }
 }
+*/
 
 const dimsSet = createAction(DIMLIST_SET);
 export function setDimsFromRecs(recs) {
