@@ -202,11 +202,6 @@ class DimInfo extends Component {
     return <div/>;
   }
 }
-DimDesc.contextTypes =  {
-  explorer: React.PropTypes.object,
-  router: React.PropTypes.object,
-  dispatch: React.PropTypes.func,
-};
 class ValDesc extends Component {
   /*
   shouldComponentUpdate(nextProps) {
