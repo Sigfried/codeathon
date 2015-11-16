@@ -4,11 +4,12 @@ import _ from 'supergroup';
 import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar } from 'react-bootstrap';
 import {D3Chart, D3XYChart} from './LineChart';
 
-let width = 600, height = 700,
-    x = d3.scale.linear().range([0, width]),
-    y = d3.scale.linear().range([0,  height])
-    //root = _.supergroup([]).asRootVal('root');
-
+const isRealNode = (n, dimNames) => {
+    return _.some(n.records, 
+        rec=>_.isEqual(
+            _(rec).pick(dimNames).values().compact().value(),
+            n.pedigree().slice(1).map(String)));
+};
 function transform(d, ky) {
     return "translate(8," + d.dx * ky / 2 + ")";
 }
@@ -44,11 +45,11 @@ class D3IcicleHorizontal { // not a react component
                 .attr('height', height)
         this.created = true;
     }
-    draw(el, props) {
+    draw(el, props, highlightFunc, drillFunc) {
         const { data, dataTitle, dimNames, valFunc, sortFunc, width, height, } = props;
-        console.log('draw with', valFunc);
-        x = this.x = d3.scale.linear().range([0, width]);
-        y = this.y = d3.scale.linear().range([0, height]);
+        //console.log('draw with', valFunc);
+        let x = this.x = d3.scale.linear().range([0, width]);
+        let y = this.y = d3.scale.linear().range([0, height]);
         if (!data) debugger;
         this.root = _.supergroup(data, dimNames, {truncateBranchOnEmptyVal:true})
                     .asRootVal(dataTitle)
@@ -65,9 +66,15 @@ class D3IcicleHorizontal { // not a react component
                 .data(this.partition.nodes(this.root), d=>d.namePath())
             .enter().append("svg:g")
                 .attr("transform", function(d) { return "translate(" + x(d.y) + "," + y(d.x) + ")"; })
+                /*
                 .on("click", d=>{
                     [kx, ky] = click(d, x, y, g);
                 })
+                */
+                .on("click", drillFunc)
+                .on("mouseover", highlightFunc)
+                .style("cursor", "pointer")
+
 
         let kx = this.kx = width / this.root.dx,
             ky = this.ky = height / 1;
@@ -77,25 +84,29 @@ class D3IcicleHorizontal { // not a react component
             .attr("height", function(d) { return d.dx * ky; })
             .attr("class", function(d) { return d.children ? "parent" : "child"; })
             .style('stroke','white')
-            .style('fill','lightgray')
+            .style('fill','steelblue')
+            .style('opacity', d => isRealNode(d, dimNames) ? 1 : .4)
+            .style("cursor", "pointer")
 
         g.append("svg:text")
             .attr("transform", transform)
             .attr("dy", ".35em")
             .style("opacity", function(d) { return d.dx * ky > 12 ? 1 : 0; })
             .text(function(d) { return d.toString(); })
+            .style('opacity', d => isRealNode(d, dimNames) ? 1 : .4)
+            .style("cursor", "pointer")
 
         this.drawn = true;
     }
 
-    update(el, props) {
+    update(el, props, highlightFunc, drillFunc) {
         if (!this.drawn) {
             if (!this.created)
                 this.create(el, props);
-            this.draw(el, props);
+            this.draw(el, props, highlightFunc, drillFunc);
         }
         const { data, dataTitle, dimNames, valFunc, width, height, } = props;
-        console.log('update with', valFunc);
+        //console.log('update with', valFunc);
         let x = this.x,
             y = this.y,
             kx = this.kx,
@@ -127,16 +138,6 @@ class D3IcicleHorizontal { // not a react component
             .text(function(d) { return d.toString(); })
 
             /*
-        let highlightComp = '';
-        if (this.state.highlightedNode) {
-          let node = this.state.highlightedNode;
-          highlightComp = (
-            <p>
-              {node.namePath()}<br/>
-              {node.aggregate(list=>
-                    _.sum(list.map(d=>parseInt(d))), 'cnt')} dimsets
-            </p>);
-        }
         const isRealNode = n => {
           return _.some(n.records, 
               rec=>_.isEqual(
@@ -167,7 +168,9 @@ class D3IcicleHorizontal { // not a react component
     }
 }
 export default class Icicle extends Component {
-    componentWillUpdate() {
+    constructor() {
+        super();
+        this.state = { };
     }
     nodeHighlight(node) {
       this.setState({highlightedNode: node});
@@ -178,12 +181,38 @@ export default class Icicle extends Component {
         if (data.length < 1) {
             return (<h3>Loading .. </h3>);
         }
-        return (<div ref="div" 
-                style={{border:"1px solid blue", 
-                        width, height,
-                        fontSize: 10,
-                      }}>
-                </div>);
+
+        let highlightComp = '';
+        if (this.state.highlightedNode) {
+            let node = this.state.highlightedNode;
+            debugger;
+            highlightComp = (
+                <p>
+                    {node.namePath({noRoot:true, delim:'\n'})}
+                    <br/>
+                    <br/>
+                    {node.aggregate(list=>
+                        _.sum(list.map(d=>parseInt(d))), 'cnt')} dimsets
+                </p>);
+            //console.log('highlight', node);
+        }
+
+        return (
+            <Row>
+                <Col md={6}>
+                    <div ref="div" 
+                        style={{//border:"1px solid blue", 
+                                width, height,
+                                fontSize: 10,
+                            }}>
+                        </div>
+                </Col>
+                <Col md={5} mdOffset={1}>
+                    {highlightComp}
+                    {this.props.children}
+                </Col>
+            </Row>
+        );
     }
     componentDidMount() {
       this.lc = new D3IcicleHorizontal();
@@ -195,7 +224,21 @@ export default class Icicle extends Component {
             this.props.data !== prevProps.data)
         ))
             return;
-        this.lc.update(this.refs.div, this.props);
+        this.lc.update(this.refs.div, this.props,
+            this.nodeHighlight.bind(this),
+            this.drill.bind(this)
+                      );
+    }
+    drill(node) { // specific to dimset stuff
+        if (this.props.drillFunc)
+        this.props.drillFunc(node);
+    }
+    highlight(node) {
+        try {
+            this.props.highlight(node);
+        } catch(e) {
+            debugger;
+        }
     }
 };
 Icicle.propTypes = {
@@ -206,8 +249,8 @@ Icicle.propTypes = {
   sortFunc: React.PropTypes.func.isRequired,
 };
 Icicle.defaultProps = {
-    width: 800, 
-    height: 600, 
+    width: window.innerWidth * 0.5, 
+    height: window.innerHeight * 0.7, 
     valFunc: _.constant(1),
 };
 
@@ -240,17 +283,6 @@ class IceCell extends Component {
               </foreignObject>
         </g>
       );
-  }
-  drill(node) { // specific to dimset stuff
-    if (this.props.drillFunc)
-      this.props.drillFunc(node);
-  }
-  highlight(node) {
-    try {
-      this.props.highlight(node);
-    } catch(e) {
-      debugger;
-    }
   }
 };
 

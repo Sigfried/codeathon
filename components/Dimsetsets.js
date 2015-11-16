@@ -7,8 +7,10 @@ import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
 import DataTable from './DataTable';
 import Icicle from './Icicle';
+import {DimInfo} from './DQData';
 import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar, Input } from 'react-bootstrap';
 import * as Selector from '../selectors';
+import _ from 'supergroup';
 //var css = require('css!bootstrap/dist/css/bootstrap.css');
 //require("!style!css!less!bootstrap/less/bootstrap.less");
 require('expose?$!expose?jQuery!jquery');
@@ -70,13 +72,18 @@ export default class Dimsetsets extends Component {
     const drillFunc = dim => {
       this.state.drillDims = dim.pedigree().map(String).slice(1);
       this.state.drillDss = this.state.drillDims.join(',');
-      //console.log(this.context.queryChange);
       this.context.queryChange('dimsetset', this.state.drillDss);
+      /*
       let apiparams = { schema, api:'dimsetset', 
                   where: { dss: this.state.drillDss},
                   datasetLabel:'summary' };
+      */
+      let apiparams = { schema, api:'denorm', 
+                  where: { dss: this.state.drillDss },
+                  datasetLabel:'data' };
       this.state.drillApiString = Selector.apiId(apiparams);
       apicall(this.state.drillApiString);
+
       /*
       this.state.drillDims = dim.pedigree().map(String).slice(1);
       this.state.drillDss = this.state.drillDims.join(',');
@@ -94,8 +101,23 @@ export default class Dimsetsets extends Component {
               />
       */
     };
-    let drillData = this.state.drillApiString && 
-            datasets[this.state.drillApiString] || [];
+    let dimComp = 'not being used';
+    let drillData = [];
+    if (this.state.drillApiString) {
+      dimComp = `Loading data for ${this.state.drillDss}`;
+      if (datasets[this.state.drillApiString]) {
+        drillData = datasets[this.state.drillApiString];
+        let dim = _.last(this.state.drillDims);
+        dimComp = <Dim dim={dim} data={drillData} gridWidth={3}/>;
+      }
+    }
+    /*
+    function dimval(dimname, data) {
+      let dim = {name:dimname, id: dimname};
+      let val = _.supergroup(data, dimname);
+      return [dim,val];
+    }
+    */
 
     const buttons = valFuncs().map((f,i) =>
         <Input type="radio" name="valfunc" label={f.label} 
@@ -121,7 +143,7 @@ export default class Dimsetsets extends Component {
         >
           <div style={{border: '1px solid brown'}}>
               <h3>Icicle drilldown</h3>
-              <pre>{JSON.stringify(drillData,null,2)}</pre>
+              {dimComp}
           </div>
         </Icicle>
       </Grid>
@@ -180,7 +202,7 @@ class Dimsetset extends Component {
                 where: { dss: dss.dimsetset },
                 datasetLabel:'data' };
     let data = datasets[Selector.apiId(apiparams)];
-    //data && console.log('GOT SOMETHING', data);
+    data && console.log('GOT SOMETHING', data);
 
     const dims = dss.dimsetset.split(/,/);
     let gridWidth = Math.floor(10 / dims.length);
