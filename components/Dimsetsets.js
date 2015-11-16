@@ -8,6 +8,7 @@ import LineChart from './LineChart';
 import DataTable from './DataTable';
 import Icicle from './Icicle';
 import {DimInfo} from './DQData';
+import ApiWrapper from './Wrapper';
 import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar, Input } from 'react-bootstrap';
 import * as Selector from '../selectors';
 import _ from 'supergroup';
@@ -15,6 +16,9 @@ import _ from 'supergroup';
 //require("!style!css!less!bootstrap/less/bootstrap.less");
 require('expose?$!expose?jQuery!jquery');
 require("bootstrap-webpack");
+
+const dimNames=['dim_name_1','dim_name_2','dim_name_3',
+                'dim_name_4','dim_name_5','dim_name_6'];
 
 function valFuncs(pick) {
   const all = [
@@ -33,11 +37,21 @@ function valFuncs(pick) {
     return _.find(all, {label: pick});
   return all;
 }
-
+const isRealNode = (n) => {
+    return _.some(n.records, 
+        rec=>_.isEqual(
+            _(rec).pick(dimNames).values().compact().value(),
+            n.pedigree().slice(1).map(String)));
+};
+function nodeGCb(node) {
+  d3.select(this)
+    .style('opacity', isRealNode(node) ? 1 : .4);
+}
 export default class Dimsetsets extends Component {
   constructor() {
     super();
     this.state = {};
+    this.state.highlightedDim = null;
     this.state.drillApiString;
     this.state.drillDss = '';
     this.state.drillDims = [];
@@ -49,11 +63,43 @@ export default class Dimsetsets extends Component {
     let apistring = Selector.apiId(apiparams);
     apicall(apistring);
   }
+  
+  hoverCb(dim) {
+    const {schema} = this.props;
+    let drillDims = dim.pedigree().map(String).slice(1);
+    let drillDss = drillDims.join(',');
+    if (!drillDss) return;
+    const apiParams = { schema, api:'dimsetset', 
+                  where: { dss: drillDss},
+                  datasetLabel:'summary' };
+    this.setState({highlightedDim: dim, hoverApiParams: apiParams});
+  }
+
+  drillCb(dim) {
+    const {schema} = this.props;
+    let drillDims = dim.pedigree().map(String).slice(1);
+    let drillDss = drillDims.join(',');
+    if (!drillDss) return;
+    const apiParams = { schema, api:'denorm', 
+                where: { dss: drillDss },
+                datasetLabel:'data' };
+    this.context.queryChange('dimsetset', drillDss);
+    this.setState({drillDim: dim, drillApiParams: apiParams});
+    /*
+    let apiparams = { schema, api:'dimsetset', 
+                where: { dss: this.state.drillDss},
+                datasetLabel:'summary' };
+    this.state.drillApiString = Selector.apiId(apiparams);
+    apicall(this.state.drillApiString);
+    */
+
+  };
+  
   render() {
     const { datasets, schema, explorer, apicall /*, dispatch, router */ } = this.props;
+    /*
     let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
     let dimsetsets = datasets[Selector.apiId(apiparams)] || [];
-    /*
     let dsss = _.map(dimsetsets,
         (dss) => {
           return (
@@ -68,50 +114,6 @@ export default class Dimsetsets extends Component {
     */
     let icicleparams = { schema,api:'icicle',datasetLabel:'icicle' };
     let icicleData = datasets[Selector.apiId(icicleparams)] || [];
-
-    const drillCb = dim => {
-      this.state.drillDims = dim.pedigree().map(String).slice(1);
-      this.state.drillDss = this.state.drillDims.join(',');
-      console.log(this.state);
-      this.context.queryChange('dimsetset', this.state.drillDss);
-      /*
-      let apiparams = { schema, api:'dimsetset', 
-                  where: { dss: this.state.drillDss},
-                  datasetLabel:'summary' };
-      */
-      let apiparams = { schema, api:'denorm', 
-                  where: { dss: this.state.drillDss },
-                  datasetLabel:'data' };
-      this.state.drillApiString = Selector.apiId(apiparams);
-      apicall(this.state.drillApiString);
-
-    };
-    let dimComp = 'not being used';
-    let drillData = [];
-    if (this.state.drillApiString) {
-      dimComp = `Loading data for ${this.state.drillDss}`;
-      if (datasets[this.state.drillApiString]) {
-        drillData = datasets[this.state.drillApiString];
-        let dim = _.last(this.state.drillDims);
-        dimComp = <Dim dim={dim} data={drillData} gridWidth={3}/>;
-      }
-    }
-    const hoverCb = _.noop;
-    /*
-        let highlightComp = '';
-        if (this.state.highlightedNode) {
-            let node = this.state.highlightedNode;
-            highlightComp = (
-                <p>
-                    {node.namePath({noRoot:true, delim:'\n'})}
-                    <br/>
-                    <br/>
-                    {node.aggregate(list=>
-                        _.sum(list.map(d=>parseInt(d))), 'cnt')} dimsets
-                </p>);
-            //console.log('highlight', node);
-        }
-        */
 
     const buttons = valFuncs().map((f,i) =>
         <Input type="radio" name="valfunc" label={f.label} 
@@ -131,21 +133,23 @@ export default class Dimsetsets extends Component {
             <Col md={6}>
               <Icicle data={icicleData}
                       dataTitle={'Dim Set Sets'}
-                      dimNames={['dim_name_1','dim_name_2','dim_name_3',
-                                'dim_name_4','dim_name_5','dim_name_6']}
+                      dimNames={dimNames}
                       valFunc={this.state.valFunc.func}
                       sortFunc={sortFunc}
-                      drillCb={drillCb}
-                      hoverCb={hoverCb}
+                      drillCb={this.drillCb.bind(this)}
+                      hoverCb={this.hoverCb.bind(this)}
+                      nodeGCb={nodeGCb}
                       zoomable={true}
               >
-                <div style={{border: '1px solid brown'}}>
-                    <h3>Icicle drilldown</h3>
-                    {dimComp}
-                </div>
               </Icicle>
             </Col>
             <Col md={5} mdOffset={1}>
+              <ApiWrapper apiParams={this.state.hoverApiParams}>
+                <HighlightedDim startingData={[]} dim={this.state.highlightedDim} />
+              </ApiWrapper>
+              <ApiWrapper apiParams={this.state.drillApiParams}>
+                <DrillDim startingData={[]} dim={this.state.drillDim} />
+              </ApiWrapper>
                 {'wait' || highlightComp}
                 {this.props.children}
             </Col>
@@ -184,6 +188,38 @@ const styles = {
     margin: 3,
   },
 }
+
+export class HighlightedDim extends Component {
+  render() {
+    const {dim, data} = this.props;
+    if (!dim)
+      return <p></p>;
+    return (
+            <div>
+                {dim.namePath({noRoot:true, delim:'\n'})}
+                <br/>
+                <br/>
+                {dim.aggregate(list=>
+                    _.sum(list.map(d=>parseInt(d))), 'cnt')} dimsets
+                <br/>
+                <br/>
+                <pre>
+                  {JSON.stringify(data, null,2)}
+                </pre>
+
+            </div>);
+  }
+}
+export class DrillDim extends Component {
+  render() {
+    const {dim, data} = this.props;
+    if (!dim)
+      return <p></p>;
+
+    return <Dim dim={dim+''} data={data} gridWidth={3}/>;
+  }
+}
+
 class Dimsetset extends Component {
   componentWillMount() {
     //this.getData();

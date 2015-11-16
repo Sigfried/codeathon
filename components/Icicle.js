@@ -4,12 +4,6 @@ import _ from 'supergroup';
 import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar } from 'react-bootstrap';
 import {D3Chart, D3XYChart} from './LineChart';
 
-const isRealNode = (n, dimNames) => {
-    return _.some(n.records, 
-        rec=>_.isEqual(
-            _(rec).pick(dimNames).values().compact().value(),
-            n.pedigree().slice(1).map(String)));
-};
 function transform(d, ky) {
     return "translate(8," + d.dx * ky / 2 + ")";
 }
@@ -48,7 +42,7 @@ class D3IcicleHorizontal { // not a react component
     }
     draw(el, props) {
         const { data, dataTitle, dimNames, valFunc, sortFunc, width, height, 
-                drillCb, hoverCb, zoomable
+                drillCb, hoverCb, nodeGCb, zoomable
         } = props;
         //console.log('draw with', valFunc);
         let x = this.x = d3.scale.linear().range([0, width]);
@@ -76,6 +70,7 @@ class D3IcicleHorizontal { // not a react component
                 .on("click.cb", drillCb || _.noop)
                 .on("mouseover.cb", hoverCb || _.noop)
                 .style("cursor", "pointer")
+                .each(nodeGCb || _.noop)
 
 
         let kx = this.kx = width / this.root.dx,
@@ -87,7 +82,6 @@ class D3IcicleHorizontal { // not a react component
             .attr("class", function(d) { return d.children ? "parent" : "child"; })
             .style('stroke','white')
             .style('fill','steelblue')
-            .style('opacity', d => isRealNode(d, dimNames) ? 1 : .4)
             .style("cursor", "pointer")
 
         g.append("svg:text")
@@ -95,7 +89,6 @@ class D3IcicleHorizontal { // not a react component
             .attr("dy", ".35em")
             .style("opacity", function(d) { return d.dx * ky > 12 ? 1 : 0; })
             .text(function(d) { return d.toString(); })
-            .style('opacity', d => isRealNode(d, dimNames) ? 1 : .4)
             .style("cursor", "pointer")
 
         this.drawn = true;
