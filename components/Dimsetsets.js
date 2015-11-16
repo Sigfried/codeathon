@@ -72,6 +72,7 @@ export default class Dimsetsets extends Component {
     const drillCb = dim => {
       this.state.drillDims = dim.pedigree().map(String).slice(1);
       this.state.drillDss = this.state.drillDims.join(',');
+      console.log(this.state);
       this.context.queryChange('dimsetset', this.state.drillDss);
       /*
       let apiparams = { schema, api:'dimsetset', 
