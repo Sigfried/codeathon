@@ -17,44 +17,88 @@ export class ApiWrapper extends Component {
         this.state = {};
         this.state.apiString;
         this.state.data = props.startingData || [];
+        this.state.dataReady = false;
+        this.state.dataRequested = false;
     }
-    getData() {
-        const {apiParams, apicall, startingData, datasets} = this.props;
-        const {apiString, data} = this.state;
+    getData(props) {
+        const {apiParams, apicall, startingData, datasets} = props;
+        let {apiString, data, dataReady, dataRequested} = this.state;
 
-        if (_.isEmpty(apiParams))
-            return;
+        //console.log('getData', dataReady, dataRequested, apiParams.where, data, arguments);
 
-        const curApiString = Selector.apiId(apiParams);
-        if (apiString !== curApiString) {
-            apicall(curApiString);
-            this.setState({apiString: curApiString});
+        if (_.isEmpty(apiParams)) {
+            console.log('getData, empty data');
+            if (!_.isEmpty(data))
+                this.setState({data: [], dataReady: false, apiString: null});
             return;
         }
 
-        const loadedData = datasets[apiString];
-        if (_.isEmpty(loadedData))
-            return;
+        let newRequest = true;
+        if (_.isEqual(this.state.apiParams, apiParams)) {
+            if (dataReady) // nothing left to do
+                return;
+            if (dataRequested) {
+                newRequest = false;
+            }
+        }
 
-        if (data !== loadedData)
-            this.setState({data: loadedData});
+        const curApiString = Selector.apiId(apiParams);
+        if (apiString === curApiString && newRequest) {
+            console.log('how could this happen?');
+            debugger;
+        }
+
+        const status = apicall(apiString);
+
+        if (status === "ready") {
+            const loadedData = datasets[apiString];
+            this.setState({
+                apiString: curApiString,
+                apiParams, data: loadedData, 
+                dataReady: true, dataRequested: true});
+            return;
+        }
+        if (status === "requested") {
+            this.setState({
+                apiString: curApiString,
+                apiParams, data: [], 
+                dataReady: false, dataRequested: true});
+            return;
+        }
+        // it's a new request (do the same as an old request, right?)
+        this.setState({
+            apiString: curApiString,
+            apiParams, data: [], 
+            dataReady: false, dataRequested: true});
     }
     componentWillMount() {
-        this.getData();
+        this.getData(this.props);
     }
-    componentWillReceiveProps() {
-        this.getData();
+    componentWillReceiveProps(newprops, otherarg) {
+        this.getData(newprops);
     }
+    /*
+    componentDidUpdate() {
+        this.getData(this.props);
+    }
+    */
     render() {
         const {preLoadingMessage, loadingMessage, 
-                apiParams, children, } = this.props;
-        const {apiString, data} = this.state;
+                children, passthrough} = this.props;
+        const {apiString, data, dataReady, dataRequested} = this.state;
+        /*
+        console.log('render', dataReady, dataRequested, 
+                    this.props.apiParams && this.props.apiParams.where || 'no props params', 
+                    this.state.apiParams && this.state.apiParams.where || 'no state params', 
+                    data);
+        */
         let content = preLoadingMessage;
-        if (!_.isEmpty(apiParams)) {
+        if (!_.isEmpty(this.props.apiParams)) {
             content = loadingMessage;
-            if (!_.isEmpty(data)) {
+            if (dataReady && _.isEqual(this.props.apiParams, this.state.apiParams)) {
                 let newChildren = React.Children.map(children, function(child) {
-                    return React.cloneElement(child, {data})
+                    return React.cloneElement(child, 
+                        {data, dataReady, apiString, passthrough})
                 });
                 content = newChildren
             }

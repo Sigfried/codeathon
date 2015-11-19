@@ -73,6 +73,7 @@ export default class Dimsetsets extends Component {
                   where: { dss: drillDss},
                   datasetLabel:'summary' };
     this.setState({highlightedDim: dim, hoverApiParams: apiParams});
+    //console.log('hover set state', dim.namePath(), apiParams.where);
   }
 
   drillCb(dim) {
@@ -97,6 +98,7 @@ export default class Dimsetsets extends Component {
   
   render() {
     const { datasets, schema, explorer, apicall /*, dispatch, router */ } = this.props;
+
     /*
     let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
     let dimsetsets = datasets[Selector.apiId(apiparams)] || [];
@@ -144,19 +146,20 @@ export default class Dimsetsets extends Component {
               </Icicle>
             </Col>
             <Col md={5} mdOffset={1}>
-              <ApiWrapper apiParams={this.state.hoverApiParams}>
-                <HighlightedDim startingData={[]} dim={this.state.highlightedDim} />
+              <ApiWrapper passthrough={{dim:this.state.highlightedDim}} apiParams={this.state.hoverApiParams}>
+                <HighlightedDim />
               </ApiWrapper>
-              <ApiWrapper apiParams={this.state.drillApiParams}>
-                <DrillDim startingData={[]} dim={this.state.drillDim} />
-              </ApiWrapper>
-                {'wait' || highlightComp}
-                {this.props.children}
             </Col>
         </Row>
       </Grid>
     );
         //{dsss}
+    /*
+                {this.props.children}
+              <ApiWrapper apiParams={this.state.drillApiParams}>
+                <DrillDim startingData={[]} dim={this.state.drillDim} />
+              </ApiWrapper>
+    */
   }
   changeValFunc(valFunc) {
     this.setState({valFunc});
@@ -188,15 +191,48 @@ const styles = {
     margin: 3,
   },
 }
+function nestPath(list, i, n) {
+  if (i < n) {
+    return <ul>
+            <li>
+              {node(list[i])}
+              {nestPath(list, i + 1, n)}
+            </li>
+           </ul>;
+  } else {
+    return <ul>
+            <li>
+              {node(list[i])}
+            </li>
+           </ul>;
+  }
+  function node(n) {
+    return (<div>
+              <strong>{list[i].toString()}</strong><br/>
+              (
+                {agg(list[i],'cnt')} groups, {}
+                {agg(list[i],'measures')} measures, {}
+                {agg(list[i],'records')} observations,
+              )
+           </div>);
+  }
+}
+function agg(node, field) {
+  return node.aggregate(list=>
+            _.sum(list.map(d=>parseInt(d))), field)
+}
 
 export class HighlightedDim extends Component {
   render() {
-    const {dim, data} = this.props;
+    const {data, passthrough} = this.props;
+    const {dim} = passthrough;
     if (!dim)
       return <p></p>;
+    const list = dim.pedigree();
+    const indented = nestPath(list, 1, list.length -1);
     return (
             <div>
-                {dim.namePath({noRoot:true, delim:'\n'})}
+                {indented}
                 <br/>
                 <br/>
                 {dim.aggregate(list=>
@@ -242,7 +278,7 @@ class Dimsetset extends Component {
                 where: { dss: dss.dimsetset },
                 datasetLabel:'data' };
     let data = datasets[Selector.apiId(apiparams)];
-    data && console.log('GOT SOMETHING', data);
+    //data && console.log('GOT SOMETHING', data);
 
     const dims = dss.dimsetset.split(/,/);
     let gridWidth = Math.floor(10 / dims.length);

@@ -68,7 +68,6 @@ class D3IcicleHorizontal { // not a react component
                         [kx, ky] = click(d, x, y, g, width, height);
                 })
                 .on("click.cb", drillCb || _.noop)
-                .on("mouseover.cb", hoverCb || _.noop)
                 .style("cursor", "pointer")
                 .each(nodeGCb || _.noop)
 
@@ -83,6 +82,7 @@ class D3IcicleHorizontal { // not a react component
             .style('stroke','white')
             .style('fill','steelblue')
             .style("cursor", "pointer")
+                .on("mouseover.cb", hoverCb || _.noop)
 
         g.append("svg:text")
             .attr("transform", transform)
@@ -90,6 +90,7 @@ class D3IcicleHorizontal { // not a react component
             .style("opacity", function(d) { return d.dx * ky > 12 ? 1 : 0; })
             .text(function(d) { return d.toString(); })
             .style("cursor", "pointer")
+                .on("mouseover.cb", hoverCb || _.noop)
 
         this.drawn = true;
     }
