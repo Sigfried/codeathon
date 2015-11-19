@@ -64,7 +64,11 @@ export default class Dimsetsets extends Component {
     apicall(apistring);
   }
   
-  hoverCb(dim) {
+  hoverCb(dim, domNode, svg) {
+
+    svg.selectAll('g').style('opacity', .4);
+    d3.select(domNode).style('opacity', 1);
+
     const {schema} = this.props;
     let drillDims = dim.pedigree().map(String).slice(1);
     let drillDss = drillDims.join(',');
@@ -76,7 +80,7 @@ export default class Dimsetsets extends Component {
     //console.log('hover set state', dim.namePath(), apiParams.where);
   }
 
-  drillCb(dim) {
+  drillCb(dim, domNode, svg) {
     const {schema} = this.props;
     let drillDims = dim.pedigree().map(String).slice(1);
     let drillDss = drillDims.join(',');
@@ -146,7 +150,13 @@ export default class Dimsetsets extends Component {
               </Icicle>
             </Col>
             <Col md={5} mdOffset={1}>
-              <ApiWrapper passthrough={{dim:this.state.highlightedDim}} apiParams={this.state.hoverApiParams}>
+              <ApiWrapper 
+                  passthrough={{
+                    dim: this.state.highlightedDim,
+                    apiParams: this.state.hoverApiParams,
+                    icicleData,
+                  }} 
+                  apiParams={this.state.hoverApiParams}>
                 <HighlightedDim />
               </ApiWrapper>
             </Col>
@@ -191,28 +201,73 @@ const styles = {
     margin: 3,
   },
 }
-function nestPath(list, i, n) {
+function nestPath(list, i, n, counts) {
+  // SAVE THIS -- WAY TO MAKE NESTED LIST FROM SG.VAL.PEDIGREE
+  let valCount = '';
+  if (counts && list[i].toString() in counts) {
+      valCount = ', ' + counts[list[i].toString()] + ' values'
+  } else {
+    console.log('expected ', list[i]+'', 'in', counts);
+    debugger;
+  }
   if (i < n) {
     return <ul>
             <li>
-              {node(list[i])}
-              {nestPath(list, i + 1, n)}
+              <strong>{list[i].toString()}</strong>
+              {valCount}
+              <br/>
+              {nestPath(list, i + 1, n, counts)}
             </li>
            </ul>;
   } else {
     return <ul>
             <li>
-              {node(list[i])}
+              <strong>{list[i].toString()}</strong>
+              {valCount}
+              <br/>
+              {details(list[i])}
             </li>
            </ul>;
   }
-  function node(n) {
+  function details(n) {
     return (<div>
-              <strong>{list[i].toString()}</strong><br/>
               (
                 {agg(list[i],'cnt')} groups, {}
                 {agg(list[i],'measures')} measures, {}
-                {agg(list[i],'records')} observations,
+                <pre>
+                {JSON.stringify(list[i].records,null,2)},
+                </pre>
+              )
+           </div>);
+  }
+}
+function dimInfo(dim, counts) {
+  // SAVE THIS -- WAY TO MAKE NESTED LIST FROM SG.VAL.PEDIGREE
+  const list = dim.pedigree();
+  let lis = list.slice(1).map((item,i) => {
+    let valCount = '';
+    if (counts && item.toString() in counts) {
+        valCount = ', ' + counts[item.toString()] + ' values'
+    } else {
+      console.log('expected ', item+'', 'in', counts);
+      debugger;
+    }
+    return <li key={i}>
+            <strong>{item.toString()}</strong>
+            {valCount}
+            <br/>
+            {i === (list.length - 2) && details(item) || ''}
+          </li>
+  });
+  return <ul>{lis}</ul>;
+  function details(item) {
+    return (<div>
+              (
+                {agg(item,'cnt')} groups, {}
+                {agg(item,'measures')} measures, {}
+                <pre>
+                {JSON.stringify(item.records,null,2)},
+                </pre>
               )
            </div>);
   }
@@ -224,25 +279,21 @@ function agg(node, field) {
 
 export class HighlightedDim extends Component {
   render() {
-    const {data, passthrough} = this.props;
+    const {data, passthrough, apiString} = this.props;
     const {dim} = passthrough;
     if (!dim)
       return <p></p>;
-    const list = dim.pedigree();
-    const indented = nestPath(list, 1, list.length -1);
+    if (data.length !== 1)
+      debugger;
+    //const list = dim.pedigree();
+    //const indented = nestPath(list, 1, list.length -1, data[0]);
+    const info = dimInfo(dim, data[0]);
     return (
             <div>
-                {indented}
-                <br/>
-                <br/>
-                {dim.aggregate(list=>
-                    _.sum(list.map(d=>parseInt(d))), 'cnt')} dimsets
-                <br/>
-                <br/>
+                {info}
                 <pre>
                   {JSON.stringify(data, null,2)}
                 </pre>
-
             </div>);
   }
 }

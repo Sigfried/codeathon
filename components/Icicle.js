@@ -59,7 +59,8 @@ class D3IcicleHorizontal { // not a react component
                         .sort(sortFunc)
 
         if (!this.partition) debugger;
-        let g = this.g = this.svg.selectAll("g")
+        let svg = this.svg;
+        let g = this.g = svg.selectAll("g")
                 .data(this.partition.nodes(this.root), d=>d.namePath())
             .enter().append("svg:g")
                 .attr("transform", function(d) { return "translate(" + x(d.y) + "," + y(d.x) + ")"; })
@@ -67,9 +68,11 @@ class D3IcicleHorizontal { // not a react component
                     if (zoomable)
                         [kx, ky] = click(d, x, y, g, width, height);
                 })
-                .on("click.cb", drillCb || _.noop)
+                .on("mouseover.cb", function(d) { hoverCb(d, this, svg); } || _.noop)
+                .on("click.cb", function(d) { drillCb(d, this, svg); } || _.noop)
                 .style("cursor", "pointer")
                 .each(nodeGCb || _.noop)
+                .on("mouseout", () => nodeGCb && svg.selectAll("g").each(nodeGCb))
 
 
         let kx = this.kx = width / this.root.dx,
@@ -82,7 +85,6 @@ class D3IcicleHorizontal { // not a react component
             .style('stroke','white')
             .style('fill','steelblue')
             .style("cursor", "pointer")
-                .on("mouseover.cb", hoverCb || _.noop)
 
         g.append("svg:text")
             .attr("transform", transform)
@@ -90,7 +92,6 @@ class D3IcicleHorizontal { // not a react component
             .style("opacity", function(d) { return d.dx * ky > 12 ? 1 : 0; })
             .text(function(d) { return d.toString(); })
             .style("cursor", "pointer")
-                .on("mouseover.cb", hoverCb || _.noop)
 
         this.drawn = true;
     }

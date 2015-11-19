@@ -46,6 +46,8 @@ export class ApiWrapper extends Component {
         if (apiString === curApiString && newRequest) {
             console.log('how could this happen?');
             debugger;
+        } else {
+            apiString = curApiString;
         }
 
         const status = apicall(apiString);
