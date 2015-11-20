@@ -256,13 +256,13 @@ function nestPath(list, i, n, counts) {
   }
 }
 export class DrillDim extends Component {
-  /*
-  componentWillReceiveProps(newprops, otherarg) {
-    if (newprops.passthrough.dim === this.props.passthrough.dim)
-      return;
-    this.setState({highlightedVal: null});
+  constructor() {
+    super();
+    this.state = {highlight:{}};
   }
-  */
+  highlight(dim, val) {
+    this.setState({highlight:{dim, val}});
+  }
   render() {
     const {dataReady, data, passthrough, apiString} = this.props;
     const {dim} = passthrough;
@@ -276,12 +276,17 @@ export class DrillDim extends Component {
       debugger;
 
     let nodes = dim.pedigree({noRoot:true}).map(
-                  nodeDim => (
-                    <DrillDimNode
-                      dim={nodeDim} data={data}
+                  nodeDim => {
+                    let dataSubset = data;
+                    if (this.state.highlight.val &&
+                        this.state.highlight.dim !== nodeDim)
+                      dataSubset = this.state.highlight.val.records;
+                    return <DrillDimNode
+                      dim={nodeDim} data={dataSubset}
+                      highlight={this.highlight.bind(this)}
                       key={nodeDim.toString()}
                     />
-                  ));
+                  });
     return (
         <div>
             <h4>Details for {dim.namePath({delim: ' / ', noRoot:true})}</h4>
@@ -319,6 +324,7 @@ export class DrillDimNode extends Component {
                    sampleVals.slice(-2).join(', ');
     else
       sampleVals = sampleVals.join(', ');
+    hval && console.log(JSON.stringify(hval.records, null, 2));
     return (
         <div style={{ border: '1px solid brown', 
                       margin:3,
@@ -332,18 +338,21 @@ export class DrillDimNode extends Component {
             Observation count per value:
             {sparkbars}
             {hval && `${hval.valueOf()}: ${hval.records.length} observations`}
+        </div>
+    );
+    /*
             <pre>
               {hval && JSON.stringify(hval.records, null, 2)}
             </pre>
-        </div>
-    );
+    */
   }
   highlight(dim,val) {
     this.setState({highlightedVal: val});
+    this.props.highlight(dim, val)
   }
   endHighlight(dim,val) {
-    console.log('end highlight');
     this.setState({highlightedVal: null});
+    this.props.highlight();
   }
   isHighlighted(dim,val) {
     return dim === this.props.dim && 
