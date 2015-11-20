@@ -11,13 +11,13 @@ export default (
   <Route path="/" component={App}>
     <Route path="/dimsetsets"
            component={Dimsetsets} />
+  </Route>
+);
+/*
     <Route path="/seedims"
            component={SeeDims} />
     <Route path="/dqdata"
            component={DQData} />
-  </Route>
-);
-/*
 export default (
   <Route path="/" component={DQData}>
     <Route path="/:login/:name"

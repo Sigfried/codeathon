@@ -51,6 +51,8 @@ export class ApiWrapper extends Component {
 
         if (status === "ready") {
             const loadedData = datasets[apiString];
+            if (loadedData.requestedOnly) // not propogated to state yet
+                return;
             this.setState({
                 apiString: curApiString,
                 apiParams, data: loadedData, 

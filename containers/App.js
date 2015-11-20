@@ -63,15 +63,16 @@ class App extends Component {
           dimsetset: explorer.dimsetset,
           recs: explorer.recs,
         });
-    }, this);
-
+    });
+    /*
+              <NavItem eventKey={1} href="/dqdata">DQ Data</NavItem>
+              <NavItem eventKey={2} href="/seedims">See Dims</NavItem>
+    */
     return (
       <div>
         <Navbar>
             <NavBrand><a href="/">Explorer</a></NavBrand>
             <Nav>
-              <NavItem eventKey={1} href="/dqdata">DQ Data</NavItem>
-              <NavItem eventKey={2} href="/seedims">See Dims</NavItem>
               <NavItem eventKey={3} href="/dimsetsets">Dimsetset Browser</NavItem>
               <NavDropdown eventKey={4} title={schema || 'Choose schema'} id="basic-nav-dropdown">
                 {schemaChoices}

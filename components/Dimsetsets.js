@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 //import {DimList, Dim} from './DimList';
 //import {ListContainer} from './ListContainer';
@@ -56,8 +57,17 @@ export default class Dimsetsets extends Component {
     this.state.drillDims = [];
     this.state.valFunc = valFuncs()[0];
   }
+  componentWillReceiveProps(newprops, otherarg) {
+    if (newprops.schema !== this.props.schema)
+      this.getData(newprops);
+  }
   componentWillMount() {
-    const {apicall, schema, } = this.props;
+    this.getData(this.props);
+  }
+  getData(props) {
+    const {apicall, schema, } = props;
+    if (!schema)
+      return;
     let apiparams = { schema,api:'icicle',datasetLabel:'icicle' };
     let apistring = Selector.apiId(apiparams);
     apicall(apistring);
@@ -110,6 +120,8 @@ export default class Dimsetsets extends Component {
   
   render() {
     const { datasets, schema, explorer, apicall /*, dispatch, router */ } = this.props;
+    if (!schema)
+      return <Row><Col md={5} mdOffset={2}><h3>Choose a schema</h3></Col></Row>;
 
     /*
     let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
@@ -139,7 +151,7 @@ export default class Dimsetsets extends Component {
         valFuncs('Size by observation count').func(b) -
         valFuncs('Size by observation count').func(a);
     return (
-      <Grid>
+      <Grid key={schema}>
         <fieldset>
           {buttons}
         </fieldset>
@@ -185,6 +197,7 @@ export default class Dimsetsets extends Component {
               </ApiWrapper>
             </Col>
         </Row>
+        <div style={{height:60}} />
       </Grid>
     );
         //{dsss}
@@ -288,11 +301,11 @@ export class DrillDim extends Component {
                     if (this.state.highlight.val &&
                         this.state.highlight.dim !== nodeDim)
                       dataSubset = this.state.highlight.val.records;
-                    return <Col md={gridWidth}>
+                    return <Col ref="col" md={gridWidth} key={nodeDim.toString()} >
                               <DrillDimNode
+                                width={window.innerWidth * 0.88 / [1,1.08,2.23,3.5,5,9][dim.depth] }
                                 dim={nodeDim} data={dataSubset}
                                 highlight={this.highlight.bind(this)}
-                                key={nodeDim.toString()}
                               />
                            </Col>
                   });
@@ -312,7 +325,8 @@ export class DrillDimNode extends Component {
     this.state = {};
   }
   render() {
-    const {dim, data} = this.props;
+    const {dim, data, width} = this.props;
+    console.log(width);
     const hval = this.state.highlightedVal;
     let sg = _.supergroup(data, dim.toString());
     let sparkbars = sg.length && <SparkBarsChart
@@ -321,7 +335,7 @@ export class DrillDimNode extends Component {
                         vals={sg}
                         dim={dim}
                         //barNums={barNums}
-                        width={200}
+                        width={width}
                         height={40} 
                         highlight={this.highlight.bind(this)}
                         endHighlight={this.endHighlight.bind(this)}
@@ -335,7 +349,18 @@ export class DrillDimNode extends Component {
                    sampleVals.slice(-2).join(', ');
     else
       sampleVals = sampleVals.join(', ');
-    hval && console.log(JSON.stringify(hval.records, null, 2));
+    //hval && console.log(JSON.stringify(hval.records, null, 2));
+    let sparkbarContent;
+    if (sg.length > 300) {
+      sparkbarContent = <h5>Too many values for spark bars</h5>;
+    } else {
+      sparkbarContent = 
+        <div>
+            Observation count per value:
+            {sparkbars}
+            {hval && `${hval.valueOf()}: ${hval.records.length} observations`}
+        </div>;
+    }
     return (
         <div style={{ border: '1px solid brown', 
                       margin:3,
@@ -346,9 +371,7 @@ export class DrillDimNode extends Component {
               [ {sampleVals} ]
             </em>
             <br/>
-            Observation count per value:
-            {sparkbars}
-            {hval && `${hval.valueOf()}: ${hval.records.length} observations`}
+            {sparkbarContent}
         </div>
     );
     /*
@@ -467,7 +490,7 @@ class Dimsetset extends Component {
     //data && console.log('GOT SOMETHING', data);
 
     const dims = dss.dimsetset.split(/,/);
-    let gridWidth = Math.floor(10 / dims.length);
+    let gridWidth = Math.floor(12 / dims.length);
     let dimComps = _.map(dims,
         dim => <Dim data={data || []} dss={dss} dim={dim} 
                   key={dim} gridWidth={gridWidth}/>
