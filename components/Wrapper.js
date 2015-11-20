@@ -25,7 +25,6 @@ export class ApiWrapper extends Component {
         //console.log('getData', dataReady, dataRequested, apiParams.where, data, arguments);
 
         if (_.isEmpty(apiParams)) {
-            console.log('getData, empty data');
             if (!_.isEmpty(data))
                 this.setState({data: [], dataReady: false, apiString: null});
             return;

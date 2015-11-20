@@ -12,7 +12,7 @@ class SparkBarsChart extends Component {
   }
   render() {
     const {dim, valType, vals, width, height, 
-        isHighlighted, highlight, notmissing } = this.props;
+        isHighlighted, highlight, endHighlight, notmissing } = this.props;
     //return <h4>debugging</h4>;
     var ext = d3.extent(vals.map(v=>v.records.length));
     var dumbExt = [0, ext[1]];
@@ -35,6 +35,7 @@ class SparkBarsChart extends Component {
                 val={val}
                 isHighlighted={isHighlighted}
                 highlight={highlight}
+                endHighlight={endHighlight}
                 //barNum={barNums[i]} 
                 x={barWidth*i}
                 chartHeight={self.props.height}
@@ -48,6 +49,7 @@ class SparkBarsChart extends Component {
                 val={val}
                 isHighlighted={isHighlighted}
                 highlight={highlight}
+                endHighlight={endHighlight}
                 x={barWidth*i}
                 chartHeight={self.props.height}
                 barWidth={barWidth} 
@@ -78,10 +80,13 @@ export default SparkBarsChart;
 
 class SparkBarsBar extends Component {
     render() {
-      const {dim, val, yscale, chartHeight, 
-        x, barWidth, isHighlighted} = this.props;
+      let {dim, val, yscale, chartHeight, 
+        x, barWidth, highlight, isHighlighted, endHighlight} = this.props;
       const height = yscale(val.records.length);
       const y = chartHeight - height;
+      highlight = highlight || _.noop;
+      isHighlighted = isHighlighted || _.noop;
+      endHighlight = endHighlight || _.noop;
       let highlighted = isHighlighted(dim,val)
       return (
         <g transform={"translate(" + x + ")"}>
@@ -89,25 +94,18 @@ class SparkBarsBar extends Component {
                   style={barStyles['background' + !!highlighted]}
                   width={barWidth}
                   height={chartHeight} 
-                  onMouseOver={this.valHover.bind(this)}
+                  onMouseOver={evt=>highlight(dim, val, evt)}
+                  onMouseOut={evt=>endHighlight(dim, val, evt)}
           />
           <rect y={chartHeight - height} 
                   style={barStyles['normal' + !!highlighted]}
                   width={barWidth}
                   height={height} 
-                  onMouseOver={this.valHover.bind(this)}
+                  onMouseOver={evt=>highlight(dim, val, evt)}
+                  onMouseOut={evt=>endHighlight(dim, val, evt)}
           />
         </g>
       );
-    }
-    valHover() {
-      const { dispatch, router, explorer } = this.context;
-      const { val, dim, highlight } = this.props;
-      if (!highlight)
-        debugger;
-      highlight(dim, val);
-      //dispatch(ExplorerActions.sgValMsg(val, dim));
-      //ExplorerActions.valHighlighted(dispatch, router, dim, val);
     }
 };
 class SparkBarsBarStack extends SparkBarsBar {

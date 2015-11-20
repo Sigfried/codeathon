@@ -308,14 +308,30 @@ export class DrillDimNode extends Component {
                         width={200}
                         height={40} 
                         highlight={this.highlight.bind(this)}
+                        endHighlight={this.endHighlight.bind(this)}
                         isHighlighted={this.isHighlighted.bind(this)}
                         />
                 || '';
+    let sampleVals = sg.map(String);
+    if (sampleVals.length > 7)
+      sampleVals = sampleVals.slice(0,2).join(', ') +
+                   ' ... ' +
+                   sampleVals.slice(-2).join(', ');
+    else
+      sampleVals = sampleVals.join(', ');
     return (
-        <div>
-            <h5>{dim.toString()}</h5>
+        <div style={{ border: '1px solid brown', 
+                      margin:3,
+                      padding: 3}}
+        >
+            <h5>{dim.toString()}, {sg.length} values</h5>
+            <em>
+              [ {sampleVals} ]
+            </em>
+            <br/>
+            Observation count per value:
             {sparkbars}
-            {hval && hval.valueOf()}
+            {hval && `${hval.valueOf()}: ${hval.records.length} observations`}
             <pre>
               {hval && JSON.stringify(hval.records, null, 2)}
             </pre>
@@ -324,6 +340,10 @@ export class DrillDimNode extends Component {
   }
   highlight(dim,val) {
     this.setState({highlightedVal: val});
+  }
+  endHighlight(dim,val) {
+    console.log('end highlight');
+    this.setState({highlightedVal: null});
   }
   isHighlighted(dim,val) {
     return dim === this.props.dim && 
