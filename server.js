@@ -8,7 +8,8 @@ var express = require('express');
 var munge = require('./data/dqcdm_munge');
 
 var app = new express();
-var port = 3000;
+//var port = 3000;
+var port = 80;
 app.use(compression())
 app.use(express.static('static'))
 app.use(express.static('data'));
