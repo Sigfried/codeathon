@@ -7,7 +7,6 @@ import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
 import DataTable from './DataTable';
 import Icicle from './Icicle';
-import {DimInfo} from './DQData';
 import ApiWrapper from './Wrapper';
 import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar, Input } from 'react-bootstrap';
 import * as Selector from '../selectors';
@@ -246,75 +245,75 @@ function nestPath(list, i, n, counts) {
            </div>);
   }
 }
-function dimInfo(dim, counts) {
-  // SAVE THIS -- WAY TO MAKE NESTED LIST FROM SG.VAL.PEDIGREE
-  const list = dim.pedigree();
-  let lis = list.slice(1).map((item,i) => {
-    let valCount = '';
-    if (counts && item.toString() in counts) {
-        valCount = ', ' + counts[item.toString()] + ' distinct values'
-    } else {
-      console.log('expected ', item+'', 'in', counts);
-      debugger;
-    }
-    return <li key={i}>
-            <strong>{item.toString()}</strong>
-            {valCount}
-            <br/>
-          </li>
-  });
-            //{i === (list.length - 2) && details(item) || ''}
-  function details(item) {
-    return (<div>
-              (
-                {agg(item,'cnt')} groups, {}
-                {agg(item,'measures')} measures, {}
-                <pre>
-                {JSON.stringify(item.records,null,2)},
-                </pre>
-              )
-           </div>);
-  }
-  return (
-          <div>
-            <h4>DimSetSet {list.slice(1).map(String).join(' => ')}</h4>
-            <h5>has {list.length - 1} dimensions:</h5>
-            <ul>{lis}</ul>
-            {counts.sets} dimension combinations (dimsets)
-            <br/>
-            {counts.measures} measures
-            <br/>
-            {counts.agg_methods} aggregation methods
-            <br/>
-            {counts.records} observations
-            <pre>
-            {JSON.stringify(dim.records,null,2)},
-            </pre>
-          </div>
-         );
-}
-function agg(node, field) {
-  return node.aggregate(list=>
-            _.sum(list.map(d=>parseInt(d))), field)
-}
-
 export class HighlightedDim extends Component {
   render() {
-    const {data, passthrough, apiString} = this.props;
+    const {dataReady, data, passthrough, apiString} = this.props;
     const {dim} = passthrough;
+
     if (!dim)
       return <p></p>;
-    if (data.length !== 1)
+
+    if (dataReady && data.length !== 1)
       debugger;
+
     //const list = dim.pedigree();
     //const indented = nestPath(list, 1, list.length -1, data[0]);
-    const info = dimInfo(dim, data[0]);
+
+    const info = dimInfo(dim, dataReady && data[0]);
     return (
             <div>
                 {info}
             </div>);
   }
 }
+function dimInfo(dim, counts = {}) {
+  const list = dim.pedigree();
+
+  let lis = list.slice(1).map((item,i) => {
+    let valCount = ', ' + counts[item.toString()] + ' distinct values'
+    return <li key={i}>
+            <strong>{item.toString()}</strong>
+            {valCount}
+            <br/>
+          </li>
+  });
+  let actRec = actualDimRec(dim);
+  return (
+          <div>
+            <h4>DimSetSet {list.slice(1).map(String).join(' => ')}</h4>
+            <h5>has {list.length - 1} dimensions:</h5>
+            <ul>{lis}</ul>
+            {counts.sets||'[fetching...]'} dimension combinations (dimsets)
+            <br/>
+            {counts.measures||'[fetching...]'} measures
+            <br/>
+            {counts.agg_methods||'[fetching...]'} aggregation methods
+            <br/>
+            {actRec.cnt} observations
+            <pre>
+            actRec
+            {JSON.stringify(actRec,null,2)},
+            counts
+            {JSON.stringify(counts,null,2)},
+            </pre>
+          </div>
+         );
+}
+function actualDimRec(dim) {
+  return _.find(dim.records,
+    rec => {
+      let dimsInRec = _.chain(dimNames)
+              .reduce((memo, dimName) =>
+                      memo + ((rec[dimName]) ? 1 : 0), 0)
+              .value()
+      return dimsInRec === dim.depth;
+    });
+}
+function agg(node, field) {
+  return node.aggregate(list=>
+            _.sum(list.map(d=>parseInt(d))), field)
+}
+
 export class DrillDim extends Component {
   render() {
     const {dim, data} = this.props;

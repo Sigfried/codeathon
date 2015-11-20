@@ -4,10 +4,8 @@ import * as ExplorerActions from '../actions/explorer';
 import * as Selector from '../selectors';
 
 /*
-    <ApiWrapper apiParams={{schema, api, where, datasetLabel}}
-             loadingMessage="Loading..."
-    >
-        <ChildComponent data=[] />
+    <ApiWrapper apiParams={{schema, api, where, datasetLabel}} >
+        <ChildComponent />
     </ApiWrapper>
  */
 
@@ -85,8 +83,7 @@ export class ApiWrapper extends Component {
     }
     */
     render() {
-        const {preLoadingMessage, loadingMessage, 
-                children, passthrough} = this.props;
+        const {children, passthrough} = this.props;
         const {apiString, data, dataReady, dataRequested} = this.state;
         /*
         console.log('render', dataReady, dataRequested, 
@@ -94,34 +91,23 @@ export class ApiWrapper extends Component {
                     this.state.apiParams && this.state.apiParams.where || 'no state params', 
                     data);
         */
-        let content = preLoadingMessage;
-        if (!_.isEmpty(this.props.apiParams)) {
-            content = loadingMessage;
-            if (dataReady && _.isEqual(this.props.apiParams, this.state.apiParams)) {
-                let newChildren = React.Children.map(children, function(child) {
-                    return React.cloneElement(child, 
-                        {data, dataReady, apiString, passthrough})
-                });
-                content = newChildren
-            }
-        }
+        let newChildren = React.Children.map(children, function(child) {
+            return React.cloneElement(child, 
+                {data, dataReady, apiString, passthrough})
+        });
         return (
             <div>
-                {content}
+                {newChildren}
             </div>
         );
     }
 }
 ApiWrapper.propTypes = {
     apiParams: React.PropTypes.object.isRequired,
-    loadingMessage: React.PropTypes.string.isRequired,
-    preLoadingMessage: React.PropTypes.string.isRequired,
     // query change stuff optional
 };
 ApiWrapper.defaultProps = {
-    loadingMessage: 'Loading...',
     apiParams: {},
-    preLoadingMessage: '',
     startingData: [],
 };
 ApiWrapper.contextTypes = {
