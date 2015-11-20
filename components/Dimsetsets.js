@@ -167,14 +167,21 @@ export default class Dimsetsets extends Component {
                   apiParams={this.state.hoverApiParams}>
                 <HighlightedDim />
               </ApiWrapper>
-              <hr/>
+            </Col>
+        </Row>
+        <Row>
+            <Col md={12}>
               <ApiWrapper 
                   passthrough={{
                     dim: this.state.drillDim,
                     icicleData,
                   }} 
                   apiParams={this.state.drillApiParams}>
-                <DrillDim />
+                <DrillDim gridWidth={
+                  this.state.drillDim &&
+                  Math.floor(12/this.state.drillDim.depth)
+                  || 12
+                }/>
               </ApiWrapper>
             </Col>
         </Row>
@@ -264,7 +271,7 @@ export class DrillDim extends Component {
     this.setState({highlight:{dim, val}});
   }
   render() {
-    const {dataReady, data, passthrough, apiString} = this.props;
+    const {dataReady, data, passthrough, apiString, gridWidth} = this.props;
     const {dim} = passthrough;
     if (!dim)
       return <p></p>;
@@ -281,16 +288,20 @@ export class DrillDim extends Component {
                     if (this.state.highlight.val &&
                         this.state.highlight.dim !== nodeDim)
                       dataSubset = this.state.highlight.val.records;
-                    return <DrillDimNode
-                      dim={nodeDim} data={dataSubset}
-                      highlight={this.highlight.bind(this)}
-                      key={nodeDim.toString()}
-                    />
+                    return <Col md={gridWidth}>
+                              <DrillDimNode
+                                dim={nodeDim} data={dataSubset}
+                                highlight={this.highlight.bind(this)}
+                                key={nodeDim.toString()}
+                              />
+                           </Col>
                   });
     return (
         <div>
             <h4>Details for {dim.namePath({delim: ' / ', noRoot:true})}</h4>
-            {nodes}
+            <Row>
+              {nodes}
+            </Row>
         </div>
     );
   }
