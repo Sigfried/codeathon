@@ -9,6 +9,9 @@
     "type": "git",
     "url": "https://github.com/rackt/redux.git"
   },
+  "engines": {
+        "node": "5.0.0"
+  },
   "license": "MIT",
   "homepage": "http://infovizconsulting.com",
   "dependencies": {
