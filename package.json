@@ -40,13 +40,12 @@
     "redux-thunk": "^0.1.0",
     "reselect": "^2.0.0",
     "supergroup": "^1.0.16",
+    "express": "^4.13.3",
     "webpack": "^1.9.11",
     "webpack-dev-middleware": "^1.2.0",
     "bootstrap-webpack": "0.0.5",
     "extract-text-webpack-plugin": "^0.8.2",
-    "webpack-hot-middleware": "^2.2.0"
-  },
-  "devDependencies": {
+    "webpack-hot-middleware": "^2.2.0",
     "babel-core": "^5.6.18",
     "babel-loader": "^5.1.4",
     "babel-plugin-react-transform": "^1.1.0",
@@ -54,7 +53,6 @@
     "css-loader": "^0.21.0",
     "exports-loader": "^0.6.2",
     "expose-loader": "^0.7.0",
-    "express": "^4.13.3",
     "faker": "^3.0.1",
     "file-loader": "^0.8.4",
     "imports-loader": "^0.6.5",
@@ -63,5 +61,7 @@
     "redux-devtools": "^2.1.5",
     "style-loader": "^0.13.0",
     "url-loader": "^0.5.6"
+  },
+  "devDependencies": {
   }
 }
