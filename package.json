@@ -1,5 +1,5 @@
 {
-  "name": "redux-real-world-example",
+  "name": "dq-cdm-viz-platform",
   "version": "0.0.0",
   "description": "Redux real-world example",
   "scripts": {
@@ -10,10 +10,7 @@
     "url": "https://github.com/rackt/redux.git"
   },
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/rackt/redux/issues"
-  },
-  "homepage": "http://rackt.github.io/redux",
+  "homepage": "http://infovizconsulting.com",
   "dependencies": {
     "bootstrap": "^3.3.5",
     "compression": "^1.6.0",
@@ -42,19 +39,22 @@
     "redux-router": "^1.0.0-beta3",
     "redux-thunk": "^0.1.0",
     "reselect": "^2.0.0",
-    "supergroup": "^1.0.16"
+    "supergroup": "^1.0.16",
+    "webpack": "^1.9.11",
+    "webpack-dev-middleware": "^1.2.0",
+    "bootstrap-webpack": "0.0.5",
+    "extract-text-webpack-plugin": "^0.8.2",
+    "webpack-hot-middleware": "^2.2.0"
   },
   "devDependencies": {
     "babel-core": "^5.6.18",
     "babel-loader": "^5.1.4",
     "babel-plugin-react-transform": "^1.1.0",
-    "bootstrap-webpack": "0.0.5",
     "concurrently": "^0.1.1",
     "css-loader": "^0.21.0",
     "exports-loader": "^0.6.2",
     "expose-loader": "^0.7.0",
     "express": "^4.13.3",
-    "extract-text-webpack-plugin": "^0.8.2",
     "faker": "^3.0.1",
     "file-loader": "^0.8.4",
     "imports-loader": "^0.6.5",
@@ -62,9 +62,6 @@
     "react-transform-hmr": "^1.0.0",
     "redux-devtools": "^2.1.5",
     "style-loader": "^0.13.0",
-    "url-loader": "^0.5.6",
-    "webpack": "^1.9.11",
-    "webpack-dev-middleware": "^1.2.0",
-    "webpack-hot-middleware": "^2.2.0"
+    "url-loader": "^0.5.6"
   }
 }
