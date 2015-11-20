@@ -46,8 +46,8 @@ class SparkBarsChart extends Component {
             <SparkBarsBar
                 dim={dim}
                 val={val}
-                //isHighlighted={isHighlighted}
-                //highlight={highlight}
+                isHighlighted={isHighlighted}
+                highlight={highlight}
                 x={barWidth*i}
                 chartHeight={self.props.height}
                 barWidth={barWidth} 
@@ -82,8 +82,7 @@ class SparkBarsBar extends Component {
         x, barWidth, isHighlighted} = this.props;
       const height = yscale(val.records.length);
       const y = chartHeight - height;
-      //let highlighted = isHighlighted(dim,val)
-      let highlighted = false;
+      let highlighted = isHighlighted(dim,val)
       return (
         <g transform={"translate(" + x + ")"}>
           <rect
@@ -104,6 +103,8 @@ class SparkBarsBar extends Component {
     valHover() {
       const { dispatch, router, explorer } = this.context;
       const { val, dim, highlight } = this.props;
+      if (!highlight)
+        debugger;
       highlight(dim, val);
       //dispatch(ExplorerActions.sgValMsg(val, dim));
       //ExplorerActions.valHighlighted(dispatch, router, dim, val);

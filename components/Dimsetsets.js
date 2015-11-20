@@ -85,6 +85,10 @@ export default class Dimsetsets extends Component {
   drillCb(dim, domNode, svg) {
     if (!isRealNode(dim))
       return;
+
+    svg.selectAll('rect').style('stroke', 'white').style('stroke-width',1);
+    d3.select(domNode).select('rect').style('stroke', 'brown').style('stroke-width',5);
+
     const {schema} = this.props;
     let drillDims = dim.pedigree().map(String).slice(1);
     let drillDss = drillDims.join(',');
@@ -149,7 +153,7 @@ export default class Dimsetsets extends Component {
                       drillCb={this.drillCb.bind(this)}
                       hoverCb={this.hoverCb.bind(this)}
                       nodeGCb={nodeGCb}
-                      zoomable={true}
+                      zoomable={false}
               >
               </Icicle>
             </Col>
@@ -163,6 +167,15 @@ export default class Dimsetsets extends Component {
                   apiParams={this.state.hoverApiParams}>
                 <HighlightedDim />
               </ApiWrapper>
+              <hr/>
+              <ApiWrapper 
+                  passthrough={{
+                    dim: this.state.drillDim,
+                    icicleData,
+                  }} 
+                  apiParams={this.state.drillApiParams}>
+                <DrillDim />
+              </ApiWrapper>
             </Col>
         </Row>
       </Grid>
@@ -170,9 +183,6 @@ export default class Dimsetsets extends Component {
         //{dsss}
     /*
                 {this.props.children}
-              <ApiWrapper apiParams={this.state.drillApiParams}>
-                <DrillDim startingData={[]} dim={this.state.drillDim} />
-              </ApiWrapper>
     */
   }
   changeValFunc(valFunc) {
@@ -245,6 +255,81 @@ function nestPath(list, i, n, counts) {
            </div>);
   }
 }
+export class DrillDim extends Component {
+  /*
+  componentWillReceiveProps(newprops, otherarg) {
+    if (newprops.passthrough.dim === this.props.passthrough.dim)
+      return;
+    this.setState({highlightedVal: null});
+  }
+  */
+  render() {
+    const {dataReady, data, passthrough, apiString} = this.props;
+    const {dim} = passthrough;
+    if (!dim)
+      return <p></p>;
+    if (!dataReady)
+      return (
+          <h5>Loading details for {dim.namePath({delim: ' / ', noRoot:true})}...</h5>
+      );
+    if (dataReady && !data.length)
+      debugger;
+
+    let nodes = dim.pedigree({noRoot:true}).map(
+                  nodeDim => (
+                    <DrillDimNode
+                      dim={nodeDim} data={data}
+                      key={nodeDim.toString()}
+                    />
+                  ));
+    return (
+        <div>
+            <h4>Details for {dim.namePath({delim: ' / ', noRoot:true})}</h4>
+            {nodes}
+        </div>
+    );
+  }
+}
+export class DrillDimNode extends Component {
+  constructor() {
+    super();
+    this.state = {};
+  }
+  render() {
+    const {dim, data} = this.props;
+    const hval = this.state.highlightedVal;
+    let sg = _.supergroup(data, dim.toString());
+    let sparkbars = sg.length && <SparkBarsChart
+                        valType={"supgergroup"}
+                        //vals={dimVals}
+                        vals={sg}
+                        dim={dim}
+                        //barNums={barNums}
+                        width={200}
+                        height={40} 
+                        highlight={this.highlight.bind(this)}
+                        isHighlighted={this.isHighlighted.bind(this)}
+                        />
+                || '';
+    return (
+        <div>
+            <h5>{dim.toString()}</h5>
+            {sparkbars}
+            {hval && hval.valueOf()}
+            <pre>
+              {hval && JSON.stringify(hval.records, null, 2)}
+            </pre>
+        </div>
+    );
+  }
+  highlight(dim,val) {
+    this.setState({highlightedVal: val});
+  }
+  isHighlighted(dim,val) {
+    return dim === this.props.dim && 
+           _.isEqual(val, this.state.highlightedVal);
+  }
+}
 export class HighlightedDim extends Component {
   render() {
     const {dataReady, data, passthrough, apiString} = this.props;
@@ -270,7 +355,8 @@ function dimInfo(dim, counts = {}) {
   const list = dim.pedigree();
 
   let lis = list.slice(1).map((item,i) => {
-    let valCount = ', ' + counts[item.toString()] + ' distinct values'
+    let valCount = ', ' + (counts[item.toString()]||'[fetching...]') + 
+                   ' distinct values'
     return <li key={i}>
             <strong>{item.toString()}</strong>
             {valCount}
@@ -280,8 +366,7 @@ function dimInfo(dim, counts = {}) {
   let actRec = actualDimRec(dim);
   return (
           <div>
-            <h4>DimSetSet {list.slice(1).map(String).join(' => ')}</h4>
-            <h5>has {list.length - 1} dimensions:</h5>
+            <h5>{list.length - 1} dimensions:</h5>
             <ul>{lis}</ul>
             {counts.sets||'[fetching...]'} dimension combinations (dimsets)
             <br/>
@@ -290,14 +375,16 @@ function dimInfo(dim, counts = {}) {
             {counts.agg_methods||'[fetching...]'} aggregation methods
             <br/>
             {actRec.cnt} observations
+          </div>
+         );
+         /*
             <pre>
             actRec
             {JSON.stringify(actRec,null,2)},
             counts
             {JSON.stringify(counts,null,2)},
             </pre>
-          </div>
-         );
+            */
 }
 function actualDimRec(dim) {
   return _.find(dim.records,
@@ -314,15 +401,6 @@ function agg(node, field) {
             _.sum(list.map(d=>parseInt(d))), field)
 }
 
-export class DrillDim extends Component {
-  render() {
-    const {dim, data} = this.props;
-    if (!dim)
-      return <p></p>;
-
-    return <Dim dim={dim+''} data={data} gridWidth={3}/>;
-  }
-}
 
 class Dimsetset extends Component {
   componentWillMount() {
@@ -370,6 +448,9 @@ Dimsetset.propTypes = {
 export class Dim extends Component {
   render() {
     const { data, dim, gridWidth} = this.props;
+    // dim is string here
+    if (!data.length)
+      return <div/>;
 
     let sg = _.supergroup(data, dim);
     //if (data.length) debugger;

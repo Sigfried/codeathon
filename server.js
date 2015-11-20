@@ -73,7 +73,7 @@ app.get("/data/:schema/:apiquery", function(req, res) {
     });
   } else if (apiquery === 'dimsetsets')
     //q = 'select  dimsetset, count(*) as records, count(nullif(value,\'\')) as records_with_values ' +
-    q = 'select  dimsetset, count(*) as records, ' +
+    q = 'select  dimsetset, count(*) as records ' +
         //', count(distinct measure_id) as measures, ' +
         //'count(distinct set_id) as sets ' +
         'from ' + schema + '.denorm ' +

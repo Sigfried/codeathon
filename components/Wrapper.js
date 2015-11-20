@@ -91,6 +91,8 @@ export class ApiWrapper extends Component {
                     this.state.apiParams && this.state.apiParams.where || 'no state params', 
                     data);
         */
+        if (dataReady && data.requestedOnly)
+            debugger;
         let newChildren = React.Children.map(children, function(child) {
             return React.cloneElement(child, 
                 {data, dataReady, apiString, passthrough})
