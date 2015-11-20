@@ -22,10 +22,10 @@ const dimNames=['dim_name_1','dim_name_2','dim_name_3',
 
 function valFuncs(pick) {
   const all = [
-    { label: 'Dimsetset count',
+    { label: 'Equal weighting',
       func:   d => {return 1},
     },
-    { label: 'Result count',
+    { label: 'Size by observation count',
       func:   d => {
         let res = d.aggregate(
                 counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt');
@@ -65,6 +65,9 @@ export default class Dimsetsets extends Component {
   }
   
   hoverCb(dim, domNode, svg) {
+    
+    if (!isRealNode(dim))
+      return;
 
     svg.selectAll('g').style('opacity', .4);
     d3.select(domNode).style('opacity', 1);
@@ -81,6 +84,8 @@ export default class Dimsetsets extends Component {
   }
 
   drillCb(dim, domNode, svg) {
+    if (!isRealNode(dim))
+      return;
     const {schema} = this.props;
     let drillDims = dim.pedigree().map(String).slice(1);
     let drillDss = drillDims.join(',');
@@ -128,8 +133,8 @@ export default class Dimsetsets extends Component {
         />
                                  );
     let sortFunc = (a,b) =>
-        valFuncs('Result count').func(b) -
-        valFuncs('Result count').func(a);
+        valFuncs('Size by observation count').func(b) -
+        valFuncs('Size by observation count').func(a);
     return (
       <Grid>
         <fieldset>
@@ -247,7 +252,7 @@ function dimInfo(dim, counts) {
   let lis = list.slice(1).map((item,i) => {
     let valCount = '';
     if (counts && item.toString() in counts) {
-        valCount = ', ' + counts[item.toString()] + ' values'
+        valCount = ', ' + counts[item.toString()] + ' distinct values'
     } else {
       console.log('expected ', item+'', 'in', counts);
       debugger;
@@ -256,10 +261,9 @@ function dimInfo(dim, counts) {
             <strong>{item.toString()}</strong>
             {valCount}
             <br/>
-            {i === (list.length - 2) && details(item) || ''}
           </li>
   });
-  return <ul>{lis}</ul>;
+            //{i === (list.length - 2) && details(item) || ''}
   function details(item) {
     return (<div>
               (
@@ -271,6 +275,23 @@ function dimInfo(dim, counts) {
               )
            </div>);
   }
+  return (
+          <div>
+            <h4>DimSetSet {list.slice(1).map(String).join(' => ')}</h4>
+            <h5>has {list.length - 1} dimensions:</h5>
+            <ul>{lis}</ul>
+            {counts.sets} dimension combinations (dimsets)
+            <br/>
+            {counts.measures} measures
+            <br/>
+            {counts.agg_methods} aggregation methods
+            <br/>
+            {counts.records} observations
+            <pre>
+            {JSON.stringify(dim.records,null,2)},
+            </pre>
+          </div>
+         );
 }
 function agg(node, field) {
   return node.aggregate(list=>
@@ -291,9 +312,6 @@ export class HighlightedDim extends Component {
     return (
             <div>
                 {info}
-                <pre>
-                  {JSON.stringify(data, null,2)}
-                </pre>
             </div>);
   }
 }

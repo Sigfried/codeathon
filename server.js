@@ -87,8 +87,11 @@ app.get("/data/:schema/:apiquery", function(req, res) {
     var cols = dss.split(/,/);
     q = 'select ' +
         cols.map(c => 'count(distinct ' + c + ') as ' + c).join(',') +
-        ', count(*) as records, count(distinct measure_id) as measures, ' +
-        'count(distinct set_id) as sets ' +
+        ', count(*) as records ' +
+        ', count(distinct set_id) as sets ' +
+        ', count(distinct measure_id) as measures ' +
+        ', count(distinct result_name_orig) as measures ' +
+        ', count(distinct result_name_orig) as agg_methods ' +
         'from ' + schema + '.denorm ' +
         'where dimsetset = $1 ';
     params.push(dss);

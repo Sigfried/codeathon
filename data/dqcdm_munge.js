@@ -283,6 +283,7 @@ var _ = require('lodash');
         })
         .then(function() {
           finalCols = finalCols.concat([
+            'r.result_name_orig',
             'm.name as measure_name',
             'm.description as measure_desc',
             'm.source_name','m.measure_id' ]);
