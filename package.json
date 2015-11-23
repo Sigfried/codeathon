@@ -1,13 +1,13 @@
 {
   "name": "dq-cdm-viz-platform",
-  "version": "0.0.0",
-  "description": "Redux real-world example",
+  "version": "0.1.0",
+  "description": "Visual exploration platform for DQ CDM",
   "scripts": {
     "start": "node server.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rackt/redux.git"
+    "url": "https://github.com/DQCode-A-Thon/platform"
   },
   "engines": {
         "node": "5.0.0"
