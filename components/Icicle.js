@@ -89,6 +89,7 @@ class D3IcicleHorizontal { // not a react component
         g.append("svg:text")
             .attr("transform", transform)
             .attr("dy", ".35em")
+            .style("fill", "white")
             .style("opacity", function(d) { return d.dx * ky > 12 ? 1 : 0; })
             .text(function(d) { return d.toString(); })
             .style("cursor", "pointer")

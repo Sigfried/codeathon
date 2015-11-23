@@ -326,7 +326,6 @@ export class DrillDimNode extends Component {
   }
   render() {
     const {dim, data, width} = this.props;
-    console.log(width);
     const hval = this.state.highlightedVal;
     let sg = _.supergroup(data, dim.toString());
     let sparkbars = sg.length && <SparkBarsChart

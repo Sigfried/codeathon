@@ -6,3 +6,4 @@ counter-example-files
 dist
 junk
 *.sql
+*.wiki

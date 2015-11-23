@@ -27,18 +27,19 @@ var _ = require('lodash');
           .each(function(i) {
             if (row[dimFields[i]] && row[dimFields[i]].length && !row[dimFields[i]].match(/emptyfield/)) {
               //var newCol = row[dimFields[i]].replace(/ /g,'') + '_dim' + i;
-              var newCol = module.exports.fixColName(row[dimFields[i]]);
-              if (!_.contains(dimNames, newCol))
-                dimNames.push(newCol);
+              //var newCol = module.exports.fixColName(row[dimFields[i]]);
+              var col = row[dimFields[i]];
+              if (!_.contains(dimNames, col))
+                dimNames.push(col);
             }
           }).value();
       });
       dimNames = dimNames.concat(dimFields);
       return dimNames;
     },
-    newDimRows: function(dimNames, rows) {
+    newDimRows: function(dimNameFixes, rows) {
       try {
-        return rows.map(row=>module.exports.fixDimRow(dimNames, row));
+        return rows.map(row=>module.exports.fixDimRow(dimNameFixes, row));
       } catch(e) {
         console.error(e);
         process.exit();
@@ -50,68 +51,34 @@ var _ = require('lodash');
         col = 'd_' + col;
       return col;
     },
-    fixDimRow: function(dimNames, row) {
-      var newRow = {set_id: row.set_id};
+    fixDimRow: function(dimNameFixes, row) {
+      var newRow = {dimsetset:'', set_id: row.set_id};
       var dimsetset = [];
+      //console.log('raw row\n', JSON.stringify( row, null, 2));
       _.range(6).forEach(function(i) {
-        var dn = 'dim_name_' + i, dv = 'dim_value_' + i;
+        var dn = 'dim_name_' + (i + 1), 
+            dv = 'dim_value_' + (i + 1);
         if (row[dn] && row[dn].length && !row[dn].match('emptyfield')) {
-          //console.log(dn, row[dn]);
-          var dimNameFixed = module.exports.fixColName(row[dn]);
+          //console.log(dn, row[dn], row[dv]);
+          var dimNameFixed = dimNameFixes[row[dn]];
           newRow[dimNameFixed] = row[dv];
-          newRow[dn] = row[dn];
           dimsetset.push(dimNameFixed);
         }
       });
-      dimNames.forEach(function(dimName) {
-        if (! (dimName in newRow))
-          newRow[dimName] = null;
+      _.each(dimNameFixes, function(fixed, orig) {
+        if (! (fixed in newRow))
+          newRow[fixed] = null;
+      });
+      _.range(6).forEach(function(i) {
+        var dn = 'dim_name_' + i, dv = 'dim_value_' + i;
+        if (row[dn] && row[dn].length && !row[dn].match('emptyfield')) {
+          newRow[dn] = row[dn];
+        }
       });
       newRow.dimsetset = dimsetset.join(',');
+      //console.log(dimsetset, JSON.stringify(newRow, null, 2));
       return newRow;
     },
-    /*
-    mungeDims: function(rows) {
-      if (!rows || !rows.length) return [];
-      var fields = _.keys(rows[0]);
-      var dimFields = _.chain(fields)
-            .filter(function(f) {
-              return f.match(/dim_name/);
-            })
-            .value();
-      var dimValues = _.chain(fields)
-            .filter(function(f) {
-              return f.match(/dim_value/);
-            }).value();
-      var dimCols = {};
-      var dimNames = [];
-      rows.forEach(function(row) {
-        var dimsetset = [];
-        _.chain(dimFields.length)
-          .range()
-          .each(function(i) {
-            if (row[dimFields[i]] && row[dimFields[i]].length && 
-                  !row[dimFields[i]].match(/emptyfield/)) {
-              //var newCol = row[dimFields[i]].replace(/ /g,'') + '_dim' + i;
-              var newCol = row[dimFields[i]].replace(/ /g,'_').toLowerCase();//.replace(/^/,'d' + i + '_');
-              if (newCol.match(/table/i))
-                newCol = 'd_' + newCol;
-              dimsetset.push(newCol);
-              row[newCol] = row[dimValues[i]];
-              dimCols[newCol] = (dimCols[newCol] || 0) + 1;
-              if (!_.contains(dimNames, newCol))
-                dimNames.push(newCol);
-            }
-            delete row[dimFields[i]];
-            delete row[dimValues[i]];
-            row.dimsetset = dimsetset.join(',');
-          }).value();
-      });
-      //console.log(rows.length, 'rows');
-      //console.log(dimCols);
-      return {dimensionNames: dimNames, dimensions: rows};
-    },
-    */
     mungeResults: function(rows) {
       if (!rows || !rows.length) return [];
       var resCols = {};
@@ -124,6 +91,11 @@ var _ = require('lodash');
             resCols[newCol] = (resCols[newCol] || 0) + 1;
         });
         //delete row.result_name;
+        var num = parseFloat(row.value);
+        if (_.isNumber(num) && isFinite(num))
+          row.value = num;
+        else
+          row.value = '\\N';
       });
       return {resCols: _.keys(resCols), results: rows};
     },
@@ -154,17 +126,14 @@ var _ = require('lodash');
     });
     return promise;
   }
-  function makeTable(table, dimnames, client, done, recs) {
+  function makeTable(table, dimnames, client, done, passthrough, coltypes) {
+    coltypes = coltypes || {};
     try {
-      //dimnames = _.sortBy(dimnames, dn => _.keys(recs[0]).indexOf(dn) || Infinity);
-      console.log('maketable', table, dimnames, recs && recs.slice(0,1));
-      if (recs && recs.length)
-        dimnames = _.keys(recs[0])//.map(s=>s.replace(/ /g,'_').toLowerCase());
-      console.log('\n\n=======================\n', table, dimnames, recs && recs.length && recs[0], '\n=======================\n\n');
-      //process.exit();
+      console.log('maketable', table, dimnames);
       var promise = new Promise(function(resolve, reject) {
         var cols = dimnames.map(
-          dimname => dimname + ' text').join(', ');
+                        dimname => dimname + ' ' + (coltypes[dimname] || 'text'))
+                      .join(', ');
         var q = 'CREATE TABLE ' + table + ' (' + cols + ')';
         console.log(q);
         var query = client.query(q);
@@ -173,8 +142,7 @@ var _ = require('lodash');
                 err, done, reject, client);
         })
         query.on('end', function(result) {
-          resolve(recs); // just passing this along
-          //resolve(result);
+          resolve(passthrough); // just passing this along
           done();
         });
       });
@@ -184,21 +152,60 @@ var _ = require('lodash');
       process.exit();
     }
   }
-  function populateDimReg(table, recs, client, done) {
+  function populateDimReg(table, recs, client, done, dimNames) {
     var promise = new Promise(function(resolve, reject) {
-      var stream = client.query(copyFrom('COPY ' + table + ' FROM STDIN'));
-      var tsv = d3.tsv.format(recs);
-      console.log('popdimreg tsv', tsv.substr(0,500));
-      var rowEmitCount = 0;
-      stream.on('row', function() {
-        rowEmitCount++;
-      });
-      stream.write(Buffer(tsv));
-      stream.end();
-      stream.on('end', function() {
-        resolve();
-        done();
-      });
+      batch(0, 100000);
+      
+      function batch(start, end) {
+        var batchrecs = recs.slice(start,end);
+        start = end;
+        end = start + 100000;
+        console.log('about to copy ' + batchrecs.length + ' starting at ' + start + ' recs into', table);
+        try {
+          var tsv = d3.tsv.formatRows(batchrecs.map(function(rec) {
+            return dimNames && 
+                  dimNames.map(function(dn) {
+                      return (dn in rec && rec[dn] != null) ? rec[dn] : '\\N';
+                  }) ||
+                  _.values(rec);
+            
+          }));
+          console.log(tsv);
+          //console.log('tsv.substr(0,500):\n=======================\n', tsv.substr(0,500), '\n===================\n');
+          if (end <= recs.length) {
+            batch(start, end);
+          }
+          return;
+        } catch(e) {
+          console.log('generate tsv failed', e);
+          process.exit();
+        }
+        try {
+          var rowEmitCount = 0;
+          var stream = client.query(copyFrom('COPY ' + table + ' FROM STDIN'));
+          stream.on('row', function() {
+            rowEmitCount++;
+          });
+          console.log('write buffer');
+          stream.write(Buffer(tsv));
+          stream.end();
+          console.log('end write buffer');
+          stream.on('end', function() {
+            console.log('on end...');
+            if (end <= recs.length)
+              setTimeout(function() { batch(start, end); }, 10000);
+            else {
+              console.log('resolving');
+              resolve();
+              console.log('done-ing...');
+              done();
+            }
+          });
+        } catch(e) {
+          console.log('copy tsv failed', e);
+          process.exit();
+        }
+      }
     });
     return promise;
   }
@@ -215,17 +222,19 @@ var _ = require('lodash');
         reject(Error("connection failed", err));
         return;
       }
-      var finalCols = [];
+      var finalCols = ['dimsetset'];
       var search_path = (process.argv[2] || 'public');
       console.log('search_path:', search_path);
       getData("SET search_path='" + search_path +"'", client, done)
         .then(function() {
           try {
             var q = 'SELECT distinct \'\'::text AS dimsetset, * FROM dimension_set d\n';
+            /*
             if (search_path === 'pcornet_dq')
               q += 'join result r on r.set_id = d.set_id \n' +
                   'join measure m on r.measure_id = m.measure_id \n' +
                   "where m.name like '%'||'date'||'%' or value>0";
+            */
             return getData(q, client, done);
           } catch(e) {
             console.error(e)
@@ -237,10 +246,19 @@ var _ = require('lodash');
             var dimNames = module.exports.dimNames(result.rows);
             dimNames.unshift('set_id');
             dimNames.unshift('dimsetset');
-            finalCols = finalCols.concat(dimNames.map((d)=>'d.'+d));
-            console.log('newDimRows!');
-            var recs = module.exports.newDimRows(dimNames, result.rows);
-            console.log('dimNames', dimNames, '\nrecs',recs.slice(0,5));
+
+            var dimNameFixes = _.chain(dimNames)
+                        .filter(function(dn) { return dn !== 'dimsetset'; })
+                        .map(function(dn) { 
+                          return [dn, module.exports.fixColName(dn)];
+                        })
+                        .object()
+                        .value();
+            console.log(JSON.stringify(dimNameFixes,null,2));
+            finalCols = finalCols.concat(_.values(dimNameFixes).map((d)=>'d.'+d));
+
+            var recs = module.exports.newDimRows(dimNameFixes, result.rows);
+            console.log('5 recs:',recs.slice(0,5));
             /*
             process.exit();
             //var dimnames = json.dimensionNames;
@@ -254,14 +272,24 @@ var _ = require('lodash');
             finalCols.unshift('dimsetset');
             console.log('dimnames', dimnames, '\nrecs',recs.slice(0,3));
             */
-            return makeTable('dimensions_regular', dimNames,client,done, recs);
+            var dimNames = _.values(dimNameFixes);
+            dimNames.unshift('dimsetset');
+            return makeTable('dimensions_regular', dimNames,
+                              client,done, [recs, dimNames],
+                           {set_id:'integer'})
           } catch(e) {
             console.error(e)
             process.exit();
           }
         })
-        .then(function(recs) {
-          return populateDimReg('dimensions_regular',recs,client,done)
+        .then(function(passthrough) {
+          var recs = passthrough[0];
+          var dimNames = passthrough[1];
+          try {
+            return populateDimReg('dimensions_regular',recs,client,done, dimNames)
+          } catch(e) {
+            console.log('error populating dimreg', e);
+          }
         })
         .then(function() {
           return getData('SELECT * FROM result', client, done)
@@ -271,12 +299,13 @@ var _ = require('lodash');
           return json;
         })
         .then(function(json) {
-          finalCols.push('value');
+          finalCols.push('r.value');
           var resCols = json.resCols.map((r)=>'result_'+r);
           finalCols = finalCols.concat(resCols.map((r)=>'r.'+r));
           resCols = ['value','result_name_orig','set_id','measure_id'].concat(resCols);
           var recs = json.results;
-          return makeTable('results_regular', resCols,client,done)
+          return makeTable('results_regular', resCols,client,done, null, 
+                           {value:'numeric', set_id:'integer', measure_id:'integer'})
             .then(function() {
               return populateDimReg('results_regular',recs,client,done)
             })
@@ -292,8 +321,8 @@ var _ = require('lodash');
                     finalCols.join(',') + ' \n' +
                   'FROM results_regular r \n' +
                   'JOIN dimensions_regular d ON r.set_id = d.set_id \n' +
-                  'JOIN measure m ON r.measure_id = m.measure_id::text;\n';
-          console.log(q);
+                  'JOIN measure m ON r.measure_id = m.measure_id \n' +
+                  'WHERE r.value IS NOT NULL';
           return getData(q, client, done);
         })
         .then(function() {
@@ -306,81 +335,3 @@ var _ = require('lodash');
   if (process.argv[2])
     newData();
 })();
-  /*
-  function newDataNew() {
-    console.log('pg: ', process.env.DATABASE_URL);
-    pg.connect(process.env.DATABASE_URL, function(err, client, done) {
-      if (err) {
-        console.log("connection error", err);
-        reject(Error("connection failed", err));
-        return;
-      }
-      var finalCols = [];
-      var search_path = (process.argv[2] || 'public');
-      console.log('search_path:', search_path);
-      getData("SET search_path='" + search_path +"'", client, done)
-        .then(function() {
-          return getData('SELECT * FROM dimension_set', client, done)
-        })
-        .then(function(result) {
-          var json = module.exports.mungeDims(result.rows);
-          dimnames.unshift('dimsetset');
-          finalCols = finalCols.concat(dimnames.map((d)=>'d.'+d));
-          dimnames.unshift('set_id');
-          return makeTable('dimensions_regular', dimnames,client,done)
-          /*
-          return json;
-          var dimNames = module.exports.dimNames(result.rows);
-          //console.log(dimNames);
-          process.exit();
-          var dimnames = json.dimensionNames;
-          var recs = json.dimensions;
-          * /
-        })
-        .then(function() {
-          // again
-          return getData('SELECT * FROM dimension_set', client, done)
-        })
-        .then(function() {
-          return populateDimReg('dimensions_regular',recs,client,done)
-        })
-        .then(function() {
-          return getData('SELECT * FROM result', client, done)
-        })
-        .then(function(result) {
-          var json = module.exports.mungeResults(result.rows);
-          return json;
-        })
-        .then(function(json) {
-          finalCols.push('value');
-          var resCols = json.resCols.map((r)=>'result_'+r);
-          finalCols = finalCols.concat(resCols.map((r)=>'r.'+r));
-          resCols = ['value','result_name_orig','set_id','measure_id'].concat(resCols);
-          var recs = json.results;
-          return makeTable('results_regular', resCols,client,done)
-            .then(function() {
-              return populateDimReg('results_regular',recs,client,done)
-            })
-        })
-        .then(function() {
-          finalCols = finalCols.concat([
-            'm.name as measure_name',
-            'm.description as measure_desc',
-            'm.source_name','m.measure_id','d.set_id' ]);
-
-          var q = 'CREATE TABLE denorm AS SELECT \n' +
-                    finalCols.join(',') + ' \n' +
-                  'FROM results_regular r \n' +
-                  'JOIN dimensions_regular d ON r.set_id = d.set_id \n' +
-                  'JOIN measure m ON r.measure_id = m.measure_id::text;\n';
-          console.log(q);
-          return getData(q, client, done);
-        })
-        .then(function() {
-          console.log('done');
-          client.end();
-          sys.exit();
-        });
-    });
-  };
-  */
