@@ -45,6 +45,7 @@ app.get("/data/:schema/:apiquery", function(req, res) {
       params.push(req.query.dss);
     }
   } else if (apiquery === 'icicle') {
+    /*
     q = 'select ' +
           "nullif(dim_name_1, '') as dim_name_1, " +
           "nullif(dim_name_2, '') as dim_name_2, " +
@@ -53,15 +54,15 @@ app.get("/data/:schema/:apiquery", function(req, res) {
           "nullif(dim_name_5, '') as dim_name_5, " +
           "nullif(dim_name_6, '') as dim_name_6, " +
           'count(*) as cnt ' +
-            /*
-          ', count(distinct(measure_name)) as measures ' +
-          ', count(distinct result_name_orig) as agg_methods ' +
-          ', count(distinct set_id) as sets ' +
-          */
+          --', count(distinct(measure_name)) as measures ' +
+          --', count(distinct result_name_orig) as agg_methods ' +
+          --', count(distinct set_id) as sets ' +
           'from ' + schema + '.denorm ' +
           'where dim_name_1 is not null ' + 
           'group by dim_name_1,dim_name_2,dim_name_3,dim_name_4,dim_name_5,dim_name_6 ' +
           'order by 1,2,3,4,5,6';
+    */
+    q = 'select * from ' + schema + '.iciclequery';
     postprocess = rows=>rows.map(row=>{
       row.dim_name_1 && (row.dim_name_1 = munge.fixColName(row.dim_name_1));
       row.dim_name_2 && (row.dim_name_2 = munge.fixColName(row.dim_name_2));
@@ -73,12 +74,15 @@ app.get("/data/:schema/:apiquery", function(req, res) {
     });
   } else if (apiquery === 'dimsetsets')
     //q = 'select  dimsetset, count(*) as records, count(nullif(value,\'\')) as records_with_values ' +
+    /*
     q = 'select  dimsetset, count(*) as records ' +
         //', count(distinct measure_id) as measures, ' +
         //'count(distinct set_id) as sets ' +
         'from ' + schema + '.denorm ' +
         'where value is not null ' +
         'group by dimsetset ';
+    */
+    q = 'select * from ' + schema + '.menuquery';
   else if (apiquery === 'dimsetset') {
     var dss = req.query.dss || '';
     console.log('dimsetset ' + dss);

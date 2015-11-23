@@ -1,5 +1,6 @@
 "use strict";
 var pg = require('pg');
+var fs = require('fs');
 var d3 = require('d3');
 var copyFrom = require('pg-copy-streams').from;
 var _ = require('lodash');
@@ -7,6 +8,8 @@ var _ = require('lodash');
 (function() {
   module = module || {};
 
+  var schema = (process.argv[2] || 'public');
+  var sqlfd = fs.openSync(schema + '.tables.sql', 'w');
   module.exports = {
     dimNames: function(rows) {
       if (!rows || !rows.length) return [];
@@ -122,6 +125,7 @@ var _ = require('lodash');
         });
       } catch(e) {
         console.error(e);
+        done();
       }
     });
     return promise;
@@ -129,90 +133,59 @@ var _ = require('lodash');
   function makeTable(table, dimnames, client, done, passthrough, coltypes) {
     coltypes = coltypes || {};
     try {
-      console.log('maketable', table, dimnames);
-      var promise = new Promise(function(resolve, reject) {
-        var cols = dimnames.map(
-                        dimname => dimname + ' ' + (coltypes[dimname] || 'text'))
-                      .join(', ');
-        var q = 'CREATE TABLE ' + table + ' (' + cols + ')';
-        console.log(q);
-        var query = client.query(q);
-        query.on('error', function(err) {
-          pgErr('makeTable ' + table + '(' + dimnames + ')', 
-                err, done, reject, client);
-        })
-        query.on('end', function(result) {
-          resolve(passthrough); // just passing this along
-          done();
+        console.log('maketable', table, dimnames);
+        var promise = new Promise(function(resolve, reject) {
+          var cols = dimnames.map(
+                          dimname => dimname + ' ' + (coltypes[dimname] || 'text'))
+                        .join(', ');
+          var q = 'CREATE TABLE ' + table + ' (' + cols + ');\n\n';
+          fs.write(sqlfd, q);
+          return;
+          var query = client.query(q);
+          console.log(q);
+          query.on('error', function(err) {
+            console.log(err);
+            pgErr('makeTable ' + table + '(' + dimnames + ')', 
+                  err, done, reject, client);
+          })
+          query.on('end', function(result) {
+            resolve(passthrough); // just passing this along
+            done();
+          });
         });
-      });
-      return promise;
+        return promise;
     } catch(e) {
-      console.error(e);
+      console.error('maketable failed', e);
       process.exit();
     }
   }
   function populateDimReg(table, recs, client, done, dimNames) {
     var promise = new Promise(function(resolve, reject) {
-      batch(0, 100000);
-      
-      function batch(start, end) {
-        var batchrecs = recs.slice(start,end);
-        start = end;
-        end = start + 100000;
-        console.log('about to copy ' + batchrecs.length + ' starting at ' + start + ' recs into', table);
-        try {
-          var tsv = d3.tsv.formatRows(batchrecs.map(function(rec) {
-            return dimNames && 
-                  dimNames.map(function(dn) {
-                      return (dn in rec && rec[dn] != null) ? rec[dn] : '\\N';
-                  }) ||
-                  _.values(rec);
-            
-          }));
-          console.log(tsv);
-          //console.log('tsv.substr(0,500):\n=======================\n', tsv.substr(0,500), '\n===================\n');
-          if (end <= recs.length) {
-            batch(start, end);
-          }
-          return;
-        } catch(e) {
-          console.log('generate tsv failed', e);
-          process.exit();
-        }
-        try {
-          var rowEmitCount = 0;
-          var stream = client.query(copyFrom('COPY ' + table + ' FROM STDIN'));
-          stream.on('row', function() {
-            rowEmitCount++;
-          });
-          console.log('write buffer');
-          stream.write(Buffer(tsv));
-          stream.end();
-          console.log('end write buffer');
-          stream.on('end', function() {
-            console.log('on end...');
-            if (end <= recs.length)
-              setTimeout(function() { batch(start, end); }, 10000);
-            else {
-              console.log('resolving');
-              resolve();
-              console.log('done-ing...');
-              done();
-            }
-          });
-        } catch(e) {
-          console.log('copy tsv failed', e);
-          process.exit();
-        }
+      try {
+        var fname = schema + '.' + table + '.tsv';
+        console.log('writing ' + fname);
+        var fd = fs.openSync(fname, 'w');
+        recs.map(function(rec, i) {
+          var line = dimNames && 
+                dimNames.map(function(dn) {
+                    return (dn in rec && rec[dn] != null) ? rec[dn] : '\\N';
+                }) ||
+                _.values(rec);
+          if (i % 10000 === 0)
+            console.log(i + ' rows written');
+          fs.write(fd, line.join('\t') + '\n');
+        })
+        fs.close(fd);
+      } catch(e) {
+        console.log('generate tsv failed', e);
+        process.exit();
       }
+      return promise;
     });
-    return promise;
   }
   function pgErr(msg, err, done, reject, client) {
     console.log(msg, err.toString());
     done();
-    client.end();
     reject(err.error);
   }
   function newData() {
@@ -223,9 +196,8 @@ var _ = require('lodash');
         return;
       }
       var finalCols = ['dimsetset'];
-      var search_path = (process.argv[2] || 'public');
-      console.log('search_path:', search_path);
-      getData("SET search_path='" + search_path +"'", client, done)
+      console.log('search_path:', schema);
+      getData("SET search_path='" + schema +"'", client, done)
         .then(function() {
           try {
             var q = 'SELECT distinct \'\'::text AS dimsetset, * FROM dimension_set d\n';
@@ -295,10 +267,12 @@ var _ = require('lodash');
           return getData('SELECT * FROM result', client, done)
         })
         .then(function(result) {
+          console.log('got ' + result.rows.length + ' results');
           var json = module.exports.mungeResults(result.rows);
           return json;
         })
         .then(function(json) {
+          console.log(_.keys(json));
           finalCols.push('r.value');
           var resCols = json.resCols.map((r)=>'result_'+r);
           finalCols = finalCols.concat(resCols.map((r)=>'r.'+r));
@@ -323,11 +297,14 @@ var _ = require('lodash');
                   'JOIN dimensions_regular d ON r.set_id = d.set_id \n' +
                   'JOIN measure m ON r.measure_id = m.measure_id \n' +
                   'WHERE r.value IS NOT NULL';
-          return getData(q, client, done);
+          var fd = fs.openSync(schema + '.denorm.sql', 'w');
+          fs.write(fd, q);
+          fs.close(fd);
+          //return getData(q, client, done);
         })
         .then(function() {
           console.log('done');
-          client.end();
+          done();
           sys.exit();
         });
     });
