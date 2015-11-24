@@ -1,6 +1,7 @@
 "use strict";
 var pg = require('pg');
 var fs = require('fs');
+var child_process = require('child_process');
 var d3 = require('d3');
 var copyFrom = require('pg-copy-streams').from;
 var _ = require('lodash');
@@ -10,6 +11,7 @@ var _ = require('lodash');
 
   var schema = (process.argv[2] || 'public');
   var sqlfd = fs.openSync(schema + '.tables.sql', 'w');
+  fs.write(sqlfd, "SET search_path='" + schema +"';\n\n");
   module.exports = {
     dimNames: function(rows) {
       if (!rows || !rows.length) return [];
@@ -31,7 +33,7 @@ var _ = require('lodash');
             if (row[dimFields[i]] && row[dimFields[i]].length && !row[dimFields[i]].match(/emptyfield/)) {
               //var newCol = row[dimFields[i]].replace(/ /g,'') + '_dim' + i;
               //var newCol = module.exports.fixColName(row[dimFields[i]]);
-              var col = row[dimFields[i]];
+              var col = row[dimFields[i]].toLowerCase();
               if (!_.contains(dimNames, col))
                 dimNames.push(col);
             }
@@ -62,8 +64,9 @@ var _ = require('lodash');
         var dn = 'dim_name_' + (i + 1), 
             dv = 'dim_value_' + (i + 1);
         if (row[dn] && row[dn].length && !row[dn].match('emptyfield')) {
-          //console.log(dn, row[dn], row[dv]);
+          row[dn] = row[dn].toLowerCase();
           var dimNameFixed = dimNameFixes[row[dn]];
+          //console.log(dn, row[dn], dimNameFixed, row[dv]);
           newRow[dimNameFixed] = row[dv];
           dimsetset.push(dimNameFixed);
         }
@@ -130,6 +133,12 @@ var _ = require('lodash');
     });
     return promise;
   }
+  function sqlAsSystemCmd(sql) {
+    // didn't really work
+    var args = ['-c', `"set search_path='${schema}'; ${sql}";`];
+    console.log('running: psql ', args);
+    child_process.execFileSync('psql', args);
+  }
   function makeTable(table, dimnames, client, done, passthrough, coltypes) {
     coltypes = coltypes || {};
     try {
@@ -138,9 +147,10 @@ var _ = require('lodash');
           var cols = dimnames.map(
                           dimname => dimname + ' ' + (coltypes[dimname] || 'text'))
                         .join(', ');
-          var q = 'CREATE TABLE ' + table + ' (' + cols + ');\n\n';
+          var q = 'CREATE TABLE ' + table + ' (' + cols + ');';
           fs.write(sqlfd, q);
-          return;
+          resolve(passthrough);
+          return promise;
           var query = client.query(q);
           console.log(q);
           query.on('error', function(err) {
@@ -230,20 +240,8 @@ var _ = require('lodash');
             finalCols = finalCols.concat(_.values(dimNameFixes).map((d)=>'d.'+d));
 
             var recs = module.exports.newDimRows(dimNameFixes, result.rows);
-            console.log('5 recs:',recs.slice(0,5));
-            /*
-            process.exit();
-            //var dimnames = json.dimensionNames;
-            var recs = json.dimensions;
-            var json = module.exports.mungeDims(result.rows);
-            //return json;
-            var dimnames = json.dimensionNames;
-            var recs = json.dimensions;
-            dimnames.unshift('set_id');
-            dimnames.unshift('dimsetset');
-            finalCols.unshift('dimsetset');
-            console.log('dimnames', dimnames, '\nrecs',recs.slice(0,3));
-            */
+            console.log(recs.length, ' recs');
+
             var dimNames = _.values(dimNameFixes);
             dimNames.unshift('dimsetset');
             return makeTable('dimensions_regular', dimNames,
@@ -295,17 +293,17 @@ var _ = require('lodash');
                     finalCols.join(',') + ' \n' +
                   'FROM results_regular r \n' +
                   'JOIN dimensions_regular d ON r.set_id = d.set_id \n' +
-                  'JOIN measure m ON r.measure_id = m.measure_id \n' +
-                  'WHERE r.value IS NOT NULL';
+                  'JOIN measure m ON r.measure_id = m.measure_id \n';
+                  //+ 'WHERE r.value IS NOT NULL;';
           var fd = fs.openSync(schema + '.denorm.sql', 'w');
           fs.write(fd, q);
           fs.close(fd);
+          fs.close(sqlfd);
           //return getData(q, client, done);
         })
         .then(function() {
           console.log('done');
-          done();
-          sys.exit();
+          process.exit();
         });
     });
   };
