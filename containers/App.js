@@ -28,6 +28,9 @@ class App extends Component {
     };
   }
   componentWillMount() {
+    const {configChange, router} = this.props;
+    configChange(router, null, null, '/dimsetsets');
+  /*
     let {explorer, dispatch, apicall, schema} = this.props;
     schema = schema || 'phis_dq';
     let apiparams = {
@@ -36,6 +39,7 @@ class App extends Component {
         datasetLabel: 'dimsetsets-summary',
     };
     apicall(Selector.apiId(apiparams));
+  */
   }
   render() {
         //<PickData tableWidth={700} tableHeight={1000}/>
@@ -49,21 +53,24 @@ class App extends Component {
         api:'dimsetsets',
         datasetLabel: 'dimsetsets-summary',
     };
+    /*
     let dimsetsets = explorer.datasets[Selector.apiId(apiparams)];
     let dimsetsetChoices = dimsetsets ?
       _.sortBy(dimsetsets, d => -d.records)
       .map(
         dc => <MenuItem onSelect={this.dssChoose.bind(this)} key={'dss'+dc.dimsetset} eventKey={dc.dimsetset}>{dc.dimsetset} ({dc.records})</MenuItem>)
       : '';
+    */
 
     //console.log('dimsetsetchoices', dimsetsetChoices, dimsetsets);
-    let children = React.Children.map(this.props.children, function(child, i) {
-        return React.cloneElement(child, {
-          schema: explorer.schema,
+    let children = React.Children.map(this.props.children, (child, i) =>
+        React.cloneElement(child, {
+          //key: this.props.schema, // didn't need this...not sure why
+          schema: this.props.schema,
           dimsetset: explorer.dimsetset,
           recs: explorer.recs,
-        });
-    });
+        })
+    );
     /*
               <NavItem eventKey={1} href="/dqdata">DQ Data</NavItem>
               <NavItem eventKey={2} href="/seedims">See Dims</NavItem>
@@ -77,15 +84,17 @@ class App extends Component {
               <NavDropdown eventKey={4} title={schema || 'Choose schema'} id="basic-nav-dropdown">
                 {schemaChoices}
               </NavDropdown>
-              <NavDropdown eventKey={5} title={router.location.query.dimsetset || 'Choose dimsetset'} id="basic-nav-dropdown">
-                {dimsetsetChoices}
-              </NavDropdown>
             </Nav>
           </Navbar>
         {this.renderErrorMessage()}
         {children}
       </div>
     );
+    /*
+              <NavDropdown eventKey={5} title={router.location.query.dimsetset || 'Choose dimsetset'} id="basic-nav-dropdown">
+                {dimsetsetChoices}
+              </NavDropdown>
+    */
   }
   schemaChoose(apicall, schema, configChange, router) {
     configChange(router, 'schema', schema);

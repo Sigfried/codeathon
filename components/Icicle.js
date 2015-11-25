@@ -98,12 +98,14 @@ class D3IcicleHorizontal { // not a react component
     }
 
     update(el, props) {
+        const { data, dataTitle, dimNames, valFunc, width, height, } = props;
+        if (!data.length)
+            return;
         if (!this.drawn) {
             if (!this.created)
                 this.create(el, props);
             this.draw(el, props);
         }
-        const { data, dataTitle, dimNames, valFunc, width, height, } = props;
         //console.log('update with', valFunc);
         let x = this.x,
             y = this.y,
@@ -157,11 +159,12 @@ export default class Icicle extends Component {
     }
     componentDidMount() {
       this.lc = new D3IcicleHorizontal();
+      this.lc.update(this.refs.div, this.props);
     }
     componentDidUpdate(prevProps, prevState) {
         if (this.props.valFunc !== prevProps.valFunc ||
             (this.props.data.length > 0 &&
-            this.props.data !== prevProps.data)
+             this.props.data !== prevProps.data)
         ) {
             this.lc.update(this.refs.div, this.props);
         }

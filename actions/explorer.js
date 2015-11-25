@@ -7,10 +7,11 @@ import * as Selectors from '../selectors';
 require('isomorphic-fetch');
 
 export const CONFIG_CHANGED = 'CONFIG_CHANGED';
-export const configChange = (router, key, val) => {
+export const configChange = (router, key, val, path) => {
   let query = router.location.query;
-  query[key] = val;
-  return pushState(query, router.location.pathname, query);
+  if (typeof key !== "undefined" && key !== null)
+    query[key] = val;
+  return pushState(query, path || router.location.pathname, query);
 }
 
 /*

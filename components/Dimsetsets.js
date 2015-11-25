@@ -151,7 +151,7 @@ export default class Dimsetsets extends Component {
         valFuncs('Size by observation count').func(b) -
         valFuncs('Size by observation count').func(a);
     return (
-      <Grid key={schema}>
+      <Grid >
         <fieldset>
           {buttons}
         </fieldset>
@@ -166,6 +166,7 @@ export default class Dimsetsets extends Component {
                       hoverCb={this.hoverCb.bind(this)}
                       nodeGCb={nodeGCb}
                       zoomable={false}
+                      key={schema}
               >
               </Icicle>
             </Col>
@@ -550,7 +551,7 @@ function mapStateToProps(state) {
     explorer: Selector.explorer(state),
     router: state.router,
     datasets: state.explorer.datasets,
-    schema: state.router.location.query.schema,
+    //schema: state.router.location.query.schema,
   };
 }
 
