@@ -10,7 +10,7 @@
     "url": "https://github.com/DQCode-A-Thon/platform"
   },
   "engines": {
-        "node": "5.0.0"
+    "node": "5.0.0"
   },
   "license": "MIT",
   "homepage": "http://infovizconsulting.com",

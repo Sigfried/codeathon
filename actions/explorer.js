@@ -38,7 +38,7 @@ const receiveData = createAction(DATA_RECEIVED);
 export const DATA_CACHED = 'DATA_CACHED';
 const cacheData = createAction(DATA_CACHED);
 
-export function apicall(apistring) {
+export function apicall(apistring, dontFetch) {
   if (typeof apistring !== 'string')
         debugger;
 
@@ -51,6 +51,8 @@ export function apicall(apistring) {
         return 'requested';
       return 'ready';
     }
+    if (dontFetch)
+      return 'not requested';
     console.log('new API call', apistring);
     let url = apiurl(params);
     dispatch(requestData({apistring, url:url}));

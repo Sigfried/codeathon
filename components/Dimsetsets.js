@@ -9,6 +9,7 @@ import LineChart from './LineChart';
 import DataTable from './DataTable';
 import Icicle from './Icicle';
 import ApiWrapper from './Wrapper';
+import Histogram from './Histogram';
 import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar, Input } from 'react-bootstrap';
 import * as Selector from '../selectors';
 import _ from 'supergroup';
@@ -37,11 +38,12 @@ function valFuncs(pick) {
     return _.find(all, {label: pick});
   return all;
 }
+const dim2strings = dim => dim.pedigree({noRoot:true}).map(String);
+const dim2dss = dim => dim2strings(dim).join(',');
+
 const isRealNode = (n) => {
-    return _.some(n.records, 
-        rec=>_.isEqual(
-            _(rec).pick(dimNames).values().compact().value(),
-            n.pedigree().slice(1).map(String)));
+  return _.some(n.records, 
+    rec=>_.isEqual( _(rec).pick(dimNames).values().compact().value(), dim2strings(n)));
 };
 function nodeGCb(node) {
   d3.select(this)
@@ -82,14 +84,32 @@ export default class Dimsetsets extends Component {
     d3.select(domNode).style('opacity', 1);
 
     const {schema} = this.props;
-    let drillDims = dim.pedigree().map(String).slice(1);
-    let drillDss = drillDims.join(',');
+    let drillDims = dim2strings(dim);
+    let drillDss = dim2dss(dim);
     if (!drillDss) return;
     const apiParams = { schema, api:'dimsetset', 
                   where: { dss: drillDss},
                   datasetLabel:'summary' };
     this.setState({highlightedDim: dim, hoverApiParams: apiParams});
     //console.log('hover set state', dim.namePath(), apiParams.where);
+  }
+  rawDataReady(dim, returnData) {
+    if (!dim)
+      return;
+    const {schema, apicall, datasets} = this.props;
+    const dss = dim2dss(dim);
+    const apiParams = { schema, api:'denorm', 
+                  where: {dss},
+                  datasetLabel:'data' };
+    const apiString = Selector.apiId(apiParams);
+    const status = apicall(apiString, true); // don't fetch, but check if available
+    if (returnData) {
+      if (status === 'ready') {
+        return datasets[apiString];
+      }
+      return null;
+    }
+    return status;
   }
 
   drillCb(dim, domNode, svg) {
@@ -100,8 +120,8 @@ export default class Dimsetsets extends Component {
     d3.select(domNode).select('rect').style('stroke', 'brown').style('stroke-width',5);
 
     const {schema} = this.props;
-    let drillDims = dim.pedigree().map(String).slice(1);
-    let drillDss = drillDims.join(',');
+    let drillDims = dim2strings(dim);
+    let drillDss = dim2dss(dim);
     if (!drillDss) return;
     const apiParams = { schema, api:'denorm', 
                 where: { dss: drillDss },
@@ -150,6 +170,7 @@ export default class Dimsetsets extends Component {
     let sortFunc = (a,b) =>
         valFuncs('Size by observation count').func(b) -
         valFuncs('Size by observation count').func(a);
+    let rawDataReady = this.rawDataReady(this.state.highlightedDim);
     return (
       <Grid >
         <fieldset>
@@ -170,16 +191,22 @@ export default class Dimsetsets extends Component {
               >
               </Icicle>
             </Col>
-            <Col md={5} mdOffset={1}>
+            <Col md={4} mdOffset={2}>
               <ApiWrapper 
                   passthrough={{
                     dim: this.state.highlightedDim,
-                    apiParams: this.state.hoverApiParams,
                     icicleData,
                   }} 
                   apiParams={this.state.hoverApiParams}>
-                <HighlightedDim />
+                <HighlightedDim 
+                />
               </ApiWrapper>
+                <p>{
+                  (rawDataReady === 'not requested' && 'Click cell for details') ||
+                  (rawDataReady === 'requested' && 'Waiting for details...') ||
+                  (rawDataReady === 'ready' && 'details ready') ||
+                  ''
+                }</p>
             </Col>
         </Row>
         <Row>
@@ -203,6 +230,9 @@ export default class Dimsetsets extends Component {
     );
         //{dsss}
     /*
+        <Row>
+            <MeasureInfo data={this.rawDataReady(this.state.highlightedDim, true)} />
+        </Row>
                 {this.props.children}
     */
   }
@@ -310,9 +340,17 @@ export class DrillDim extends Component {
                               />
                            </Col>
                   });
+    var records = this.state.highlight.val ? this.state.highlight.val.records : data;
+    var selection = this.state.highlight.val ?
+                    `${this.state.highlight.val.dim} => ${this.state.highlight.val.toString()}`
+                    : 'all records';
     return (
         <div>
             <h4>Details for {dim.namePath({delim: ' / ', noRoot:true})}</h4>
+            <Row>
+                Selection: <strong>{selection}</strong>, {records.length} values
+                <MeasureInfo data={records} val={this.state.highlight.val||dim} />
+            </Row>
             <Row>
               {nodes}
             </Row>
@@ -393,6 +431,32 @@ export class DrillDimNode extends Component {
            _.isEqual(val, this.state.highlightedVal);
   }
 }
+export class MeasureInfo extends Component {
+  render() {
+    const {data, val} = this.props;
+    if (!data || !data.length)
+      return <p></p>;
+    var sg = _.supergroup(data, 'measure_name');
+    var measures = sg.slice(0, 5).map(measure => {
+      var vals = _.pluck(measure.records, 'value');
+      return (
+              <div key={measure} style={{
+                    border:'1px solid brown',
+                    padding: 5,
+              }}>
+                  {measure} <br/>
+                  Min: {_.min(vals)} <br/>
+                  Max: {_.max(vals)} <br/>
+                  Mean: {_.mean(vals)} <br/>
+                  Median: {_.median(vals)} <br/>
+                  Sum: {_.sum(vals)} <br/>
+                  <Histogram nums={vals} key={val.dim + ':' + val}/>
+              </div>);
+    });
+    return <div>{measures}</div>;
+
+  }
+}
 export class HighlightedDim extends Component {
   render() {
     const {dataReady, data, passthrough, apiString} = this.props;
@@ -415,9 +479,9 @@ export class HighlightedDim extends Component {
   }
 }
 function dimInfo(dim, counts = {}) {
-  const list = dim.pedigree();
+  const list = dim.pedigree({noRoot:true});
 
-  let lis = list.slice(1).map((item,i) => {
+  let lis = list.map((item,i) => {
     let valCount = ', ' + (counts[item.toString()]||'[fetching...]') + 
                    ' distinct values'
     return <li key={i}>
@@ -429,7 +493,7 @@ function dimInfo(dim, counts = {}) {
   let actRec = actualDimRec(dim);
   return (
           <div>
-            <h5>{list.length - 1} dimensions:</h5>
+            <h5>{list.length} dimensions:</h5>
             <ul>{lis}</ul>
             {counts.sets||'[fetching...]'} dimension combinations (dimsets)
             <br/>
@@ -440,14 +504,6 @@ function dimInfo(dim, counts = {}) {
             {actRec.cnt} observations
           </div>
          );
-         /*
-            <pre>
-            actRec
-            {JSON.stringify(actRec,null,2)},
-            counts
-            {JSON.stringify(counts,null,2)},
-            </pre>
-            */
 }
 function actualDimRec(dim) {
   return _.find(dim.records,
@@ -461,7 +517,7 @@ function actualDimRec(dim) {
 }
 function agg(node, field) {
   return node.aggregate(list=>
-            _.sum(list.map(d=>parseInt(d))), field)
+            _.sum(list.map(d=>parseFloat(d))), field)
 }
 
 

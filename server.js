@@ -6,6 +6,7 @@ var config = require('./webpack.config');
 var compression = require('compression');
 var express = require('express');
 var munge = require('./data/dqcdm_munge');
+var _ = require('lodash');
 
 var app = new express();
 var port = process.env.PORT || 5000;
@@ -44,6 +45,13 @@ app.get("/data/:schema/:apiquery", function(req, res) {
       q += ' WHERE dimsetset = $1';
       params.push(req.query.dss);
     }
+    postprocess = rows=>rows.map(row=> {
+      try {
+        return _.extend(row, {value:parseFloat(row.value)});
+      } catch(e) {
+        console.error(e);
+      }
+    });
   } else if (apiquery === 'icicle') {
     /*
     q = 'select ' +

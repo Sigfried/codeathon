@@ -68,7 +68,7 @@ export class D3Chart {
     //debugger;
   }
 }
-class D3XYChart extends D3Chart {
+export class D3XYChart extends D3Chart {
   constructor() {
     super();
     this._getx = d=>d.x;
