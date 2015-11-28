@@ -354,6 +354,11 @@ export class DrillDim extends Component {
             <Row>
               {nodes}
             </Row>
+            <Row>
+              <pre>
+                {JSON.stringify(records.slice(0,20), null, 2)}
+              </pre>
+            </Row>
         </div>
     );
   }
@@ -453,7 +458,9 @@ export class MeasureInfo extends Component {
                   <Histogram nums={vals} key={val.dim + ':' + val}/>
               </div>);
     });
-    return <div>{measures}</div>;
+    return <Row>
+              {measures}
+           </Row>;
 
   }
 }

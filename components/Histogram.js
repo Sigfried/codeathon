@@ -43,16 +43,21 @@ class D3Histogram extends D3Chart {
     var margin = {top: 10, right: 30, bottom: 30, left: 30},
         width = this._layout.width - margin.left - margin.right,
         height = this._layout.height - margin.top - margin.bottom;
+    var ext = d3.extent(values);
+    if (ext[0] === ext[1]) {
+      ext[0]--;
+      ext[1]++;
+    }
     var x = d3.scale.linear()
-        .domain(d3.extent(values))
+        .domain(ext)
         .range([0, width]);
 
     // Generate a histogram using twenty uniformly-spaced bins.
-    var data = d3.layout.histogram()
-        .bins(x.ticks(X_TICKS_WANTED).length)
-        .range(d3.extent(values))
-        //.bins(X_TICKS_WANTED)
-        (values);
+    var hist = d3.layout.histogram();
+    if (x.ticks(X_TICKS_WANTED).length)
+      hist.bins(x.ticks(X_TICKS_WANTED).length);
+    var data = hist(values);
+        //.range(d3.extent(values))
 
     var y = d3.scale.linear()
         .domain([0, d3.max(data, function(d) { return d.y; })])
@@ -82,9 +87,10 @@ class D3Histogram extends D3Chart {
     let ticks = x.ticks(X_TICKS_WANTED);
     let barWidth = width / ticks.length - 1;
 
+    if (!data[0]) debugger;
     values.length < 100 && console.log(
       `domain width: ${x.domain()[1] - x.domain()[0]}
-       domain: ${d3.extent(values)}
+       domain: ${ext}
        bar width should be: ${(x.domain()[1] - x.domain()[0]) / ticks.length}
        bar width (d3) is: ${data[0].dx}
        bar width (actual) is: ${barWidth}
