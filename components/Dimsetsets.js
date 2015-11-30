@@ -18,15 +18,20 @@ import _ from 'supergroup';
 require('expose?$!expose?jQuery!jquery');
 require("bootstrap-webpack");
 
+const commaf = d3.format(',');
+const comma = n => n && commaf(n) || undefined;
+
 const dimNames=['dim_name_1','dim_name_2','dim_name_3',
                 'dim_name_4','dim_name_5','dim_name_6'];
 
 function valFuncs(pick) {
   const all = [
-    { label: 'Equal weighting',
+    { label: 'Uniform leaf size',
+      key:   'uniform',
       func:   d => {return 1},
     },
-    { label: 'Size by observation count',
+    { label: 'Leaf size by observation count',
+      key:   'countsize',
       func:   d => {
         let res = d.aggregate(
                 counts=>_.sum(counts.map(c=>parseInt(c))), 'cnt');
@@ -35,7 +40,7 @@ function valFuncs(pick) {
     },
   ];
   if (pick)
-    return _.find(all, {label: pick});
+    return _.find(all, {key: pick});
   return all;
 }
 const dim2strings = dim => dim.pedigree({noRoot:true}).map(String);
@@ -168,8 +173,8 @@ export default class Dimsetsets extends Component {
         />
                                  );
     let sortFunc = (a,b) =>
-        valFuncs('Size by observation count').func(b) -
-        valFuncs('Size by observation count').func(a);
+        valFuncs('countsize').func(b) -
+        valFuncs('countsize').func(a);
     let rawDataReady = this.rawDataReady(this.state.highlightedDim);
     return (
       <Grid >
@@ -179,7 +184,7 @@ export default class Dimsetsets extends Component {
         <Row>
             <Col md={6}>
               <Icicle data={icicleData}
-                      dataTitle={'Dim Set Sets'}
+                      dataTitle={'Grouping Sets'}
                       dimNames={dimNames}
                       valFunc={this.state.valFunc.func}
                       sortFunc={sortFunc}
@@ -355,9 +360,8 @@ export class DrillDim extends Component {
               {nodes}
             </Row>
             <Row>
-              <pre>
-                {JSON.stringify(records.slice(0,20), null, 2)}
-              </pre>
+              <DataTable recs={records.slice(10)} 
+                  cols={dim2strings(this.state.highlightVal || dim)}/>
             </Row>
         </div>
     );
@@ -436,25 +440,28 @@ export class DrillDimNode extends Component {
            _.isEqual(val, this.state.highlightedVal);
   }
 }
+function splitResultName(orig) {
+  return orig.split(/\|\|\|/).map(part => part.split(/=/)[1]).join(' / ');
+}
 export class MeasureInfo extends Component {
   render() {
     const {data, val} = this.props;
     if (!data || !data.length)
       return <p></p>;
-    var sg = _.supergroup(data, 'measure_name');
+    var sg = _.supergroup(data, ['measure_name',d=>splitResultName(d.result_name_orig)]).leafNodes();
     var measures = sg.slice(0, 5).map(measure => {
       var vals = _.pluck(measure.records, 'value');
       return (
-              <div key={measure} style={{
+              <div key={measure.namePath()} style={{
                     border:'1px solid brown',
                     padding: 5,
               }}>
-                  {measure} <br/>
-                  Min: {_.min(vals)} <br/>
-                  Max: {_.max(vals)} <br/>
-                  Mean: {_.mean(vals)} <br/>
-                  Median: {_.median(vals)} <br/>
-                  Sum: {_.sum(vals)} <br/>
+                  {measure.namePath(' => ')} <br/>
+                  Min: {comma(_.min(vals))} <br/>
+                  Max: {comma(_.max(vals))} <br/>
+                  Mean: {comma(_.mean(vals))} <br/>
+                  Median: {comma(_.median(vals))} <br/>
+                  Sum: {comma(_.sum(vals))} <br/>
                   <Histogram nums={vals} key={val.dim + ':' + val}/>
               </div>);
     });
@@ -489,7 +496,7 @@ function dimInfo(dim, counts = {}) {
   const list = dim.pedigree({noRoot:true});
 
   let lis = list.map((item,i) => {
-    let valCount = ', ' + (counts[item.toString()]||'[fetching...]') + 
+    let valCount = ', ' + (comma(counts[item.toString()])||'[fetching...]') + 
                    ' distinct values'
     return <li key={i}>
             <strong>{item.toString()}</strong>
@@ -502,13 +509,13 @@ function dimInfo(dim, counts = {}) {
           <div>
             <h5>{list.length} dimensions:</h5>
             <ul>{lis}</ul>
-            {counts.sets||'[fetching...]'} dimension combinations (dimsets)
+            {comma(counts.sets)||'[fetching...]'} dimension combinations (dimsets)
             <br/>
-            {counts.measures||'[fetching...]'} measures
+            {comma(counts.measures)||'[fetching...]'} measures
             <br/>
-            {counts.agg_methods||'[fetching...]'} aggregation methods
+            {comma(counts.agg_methods)||'[fetching...]'} aggregation methods
             <br/>
-            {actRec.cnt} observations
+            {comma(actRec.cnt)} observations
           </div>
          );
 }

@@ -88,7 +88,7 @@ class D3Histogram extends D3Chart {
     let barWidth = width / ticks.length - 1;
 
     if (!data[0]) debugger;
-    values.length < 100 && console.log(
+    false && values.length < 100 && console.log(
       `domain width: ${x.domain()[1] - x.domain()[0]}
        domain: ${ext}
        bar width should be: ${(x.domain()[1] - x.domain()[0]) / ticks.length}

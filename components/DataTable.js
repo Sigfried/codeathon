@@ -8,15 +8,14 @@ import _ from 'supergroup';
 
 export default class DataTable extends Component {
     render() {
-      const { recs } = this.props;
+      const { recs, width, height, cols } = this.props;
       if (!(recs && recs.length))
         return (<div/>);
 
+      const columnNames = cols || _.keys(recs[0]);
       let colidx = 0;
-      const columns = _.chain(recs[0])
-        .keys().map(col => {
-          return (
-                <Column
+      const columns = _.map(columnNames,
+            col => <Column
                   isResizable={true}
                   label={col}
                   width={(_.chain(recs)
@@ -27,12 +26,12 @@ export default class DataTable extends Component {
                   dataKey={colidx++}
                   key={colidx}
                 />);
-        }).value();
       //console.log(columns);
                   //width={colval1.length + 'em'}
 
       function rowGetter(rowIndex) {
-        let row = _.values(recs[rowIndex])
+        let row = _.values(_.pick(recs[rowIndex], columnNames))
+        console.log(row);
         return row;
       }
       function resize(newWidth, datakey) {
@@ -49,8 +48,8 @@ export default class DataTable extends Component {
                 rowHeight={25}
                 rowGetter={rowGetter}
                 rowsCount={recs.length}
-                width={800}
-                height={300}
+                width={width || 800}
+                height={height || 300}
                 headerHeight={40}>
                 {columns}
               </Table>
