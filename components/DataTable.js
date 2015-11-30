@@ -18,20 +18,18 @@ export default class DataTable extends Component {
             col => <Column
                   isResizable={true}
                   label={col}
-                  width={(_.chain(recs)
+                  width={(Math.min(20, (_.chain(recs) // 50 max col width
                     .pluck(col)
-                    .pluck('length')
+                    .pluck('length').concat(5) // 5 min col width
                     .max()
-                    .value() + 10) * 7}
+                    .value())) + 10) * 7}
                   dataKey={colidx++}
                   key={colidx}
                 />);
-      //console.log(columns);
                   //width={colval1.length + 'em'}
 
       function rowGetter(rowIndex) {
         let row = _.values(_.pick(recs[rowIndex], columnNames))
-        console.log(row);
         return row;
       }
       function resize(newWidth, datakey) {

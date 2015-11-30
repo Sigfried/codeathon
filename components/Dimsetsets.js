@@ -65,8 +65,11 @@ export default class Dimsetsets extends Component {
     this.state.valFunc = valFuncs()[0];
   }
   componentWillReceiveProps(newprops, otherarg) {
-    if (newprops.schema !== this.props.schema)
+    if (newprops.schema !== this.props.schema) {
       this.getData(newprops);
+      this.setState({highlightedDim: null, hoverApiParams: {},
+                    drillDim: null, drillApiParams: {}});
+    }
   }
   componentWillMount() {
     this.getData(this.props);
@@ -176,6 +179,7 @@ export default class Dimsetsets extends Component {
         valFuncs('countsize').func(b) -
         valFuncs('countsize').func(a);
     let rawDataReady = this.rawDataReady(this.state.highlightedDim);
+    console.log(this.state.highlightedDim, this.state.hoverApiParams);
     return (
       <Grid >
         <fieldset>
@@ -360,8 +364,11 @@ export class DrillDim extends Component {
               {nodes}
             </Row>
             <Row>
-              <DataTable recs={records.slice(10)} 
-                  cols={dim2strings(this.state.highlightVal || dim)}/>
+              First 10 observations
+              <DataTable recs={records.slice(0,10)} 
+                  cols={dim2strings(this.state.highlightVal || dim).concat([
+                   'value','measure_name','result_name_orig']) 
+                       }/>
             </Row>
         </div>
     );
