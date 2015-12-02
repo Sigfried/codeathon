@@ -26,11 +26,11 @@ const dimNames=['dim_name_1','dim_name_2','dim_name_3',
 
 function valFuncs(pick) {
   const all = [
-    { label: 'Uniform leaf size',
+    { label: 'Uniform size',
       key:   'uniform',
       func:   d => {return 1},
     },
-    { label: 'Leaf size by observation count',
+    { label: 'Size by observation count',
       key:   'countsize',
       func:   d => {
         let res = d.aggregate(
@@ -179,7 +179,6 @@ export default class Dimsetsets extends Component {
         valFuncs('countsize').func(b) -
         valFuncs('countsize').func(a);
     let rawDataReady = this.rawDataReady(this.state.highlightedDim);
-    console.log(this.state.highlightedDim, this.state.hoverApiParams);
     return (
       <Grid >
         <fieldset>
@@ -279,7 +278,7 @@ function nestPath(list, i, n, counts) {
   // SAVE THIS -- WAY TO MAKE NESTED LIST FROM SG.VAL.PEDIGREE
   let valCount = '';
   if (counts && list[i].toString() in counts) {
-      valCount = ', ' + counts[list[i].toString()] + ' values'
+      valCount = ', ' + comma(counts[list[i].toString()]) + ' values'
   } else {
     console.log('expected ', list[i]+'', 'in', counts);
     debugger;
@@ -333,7 +332,7 @@ export class DrillDim extends Component {
           <h5>Loading details for {dim.namePath({delim: ' / ', noRoot:true})}...</h5>
       );
     if (dataReady && !data.length)
-      debugger;
+      console.log('no data', dim.namePath());
 
     let nodes = dim.pedigree({noRoot:true}).map(
                   nodeDim => {
@@ -354,10 +353,13 @@ export class DrillDim extends Component {
                     `${this.state.highlight.val.dim} => ${this.state.highlight.val.toString()}`
                     : 'all records';
     return (
-        <div>
+        <div onClick={()=>{
+                      this.setState({highlightedVal: null});
+                      this.highlight();
+                      }}>
             <h4>Details for {dim.namePath({delim: ' / ', noRoot:true})}</h4>
             <Row>
-                Selection: <strong>{selection}</strong>, {records.length} values
+                Selection: <strong>{selection}</strong>, {comma(records.length)} values
                 <MeasureInfo data={records} val={this.state.highlight.val||dim} />
             </Row>
             <Row>
@@ -383,9 +385,12 @@ export class DrillDimNode extends Component {
     const {dim, data, width} = this.props;
     const hval = this.state.highlightedVal;
     let sg = _.supergroup(data, dim.toString());
+    sg = sg.sort((a,b)=> d3.ascending(a.records,b.records) || 
+                         d3.ascending(a.valueOf(), b.valueOf()));
     let sparkbars = sg.length && <SparkBarsChart
                         valType={"supgergroup"}
                         //vals={dimVals}
+                        sortBy={(d,i)=>i}
                         vals={sg}
                         dim={dim}
                         //barNums={barNums}
@@ -439,6 +444,7 @@ export class DrillDimNode extends Component {
     this.props.highlight(dim, val)
   }
   endHighlight(dim,val) {
+    return;
     this.setState({highlightedVal: null});
     this.props.highlight();
   }

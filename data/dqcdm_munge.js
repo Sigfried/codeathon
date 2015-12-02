@@ -76,7 +76,7 @@ var _ = require('lodash');
           newRow[fixed] = null;
       });
       _.range(6).forEach(function(i) {
-        var dn = 'dim_name_' + i, dv = 'dim_value_' + i;
+        var dn = 'dim_name_' + (i + 1), dv = 'dim_value_' + (i + 1);
         if (row[dn] && row[dn].length && !row[dn].match('emptyfield')) {
           newRow[dn] = row[dn];
         }
@@ -283,27 +283,37 @@ var _ = require('lodash');
             })
         })
         .then(function() {
-          finalCols = finalCols.concat([
-            'r.result_name_orig',
-            'm.name as measure_name',
-            'm.description as measure_desc',
-            'm.source_name','m.measure_id' ]);
+          try {
+            finalCols = finalCols.concat([
+              'r.result_name_orig',
+              'm.name as measure_name',
+              'm.description as measure_desc',
+              'm.source_name','m.measure_id' ]);
 
-          var q = 'CREATE TABLE denorm AS SELECT \n' +
-                    finalCols.join(',') + ' \n' +
-                  'FROM results_regular r \n' +
-                  'JOIN dimensions_regular d ON r.set_id = d.set_id \n' +
-                  'JOIN measure m ON r.measure_id = m.measure_id \n';
-                  //+ 'WHERE r.value IS NOT NULL;';
-          var fd = fs.openSync(schema + '.denorm.sql', 'w');
-          fs.write(fd, q);
-          fs.close(fd);
-          fs.close(sqlfd);
-          //return getData(q, client, done);
+            var q = 'CREATE TABLE denorm AS SELECT \n' +
+                      finalCols.join(',') + ' \n' +
+                    'FROM results_regular r \n' +
+                    'JOIN dimensions_regular d ON r.set_id = d.set_id \n' +
+                    'JOIN measure m ON r.measure_id = m.measure_id;\n';
+                    //+ 'WHERE r.value IS NOT NULL;';
+            var fname = schema + '.denorm.sql';
+            var fdd = fs.openSync(fname, 'w');
+            fs.write(fdd, q);
+            fs.close(fdd);
+            fs.close(sqlfd);
+            console.log('wrote', fname, q);
+            //return getData(q, client, done);
+          } catch(e) {
+            console.error('denorm write failed', e);
+          }
         })
         .then(function() {
           console.log('done');
-          process.exit();
+          /*
+          setTimeout(function() {
+            process.exit();
+          }, 1000);
+          */
         });
     });
   };
