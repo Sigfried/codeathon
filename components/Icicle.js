@@ -1,8 +1,5 @@
-
 import React, { Component } from 'react';
 import _ from 'supergroup';
-import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar } from 'react-bootstrap';
-import {D3Chart, D3XYChart} from './LineChart';
 
 function transform(d, ky) {
     return "translate(8," + d.dx * ky / 2 + ")";

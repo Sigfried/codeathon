@@ -30,16 +30,6 @@ class App extends Component {
   componentWillMount() {
     const {configChange, router} = this.props;
     configChange(router, null, null, '/dimsetsets');
-  /*
-    let {explorer, dispatch, apicall, schema} = this.props;
-    schema = schema || 'phis_dq';
-    let apiparams = {
-        schema,
-        api:'dimsetsets',
-        datasetLabel: 'dimsetsets-summary',
-    };
-    apicall(Selector.apiId(apiparams));
-  */
   }
   render() {
         //<PickData tableWidth={700} tableHeight={1000}/>
@@ -66,7 +56,9 @@ class App extends Component {
     let children = React.Children.map(this.props.children, (child, i) =>
         React.cloneElement(child, {
           //key: this.props.schema, // didn't need this...not sure why
-          schema: this.props.schema,
+          schema,
+          apicall,
+          datasets: explorer.datasets,
           dimsetset: explorer.dimsetset,
           recs: explorer.recs,
         })

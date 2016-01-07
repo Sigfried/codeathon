@@ -1,15 +1,13 @@
 import React, { Component, PropTypes } from 'react';
-import { connect } from 'react-redux';
-import * as ExplorerActions from '../actions/explorer';
 import * as Selector from '../selectors';
 
 /*
-    <ApiWrapper apiParams={{schema, api, where, datasetLabel}} >
+    <ApiWrapper apiParams={{api, where, datasetLabel}} >
         <ChildComponent />
     </ApiWrapper>
  */
 
-export class ApiWrapper extends Component {
+export default class ApiWrapper extends Component {
     constructor(props) {
         super();
         this.state = {};
@@ -113,24 +111,3 @@ ApiWrapper.defaultProps = {
     apiParams: {},
     startingData: [],
 };
-ApiWrapper.contextTypes = {
-    queryChange: React.PropTypes.func,
-    dispatch: React.PropTypes.func,
-    explorer: React.PropTypes.object,
-    router: React.PropTypes.object,
-};
-
-function mapStateToProps(state) {
-  return {
-    errorMessage: state.errorMessage,
-    explorer: Selector.explorer(state),
-    router: state.router,
-    datasets: state.explorer.datasets,
-    schema: state.router.location.query.schema,
-  };
-}
-export default connect(mapStateToProps,
-          { /*resetErrorMessage, */ 
-            dispatch: dispatchWrappedFunc=>dispatchWrappedFunc,
-            apicall: ExplorerActions.apicall,
-          })(ApiWrapper);

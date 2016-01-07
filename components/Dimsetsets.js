@@ -1,7 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import { connect } from 'react-redux';
-import * as ExplorerActions from '../actions/explorer';
 import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
 import DataTable from './DataTable';
@@ -135,36 +133,13 @@ export default class Dimsetsets extends Component {
                 datasetLabel:'data' };
     this.context.queryChange('dimsetset', drillDss);
     this.setState({drillDim: dim, drillApiParams: apiParams});
-    /*
-    let apiparams = { schema, api:'dimsetset', 
-                where: { dss: this.state.drillDss},
-                datasetLabel:'summary' };
-    this.state.drillApiString = Selector.apiId(apiparams);
-    apicall(this.state.drillApiString);
-    */
-
   };
   
   render() {
-    const { datasets, schema, explorer, apicall /*, dispatch, router */ } = this.props;
+    const { datasets, schema, apicall } = this.props;
     if (!schema)
       return <Row><Col md={5} mdOffset={2}><h3>Choose a schema</h3></Col></Row>;
 
-    /*
-    let apiparams = { schema,api:'dimsetsets',datasetLabel:'dimsetsets-summary' };
-    let dimsetsets = datasets[Selector.apiId(apiparams)] || [];
-    let dsss = _.map(dimsetsets,
-        (dss) => {
-          return (
-            <Row className="show-grid" key={dss.dimsetset}
-              onClick={evt => this.dssClick.bind(this)(evt, dss)}
-            >
-              <Dimsetset dss={dss} apicall={apicall}
-                  schema={schema} datasets={datasets}
-              />
-            </Row>);
-        })
-    */
     let icicleparams = { schema,api:'icicle',datasetLabel:'icicle' };
     let icicleData = datasets[Selector.apiId(icicleparams)] || [];
 
@@ -204,6 +179,8 @@ export default class Dimsetsets extends Component {
                     dim: this.state.highlightedDim,
                     icicleData,
                   }} 
+                  apicall={apicall}
+                  datasets={datasets}
                   apiParams={this.state.hoverApiParams}>
                 <HighlightedDim 
                 />
@@ -223,6 +200,8 @@ export default class Dimsetsets extends Component {
                     dim: this.state.drillDim,
                     icicleData,
                   }} 
+                  apicall={apicall}
+                  datasets={datasets}
                   apiParams={this.state.drillApiParams}>
                 <DrillDim gridWidth={
                   this.state.drillDim &&
@@ -235,13 +214,6 @@ export default class Dimsetsets extends Component {
         <div style={{height:60}} />
       </Grid>
     );
-        //{dsss}
-    /*
-        <Row>
-            <MeasureInfo data={this.rawDataReady(this.state.highlightedDim, true)} />
-        </Row>
-                {this.props.children}
-    */
   }
   changeValFunc(valFunc) {
     this.setState({valFunc});
@@ -258,14 +230,7 @@ function dssId(dss, what, schema) {
   return `${schema}_dimsetset_${what}_${dss.dimsetset}`;
 }
 Dimsetsets.propTypes = {
-  datasets: React.PropTypes.object.isRequired,
-  /*
-  explorer: PropTypes.object.isRequired,
-  dispatch: React.PropTypes.func,
-  router: React.PropTypes.object,
-  schema: React.PropTypes.string.isRequired,
-  recs: React.PropTypes.array.isRequired,
-  */
+  //datasets: React.PropTypes.object.isRequired,
 };
 const styles = {
   dimsetset: {
@@ -387,11 +352,10 @@ export class DrillDimNode extends Component {
     sg = sg.sort((a,b)=> d3.ascending(a.records,b.records) || 
                          d3.ascending(a.valueOf(), b.valueOf()));
     let sparkbars = sg.length && <SparkBarsChart
-                        valType={"supgergroup"}
-                        //vals={dimVals}
-                        sortBy={(d,i)=>i}
-                        vals={sg}
-                        dim={dim}
+                        things={sg}
+                        valFunc={d=>d.records.length}
+                        sortBy={d=>-d.records.length}
+                        passthrough={dim}
                         //barNums={barNums}
                         width={width}
                         height={40} 
@@ -438,16 +402,16 @@ export class DrillDimNode extends Component {
             </pre>
     */
   }
-  highlight(dim,val) {
+  highlight(val,dim,i,evt) {
     this.setState({highlightedVal: val});
     this.props.highlight(dim, val)
   }
-  endHighlight(dim,val) {
+  endHighlight(val,dim,i,evt) {
     return;
     this.setState({highlightedVal: null});
     this.props.highlight();
   }
-  isHighlighted(dim,val) {
+  isHighlighted(val,dim,i) {
     return dim === this.props.dim && 
            _.isEqual(val, this.state.highlightedVal);
   }
@@ -546,99 +510,3 @@ function agg(node, field) {
             _.sum(list.map(d=>parseFloat(d))), field)
 }
 
-
-class Dimsetset extends Component {
-  componentWillMount() {
-    //this.getData();
-  }
-  getData() {
-    const {dss, apicall, explorer, dispatch, schema, } = this.props;
-    let apiparams = { schema, api:'denorm', 
-                where: { dss: dss.dimsetset },
-                datasetLabel:'data' };
-    let apistring = Selector.apiId(apiparams);
-    apicall(apistring);
-    //console.log('asked for', apistring);
-  }
-  render() {
-    const { dss, schema, datasets,  } = this.props;
-    const { records, records_with_values, measures,
-            sets } = dss;
-
-    let apiparams = { schema, api:'denorm', 
-                where: { dss: dss.dimsetset },
-                datasetLabel:'data' };
-    let data = datasets[Selector.apiId(apiparams)];
-    //data && console.log('GOT SOMETHING', data);
-
-    const dims = dss.dimsetset.split(/,/);
-    let gridWidth = Math.floor(12 / dims.length);
-    let dimComps = _.map(dims,
-        dim => <Dim data={data || []} dss={dss} dim={dim} 
-                  key={dim} gridWidth={gridWidth}/>
-    );
-
-    return (<div>
-              <Row onClick={this.getData.bind(this)}>
-                <strong>{dss.dimsetset}</strong><br/>
-                <em>{records} recs, {measures} measures</em>
-              </Row>
-              {dimComps}
-            </div>);
-  }
-}
-Dimsetset.propTypes = {
-  dss: React.PropTypes.object.isRequired,
-};
-export class Dim extends Component {
-  render() {
-    const { data, dim, gridWidth} = this.props;
-    // dim is string here
-    if (!data.length)
-      return <div/>;
-
-    let sg = _.supergroup(data, dim);
-    //if (data.length) debugger;
-    let sparkbars = sg.length && <SparkBarsChart
-                        valType={"supgergroup"}
-                        //vals={dimVals}
-                        vals={sg}
-                        dim={dim}
-                        //barNums={barNums}
-                        width={200}
-                        height={40} 
-                        />
-                || '';
-                        /*
-                        isHighlighted={explorer.isValHighlighted}
-                        highlight={(dim,val)=>
-                          ExplorerActions.valHighlighted(dispatch,router,dim,val)}
-                        highlighted={explorer.highlighted}
-                        */
-    return (
-      <Col style={styles.dimsetset} md={gridWidth} key={dim}>
-        {dim}
-        {sparkbars}
-      </Col>);
-  }
-}
-Dim.propTypes = {
-  data: React.PropTypes.array.isRequired,
-  dim: React.PropTypes.string.isRequired,
-  gridWidth: React.PropTypes.number.isRequired,
-};
-function mapStateToProps(state) {
-  return {
-    errorMessage: state.errorMessage,
-    explorer: Selector.explorer(state),
-    router: state.router,
-    datasets: state.explorer.datasets,
-    //schema: state.router.location.query.schema,
-  };
-}
-
-export default connect(mapStateToProps,
-          { /*resetErrorMessage, */ 
-            dispatch: dispatchWrappedFunc=>dispatchWrappedFunc,
-            apicall: ExplorerActions.apicall,
-          })(Dimsetsets);
