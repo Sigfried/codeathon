@@ -1,8 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
-//import {DimList, Dim} from './DimList';
-//import {ListContainer} from './ListContainer';
 import * as ExplorerActions from '../actions/explorer';
 import SparkBarsChart from './SparkBars';
 import LineChart from './LineChart';
@@ -61,14 +59,17 @@ export default class Dimsetsets extends Component {
     this.state.highlightedDim = null;
     this.state.drillApiString;
     this.state.drillDss = '';
-    this.state.drillDims = [];
     this.state.valFunc = valFuncs()[0];
   }
   componentWillReceiveProps(newprops, otherarg) {
     if (newprops.schema !== this.props.schema) {
       this.getData(newprops);
-      this.setState({highlightedDim: null, hoverApiParams: {},
-                    drillDim: null, drillApiParams: {}});
+      this.setState({
+        highlightedDim: null, 
+        hoverApiParams: {},
+        drillDim: null, 
+        drillApiParams: {}
+      });
     }
   }
   componentWillMount() {
@@ -92,7 +93,6 @@ export default class Dimsetsets extends Component {
     d3.select(domNode).style('opacity', 1);
 
     const {schema} = this.props;
-    let drillDims = dim2strings(dim);
     let drillDss = dim2dss(dim);
     if (!drillDss) return;
     const apiParams = { schema, api:'dimsetset', 
@@ -128,7 +128,6 @@ export default class Dimsetsets extends Component {
     d3.select(domNode).select('rect').style('stroke', 'brown').style('stroke-width',5);
 
     const {schema} = this.props;
-    let drillDims = dim2strings(dim);
     let drillDss = dim2dss(dim);
     if (!drillDss) return;
     const apiParams = { schema, api:'denorm', 
